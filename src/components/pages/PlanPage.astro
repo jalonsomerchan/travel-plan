@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppActionsMenu from '../app/AppActionsMenu.astro';
 import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -35,16 +34,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         ]}
       />
     </div>
+    <div data-plan-view>
+      <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
+        {t('common.loading')}
+      </article>
+    </div>
   </AppShell>
-  <Container class="pb-12">
-    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
-      <div data-plan-view>
-        <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
-          {t('common.loading')}
-        </article>
-      </div>
-    </section>
-  </Container>
   <script>
     import { mountPlanPage } from '../../scripts/pages/plan';
 
