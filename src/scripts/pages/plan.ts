@@ -140,6 +140,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
             latitude: plan.locationLat,
             longitude: plan.locationLng,
             label: plan.name,
+            kind: 'plan',
             emptyTitle: '',
             emptyDescription: '',
             emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
@@ -147,6 +148,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         } else {
           nearbyPoiExplorer.setSource({
             label: plan.name,
+            kind: 'plan',
             emptyTitle: t('poi.plan.noLocationTitle'),
             emptyDescription: t('poi.plan.noLocationDescription'),
             emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),

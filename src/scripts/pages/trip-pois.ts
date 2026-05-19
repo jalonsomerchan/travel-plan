@@ -56,12 +56,14 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
           latitude: trip.accommodation.locationLat,
           longitude: trip.accommodation.locationLng,
           label: trip.accommodation.name || getAccommodationLocationLabel(trip.accommodation) || trip.name,
+          kind: 'accommodation',
           emptyTitle: '',
           emptyDescription: '',
         });
       } else {
         explorer.setSource({
           label: trip.name,
+          kind: 'accommodation',
           emptyTitle: t('tripPois.noAccommodationTitle'),
           emptyDescription: t('tripPois.noAccommodationDescription'),
           emptyActionHref: getAppUrl(locale, 'trip-accommodation', { trip: tripId }),

@@ -25,6 +25,7 @@ interface ExplorerSourceContext {
   latitude?: number;
   longitude?: number;
   label: string;
+  kind?: 'accommodation' | 'plan';
   emptyTitle: string;
   emptyDescription: string;
   emptyActionHref?: string;
@@ -53,14 +54,24 @@ function getErrorMessage(error: unknown, t: ReturnType<typeof useTranslations>) 
   return t('poi.error.generic');
 }
 
-function createSourceMarker(label: string) {
+function createSourceMarker(label: string, kind: ExplorerSourceContext['kind'] = 'plan') {
+  const iconSvg =
+    kind === 'accommodation'
+      ? `
+        <path d="M3 11.4 12 4l9 7.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.5 10.5V20h4.25v-5.5h4.5V20h4.25v-9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      `
+      : `
+        <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" fill="currentColor"/>
+        <circle cx="12" cy="10" r="2.8" fill="#ffffff"/>
+      `;
+
   return L.divIcon({
     className: 'nearby-poi-source-marker',
     html: `
       <span aria-hidden="true" style="align-items:center;background:#0f766e;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;height:38px;justify-content:center;width:38px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" fill="currentColor"/>
-          <circle cx="12" cy="10" r="2.8" fill="#ffffff"/>
+          ${iconSvg}
         </svg>
       </span>
     `,
@@ -172,9 +183,34 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
     if (list) {
       list.innerHTML = '';
     }
-    markers?.clearLayers();
+    syncSourceMarker();
     setCount(0, 'warning');
     setStatus('');
+  };
+
+  const syncSourceMarker = () => {
+    if (!map || !markers || state.source.latitude === undefined || state.source.longitude === undefined) {
+      markers?.clearLayers();
+      return;
+    }
+
+    markers.clearLayers();
+
+    const sourceLatLng = L.latLng(state.source.latitude, state.source.longitude);
+
+    L.marker(sourceLatLng, {
+      icon: createSourceMarker(state.source.label, state.source.kind),
+      keyboard: true,
+      title: state.source.label,
+    })
+      .bindPopup(escapeHtml(state.source.label))
+      .addTo(markers);
+
+    map.setView(sourceLatLng, Math.max(map.getZoom(), 15));
+    window.setTimeout(() => {
+      map?.invalidateSize();
+      map?.setView(sourceLatLng, Math.max(map.getZoom(), 15));
+    }, 0);
   };
 
   const renderResults = () => {
@@ -192,7 +228,7 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       `;
       setCount(0, 'warning');
       setStatus(t('poi.empty'));
-      markers?.clearLayers();
+      syncSourceMarker();
       return;
     }
 
@@ -244,7 +280,7 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       bounds.extend(sourceLatLng);
 
       L.marker(sourceLatLng, {
-        icon: createSourceMarker(state.source.label),
+        icon: createSourceMarker(state.source.label, state.source.kind),
         keyboard: true,
         title: state.source.label,
       })
@@ -269,6 +305,7 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       });
 
       map.fitBounds(bounds.pad(0.18), { maxZoom: 16 });
+      window.setTimeout(() => map?.invalidateSize(), 0);
     }
   };
 
@@ -305,7 +342,7 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
 
       state.results = [];
       state.truncated = false;
-      markers?.clearLayers();
+      syncSourceMarker();
       setCount(0, 'warning');
       setStatus(getErrorMessage(error, t), 'danger');
 
@@ -391,6 +428,7 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       }
 
       ensureMap();
+      syncSourceMarker();
       state.results = [];
       state.truncated = false;
       if (list) {
