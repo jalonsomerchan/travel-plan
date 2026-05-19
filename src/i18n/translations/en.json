@@ -109,7 +109,7 @@
   "trip.membersEmpty": "There are no extra invited people in this trip yet.",
   "trip.invite.email": "Guest email",
   "trip.invite.role": "Permission",
-  "trip.invite.helper": "You can invite someone even if they has not signed up yet. They will see the invite when they use that email.",
+  "trip.invite.helper": "You can invite someone even if they have not signed up yet. They will see the invite when they use that email.",
   "trip.invite.action": "Send invitation",
   "trip.invite.sending": "Sending...",
   "trip.invite.sent": "Invitation sent successfully.",
