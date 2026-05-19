@@ -264,5 +264,38 @@ export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
     trip.accommodation ? t('accommodation.status.configured') : t('accommodation.status.empty'),
   ]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem(
+    'trip-accommodation',
+    t('accommodation.breadcrumb'),
+    getAppUrl(locale, 'trip-accommodation', { trip: trip.id }),
+  );
   revealAppShell();
+}
+
+export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {
+  setAppShellTitle(plan.name);
+  setAppShellDescription(plan.description || getCategoryLabel(locale, plan.category));
+  setAppShellMeta([
+    trip.name,
+    formatPlanMoment(plan, locale) || getPageTranslator(locale)('calendar.unscheduled'),
+    getPlanStatusLabel(locale, plan.status),
+    hasPlanLocation(plan) ? getPlanLocationLabel(plan) : '',
+  ]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem('plan', plan.name, getAppUrl(locale, 'plan', { trip: trip.id, plan: plan.id }));
+  revealAppShell();
+}
+
+export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCount: number, completedCount: number) {
+  const t = getPageTranslator(locale);
+
+  setAppShellTitle(t('tripChecklist.titleWithTrip').replace('{trip}', trip.name));
+  setAppShellDescription('');
+  setAppShellMeta([]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem(
+    'trip-checklist',
+    t('tripChecklist.breadcrumb'),
+    getAppUrl(locale, 'trip-checklist', { trip: trip.id }),
+  );
 }
