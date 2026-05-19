@@ -1,11 +1,13 @@
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
+import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-links';
 import { getPlanInputFromForm } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
+import { initPlanLinksFields } from './plan-links-fields';
 import { initLocationPickers } from './plan-location-picker';
 import { ensureFirebaseReady, getPageTranslator, syncTripNavigation, syncTripShell } from './shared';
 
@@ -22,6 +24,7 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   initLocationPickers();
+  initPlanLinksFields(form);
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -36,9 +39,17 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const planInput = withPlanLinksFromForm(form, getPlanInputFromForm(form));
+    const linksValidation = validatePlanLinks(planInput.links ?? []);
+
+    if (!linksValidation.valid) {
+      setMessage(message, t(linksValidation.errorKey ?? 'plan.links.invalidUrl'), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
     try {
-      await createPlan(tripId, getPlanInputFromForm(form));
+      await createPlan(tripId, planInput);
       setMessage(message, t('trip.plansCreated'), 'success');
       window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
     } catch (error) {
