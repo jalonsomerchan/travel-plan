@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import GoogleSignInButton from '../app/GoogleSignInButton.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { siteConfig, type Locale } from '../../config/site';
@@ -37,7 +38,7 @@ const highlights = [
 
 <BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
   <Container class="py-8 md:py-14">
-    <section class="grid gap-8 lg:grid-cols-[1.25fr_0.95fr]">
+    <section class="grid gap-8 lg:grid-cols-[1.2fr_0.9fr]">
       <article class="section-shell overflow-hidden px-6 py-8 md:px-10 md:py-10">
         <span class="eyebrow">{t('home.eyebrow')}</span>
         <h1 class="mt-6 max-w-3xl text-4xl font-black tracking-tight text-[var(--color-text)] md:text-6xl">
@@ -47,9 +48,10 @@ const highlights = [
           {t('home.description')}
         </p>
         <div class="mt-8 flex flex-wrap gap-3">
-          <Button href={dashboardUrl}>{t('home.primaryCta')}</Button>
+          <GoogleSignInButton class="w-full sm:w-auto" form="google-sign-in-form" type="submit">
+            {t('auth.signIn')}
+          </GoogleSignInButton>
           <Button href={globalCalendarUrl} variant="secondary">{t('home.secondaryCta')}</Button>
-          <Button href={siteConfig.repositoryUrl} variant="secondary">{t('footer.repository')}</Button>
         </div>
         <ul class="mt-8 grid gap-3 sm:grid-cols-2">
           {features.map((feature) => (
@@ -80,7 +82,7 @@ const highlights = [
             {t('auth.helper')}
           </div>
           <p class="text-sm text-[var(--color-text-soft)]" id="google-sign-in-message">{t('auth.providerHint')}</p>
-          <Button class="w-full" type="submit">{t('auth.signIn')}</Button>
+          <GoogleSignInButton class="w-full" type="submit">{t('auth.signIn')}</GoogleSignInButton>
         </form>
         <div class="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-text-soft)]" data-firebase-state>
           {t('firebase.configPending')}
