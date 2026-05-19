@@ -38,8 +38,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   </AppShell>
 
   <Container class="pb-12">
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <section class="section-shell px-6 py-6">
+    <section class="section-shell px-6 py-6 md:px-8">
+      <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div class="min-w-0">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <span class="eyebrow">{t('tripAi.form.eyebrow')}</span>
@@ -155,9 +156,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
             <Button id="trip-ai-submit" type="submit" hidden>{t('tripAi.form.submit')}</Button>
           </div>
         </form>
-      </section>
+        </div>
 
-      <section class="section-shell px-6 py-6">
+        <div class="min-w-0 border-t border-[var(--color-border)] pt-8 xl:border-t-0 xl:border-l xl:pl-8 xl:pt-0">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <span class="eyebrow">{t('tripAi.results.eyebrow')}</span>
@@ -179,8 +180,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           </div>
         </div>
         <div class="mt-5 grid gap-4" data-trip-ai-results-list></div>
-      </section>
-    </div>
+        </div>
+      </div>
+    </section>
   </Container>
 
   <script>

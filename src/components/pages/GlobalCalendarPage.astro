@@ -31,8 +31,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </AppToolbar>
   </AppShell>
 
-  <Container class="grid gap-8 pb-12 lg:grid-cols-[1.2fr_0.8fr]">
-    <section class="section-shell px-6 py-6">
+  <Container class="pb-12">
+    <section class="section-shell px-6 py-6 md:px-8">
+      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="min-w-0">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">{t('calendar.overviewLabel')}</p>
@@ -45,9 +47,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       </div>
       <div class="mt-6 grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-soft)]" data-global-weekdays></div>
       <div class="mt-3 grid grid-cols-7 gap-2" data-global-calendar-grid></div>
-    </section>
+        </div>
 
-    <aside class="section-shell px-6 py-6">
+        <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
       <div>
         <span class="eyebrow">{t('calendar.timelineEyebrow')}</span>
         <h2 class="mt-4 text-2xl font-black">{t('calendar.timelineTitle')}</h2>
@@ -55,7 +57,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       <div class="mt-6 grid gap-4" data-global-events>
         <LoadingState label={t('common.loading')} />
       </div>
-    </aside>
+        </div>
+      </div>
+    </section>
   </Container>
 
   <script>

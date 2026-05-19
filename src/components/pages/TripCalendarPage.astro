@@ -38,8 +38,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </AppToolbar>
   </AppShell>
 
-  <Container class="grid gap-8 pb-12 lg:grid-cols-[1.2fr_0.8fr]">
-    <section class="section-shell px-6 py-6">
+  <Container class="pb-12">
+    <section class="section-shell px-6 py-6 md:px-8">
+      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="min-w-0">
       <div>
         <div>
           <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-calendar-trip-name aria-live="polite">
@@ -51,9 +53,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       <div class="mt-6 grid gap-4" data-trip-calendar-groups>
         <LoadingState label={t('common.loading')} />
       </div>
-    </section>
+        </div>
 
-    <aside class="section-shell px-6 py-6">
+        <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
       <div>
         <span class="eyebrow">{t('calendar.unscheduledEyebrow')}</span>
         <h2 class="mt-4 text-2xl font-black">{t('calendar.unscheduledTitle')}</h2>
@@ -61,7 +63,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       <div class="mt-6 grid gap-4" data-calendar-events>
         <LoadingState label={t('common.loading')} />
       </div>
-    </aside>
+        </div>
+      </div>
+    </section>
   </Container>
 
   <script>
