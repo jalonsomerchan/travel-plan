@@ -57,10 +57,12 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   const accountSummary = document.querySelector<HTMLElement>('[data-account-summary]');
   const signOutButton = document.querySelector<HTMLButtonElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
+  const createTripInlineLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-inline-link');
   const invitesLink = document.querySelector<HTMLAnchorElement>('#dashboard-invites-link');
   if (!ensureFirebaseReady(locale)) return;
   bindSignOut(signOutButton, locale);
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
+  if (createTripInlineLink) createTripInlineLink.href = getAppUrl(locale, 'trip-create');
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');
   observeSession((user) => {
     if (!user) {

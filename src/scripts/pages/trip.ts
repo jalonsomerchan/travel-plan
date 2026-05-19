@@ -74,6 +74,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
+  const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
   const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
@@ -92,6 +93,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (createPlanInlineLink) createPlanInlineLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
   if (categorySelect) {
     categorySelect.innerHTML += getCategoryOptions(locale)
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)

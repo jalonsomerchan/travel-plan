@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppActionsMenu from '../app/AppActionsMenu.astro';
+import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -28,23 +28,20 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('trip.breadcrumb'), key: 'trip' },
     ]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button href={dashboardUrl} variant="ghost">{t('trip.backToDashboard')}</Button>
-      </div>
-      <div slot="primary">
-        <AppActionsMenu
-          label={t('trip.actionsMenu')}
-          items={[
-            { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
-            { href: dashboardUrl, id: 'trip-members-link', label: t('trip.goMembers') },
-            { href: dashboardUrl, id: 'trip-calendar-link', label: t('trip.openCalendar') },
-            { href: dashboardUrl, id: 'trip-map-link', label: t('trip.openMap') },
-            { href: dashboardUrl, id: 'trip-edit-link', label: t('trip.goEdit') },
-          ]}
-        />
-      </div>
-    </AppToolbar>
+    <div slot="topbar" class="app-shell-topbar-row">
+      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
+      <AppActionsMenu
+        ariaLabel={t('trip.actionsMenu')}
+        label="..."
+        items={[
+          { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
+          { href: dashboardUrl, id: 'trip-members-link', label: t('trip.goMembers') },
+          { href: dashboardUrl, id: 'trip-calendar-link', label: t('trip.openCalendar') },
+          { href: dashboardUrl, id: 'trip-map-link', label: t('trip.openMap') },
+          { href: dashboardUrl, id: 'trip-edit-link', label: t('trip.goEdit') },
+        ]}
+      />
+    </div>
   </AppShell>
 
   <Container class="grid gap-8 pb-12">
@@ -54,6 +51,17 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <span class="eyebrow">{t('trip.plansEyebrow')}</span>
           <h2 class="mt-4 text-2xl font-black">{t('trip.plansTitle')}</h2>
         </div>
+        <Button
+          aria-label={t('trip.goCreatePlan')}
+          class="min-w-11 px-0 text-2xl leading-none"
+          href={dashboardUrl}
+          id="trip-create-plan-inline-link"
+          title={t('trip.goCreatePlan')}
+        >
+          +
+        </Button>
+      </div>
+      <div class="mt-5">
         <form class="grid gap-3 sm:grid-cols-3" data-plan-filters>
           <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>{t('trip.filters.search')}</span>

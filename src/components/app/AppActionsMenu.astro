@@ -6,15 +6,16 @@ interface ActionItem {
 }
 
 interface Props {
+  ariaLabel?: string;
   label: string;
   items: ActionItem[];
 }
 
-const { label, items } = Astro.props;
+const { ariaLabel, label, items } = Astro.props;
 ---
 
 <details class="app-actions-menu">
-  <summary class="app-actions-menu-trigger">
+  <summary aria-label={ariaLabel} class="app-actions-menu-trigger" title={ariaLabel}>
     {label}
   </summary>
   <div class="app-actions-menu-panel">

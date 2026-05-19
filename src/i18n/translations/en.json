@@ -266,5 +266,6 @@
   "notFound.eyebrow": "Error 404",
   "notFound.message": "You can go back home or open the dashboard to keep exploring TravelPlan.",
   "notFound.backHome": "Back home",
-  "common.cancel": "Cancel"
+  "common.cancel": "Cancel",
+  "common.goBack": "Go back"
 }

@@ -1,0 +1,38 @@
+---
+interface Props {
+  fallbackHref: string;
+  label: string;
+}
+
+const { fallbackHref, label } = Astro.props;
+---
+
+<button
+  class="app-back-button"
+  data-history-back
+  data-fallback-href={fallbackHref}
+  type="button"
+>
+  <span aria-hidden="true">←</span>
+  <span>{label}</span>
+</button>
+
+<script>
+  document.querySelectorAll('[data-history-back]').forEach((button) => {
+    if (button instanceof HTMLButtonElement && !button.dataset.boundHistoryBack) {
+      button.dataset.boundHistoryBack = 'true';
+      button.addEventListener('click', () => {
+        if (window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+
+        const fallbackHref = button.dataset.fallbackHref;
+
+        if (fallbackHref) {
+          window.location.href = fallbackHref;
+        }
+      });
+    }
+  });
+</script>

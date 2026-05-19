@@ -48,6 +48,15 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <span class="eyebrow">{t('dashboard.listEyebrow')}</span>
           <h2 class="mt-4 text-2xl font-black">{t('dashboard.listTitle')}</h2>
         </div>
+        <Button
+          aria-label={t('dashboard.goCreateTrip')}
+          class="min-w-11 px-0 text-2xl leading-none"
+          href={dashboardUrl}
+          id="dashboard-create-trip-inline-link"
+          title={t('dashboard.goCreateTrip')}
+        >
+          +
+        </Button>
         <div class="grid gap-3 sm:grid-cols-3" data-dashboard-stats></div>
       </div>
       <div class="mt-6 grid gap-4" data-trip-list>

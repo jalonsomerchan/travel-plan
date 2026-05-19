@@ -23,13 +23,11 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const tripId = params.get('trip') ?? '';
   const planId = params.get('plan') ?? '';
   const view = document.querySelector<HTMLElement>('[data-plan-view]');
-  const backLink = document.querySelector<HTMLAnchorElement>('#plan-back-trip-link');
   const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
   const t = getPageTranslator(locale);
   let map: L.Map | null = null;
   if (!tripId || !planId || !view) return;
   if (!ensureFirebaseReady(locale)) return;
-  if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   observeSession((user) => {
     if (!user) {

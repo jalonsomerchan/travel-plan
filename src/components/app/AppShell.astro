@@ -13,7 +13,10 @@ const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
 ---
 
 <Container class="py-8 md:py-12">
-  <section class="section-shell overflow-hidden px-6 py-7 md:px-10 md:py-8">
+  <section class="section-shell px-6 py-7 md:px-10 md:py-8">
+    <div class="app-shell-topbar">
+      <slot name="topbar" />
+    </div>
     {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
     <div class="app-shell-layout">
       <div class="app-shell-copy">

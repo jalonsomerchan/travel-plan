@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppActionsMenu from '../app/AppActionsMenu.astro';
+import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
-import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -26,19 +25,16 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('plan.breadcrumb'), key: 'plan' },
     ]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button id="plan-back-trip-link" variant="ghost" href={dashboardUrl}>{t('plan.backToTrip')}</Button>
-      </div>
-      <div slot="primary">
-        <AppActionsMenu
-          label={t('plan.actionsMenu')}
-          items={[
-            { href: dashboardUrl, id: 'plan-edit-link', label: t('plan.goEdit') },
-          ]}
-        />
-      </div>
-    </AppToolbar>
+    <div slot="topbar" class="app-shell-topbar-row">
+      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
+      <AppActionsMenu
+        ariaLabel={t('plan.actionsMenu')}
+        label="..."
+        items={[
+          { href: dashboardUrl, id: 'plan-edit-link', label: t('plan.goEdit') },
+        ]}
+      />
+    </div>
   </AppShell>
   <Container class="pb-12">
     <section class="section-shell mx-auto max-w-3xl px-6 py-6">
