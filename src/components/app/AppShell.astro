@@ -1,15 +1,25 @@
 ---
 import Container from '../Container.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
+import LoadingState from './LoadingState.astro';
 
 interface Props {
   eyebrow?: string;
   title: string;
   description?: string;
   breadcrumbs?: Array<{ href?: string; label: string; key?: string }>;
+  loading?: boolean;
+  loadingLabel?: string;
 }
 
-const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
+const {
+  eyebrow,
+  title,
+  description,
+  breadcrumbs = [],
+  loading = false,
+  loadingLabel = 'Loading',
+} = Astro.props;
 ---
 
 <Container class="py-8 md:py-12">
@@ -18,21 +28,24 @@ const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
       <slot name="topbar" />
     </div>
     {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
-    <div class="app-shell-layout">
-      <div class="app-shell-copy">
-        {eyebrow && <span class="eyebrow">{eyebrow}</span>}
-        <h1 class="app-shell-title" data-app-title>{title}</h1>
-        {description && (
-          <p class="app-shell-description prose-copy" data-app-description>
-            {description}
-          </p>
-        )}
-        <div class="app-shell-meta" data-app-meta hidden></div>
+    {loading && <LoadingState class="mt-6" label={loadingLabel} data-app-loading />}
+    <div data-app-content={loading ? 'loading' : undefined} hidden={loading}>
+      <div class="app-shell-layout">
+        <div class="app-shell-copy">
+          {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+          <h1 class="app-shell-title" data-app-title>{title}</h1>
+          {description && (
+            <p class="app-shell-description prose-copy" data-app-description>
+              {description}
+            </p>
+          )}
+          <div class="app-shell-meta" data-app-meta hidden></div>
+        </div>
+        <div class="app-shell-side">
+          <slot />
+        </div>
       </div>
-      <div class="app-shell-side">
-        <slot />
-      </div>
+      <slot name="body" />
     </div>
-    <slot name="body" />
   </section>
 </Container>
