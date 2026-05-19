@@ -21,7 +21,6 @@ const addTripLabel = locale === 'es' ? 'Añadir viaje' : 'Add trip';
 
 <BaseLayout title={t('dashboard.metaTitle')} description={t('dashboard.metaDescription')} locale={locale}>
   <AppShell
-    eyebrow={t('dashboard.eyebrow')}
     title={dashboardTitle}
     loading
     loadingLabel={t('common.loading')}
@@ -45,10 +44,7 @@ const addTripLabel = locale === 'es' ? 'Añadir viaje' : 'Add trip';
     </div>
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span class="eyebrow">{t('dashboard.listEyebrow')}</span>
-          <h2 class="mt-4 text-2xl font-black">{t('dashboard.listTitle')}</h2>
-        </div>
+        <h2 class="text-2xl font-black">{t('dashboard.listTitle')}</h2>
         <div class="grid w-full grid-cols-3 gap-2 sm:gap-3" data-dashboard-stats></div>
       </div>
       <div class="mt-6 grid gap-4" data-trip-list>
