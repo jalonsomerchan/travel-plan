@@ -43,20 +43,28 @@ const t = useTranslations(locale);
   data-search-error-label={t('plan.location.searchError')}
   data-searching-label={t('plan.location.searching')}
   data-selected-label={t('plan.location.selected')}
+  data-results-id={`${prefix}-location-results`}
   data-testid={rootTestId}
   data-unnamed-label={t('plan.location.unnamed')}
 >
   <div>
     <label class="field-label" for={`${prefix}-location-query`}>{queryFieldLabel}</label>
     <div class="flex flex-col gap-3 sm:flex-row">
-      <input
-        class="field-input"
-        id={`${prefix}-location-query`}
-        name={queryFieldName}
-        type="search"
-        placeholder={queryPlaceholder ?? t('plan.location.placeholder')}
-        data-location-query
-      />
+      <div class="relative flex-1">
+        <input
+          aria-autocomplete="list"
+          aria-controls={`${prefix}-location-results`}
+          aria-expanded="false"
+          autocomplete="off"
+          class="field-input"
+          id={`${prefix}-location-query`}
+          name={queryFieldName}
+          placeholder={queryPlaceholder ?? t('plan.location.placeholder')}
+          role="combobox"
+          type="search"
+          data-location-query
+        />
+      </div>
       <button
         class="inline-flex items-center justify-center rounded-full bg-[var(--color-secondary)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-xs)] transition hover:opacity-90"
         type="button"
@@ -71,6 +79,9 @@ const t = useTranslations(locale);
     <div class="space-y-3">
       <div
         class="max-h-64 min-h-20 overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-3 text-sm text-[var(--color-text-muted)]"
+        id={`${prefix}-location-results`}
+        role="listbox"
+        aria-label={queryFieldLabel}
         data-location-search-results
       >
         {t('plan.location.initialState')}

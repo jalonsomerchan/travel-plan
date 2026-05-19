@@ -508,6 +508,12 @@ main {
   transform: translateY(-1px);
 }
 
+.location-result-button[data-active="true"] {
+  border-color: color-mix(in srgb, var(--color-secondary), transparent 25%);
+  background: color-mix(in srgb, var(--color-secondary-soft), var(--color-surface-raised) 35%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-secondary), transparent 45%);
+}
+
 .location-result-title {
   font-weight: 700;
 }
