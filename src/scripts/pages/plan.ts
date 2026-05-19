@@ -12,6 +12,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
+import { addMapTools } from '../maps/leaflet-map-tools';
 import {
   ensureFirebaseReady,
   getPageTranslator,
@@ -69,7 +70,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
                   ? `
                     <div>
                       <div class="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)]">
-                        <div class="h-[30rem] w-full" data-plan-map></div>
+                        <div class="h-[30rem] w-full" data-plan-map aria-label="${escapeHtml(t('map.canvasTitle'))}"></div>
                       </div>
                       <div class="mt-4 flex flex-wrap gap-3">
                         <a class="app-card-link" data-variant="secondary" href="${escapeHtml(getGoogleMapsPlaceUrl(getPlanLocationLabel(plan)))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.openMap'))}</a>
@@ -91,9 +92,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
             scrollWheelZoom: false,
           }).setView([plan.locationLat, plan.locationLng], 15);
 
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-          }).addTo(map);
+          addMapTools(map, t);
 
           L.circleMarker([plan.locationLat, plan.locationLng], {
             radius: 10,
