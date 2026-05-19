@@ -298,7 +298,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
           accommodationMapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
           accommodationMapsLink.hidden = !mapUrl;
           accommodationMapsLink.target = mapUrl ? '_blank' : '';
-          accommodationMapsLink.rel = mapUrl ? 'noreferrer' : '';
+          accommodationMapsLink.rel = mapUrl ? 'noopener noreferrer' : '';
         }
         syncPlans();
       } else {
