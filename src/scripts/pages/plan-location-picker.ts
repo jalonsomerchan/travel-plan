@@ -171,8 +171,8 @@ function createPickerContext(root: HTMLElement) {
   return context;
 }
 
-export function initPlanLocationPickers() {
-  document.querySelectorAll<HTMLElement>('[data-plan-location-picker]').forEach((root) => {
+export function initLocationPickers() {
+  document.querySelectorAll<HTMLElement>('[data-location-picker]').forEach((root) => {
     const existingContext = pickerContexts.get(root);
     if (existingContext) {
       const existingLat = Number(existingContext.latInput.value);

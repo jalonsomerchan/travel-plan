@@ -1,5 +1,6 @@
 import { type Locale } from '../../config/site';
 import { useTranslations } from '../../i18n/ui';
+import { getAccommodationLocationLabel } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
@@ -212,6 +213,27 @@ export function syncTripShell(locale: Locale, trip: TripRecord) {
     trip.ownerEmail,
   ]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+}
+
+export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
+  const t = getPageTranslator(locale);
+  const accommodationName = trip.accommodation?.name || t('accommodation.emptyTitle');
+
+  setAppShellTitle(accommodationName);
+  setAppShellDescription(
+    trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : t('accommodation.emptyDescription'),
+  );
+  setAppShellMeta([
+    trip.name,
+    trip.location,
+    trip.accommodation ? t('accommodation.status.configured') : t('accommodation.status.empty'),
+  ]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem(
+    'trip-accommodation',
+    t('accommodation.breadcrumb'),
+    getAppUrl(locale, 'trip-accommodation', { trip: trip.id }),
+  );
 }
 
 export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {

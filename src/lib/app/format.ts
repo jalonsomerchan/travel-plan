@@ -36,6 +36,21 @@ export function formatPlanMoment(plan: PlanRecord, locale: Locale) {
   return dateLabel || plan.time || '';
 }
 
+export function formatDistance(distanceKm: number, locale: Locale) {
+  const intlLocale = toIntlLocale(locale);
+
+  if (distanceKm < 1) {
+    return `${new Intl.NumberFormat(intlLocale, {
+      maximumFractionDigits: 0,
+    }).format(distanceKm * 1000)} m`;
+  }
+
+  return `${new Intl.NumberFormat(intlLocale, {
+    minimumFractionDigits: distanceKm < 10 ? 1 : 0,
+    maximumFractionDigits: distanceKm < 10 ? 1 : 0,
+  }).format(distanceKm)} km`;
+}
+
 export function getMonthCursor(value: string | null) {
   const baseDate = value ? new Date(`${value}-01T00:00:00`) : new Date();
 

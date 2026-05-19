@@ -1,0 +1,32 @@
+---
+import type { Locale } from '../../config/site';
+import { useTranslations } from '../../i18n/ui';
+import LocationPickerFields from './LocationPickerFields.astro';
+
+interface Props {
+  locale: Locale;
+  prefix: string;
+}
+
+const { locale, prefix } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class="space-y-4">
+  <div>
+    <label class="field-label" for={`${prefix}-accommodation-name`}>{t('accommodation.form.name')}</label>
+    <input class="field-input" id={`${prefix}-accommodation-name`} name="accommodationName" />
+    <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('accommodation.form.optionalHint')}</p>
+  </div>
+  <LocationPickerFields
+    clearButtonName={t('accommodation.location.clear')}
+    latFieldName="accommodationLocationLat"
+    locale={locale}
+    lngFieldName="accommodationLocationLng"
+    nameFieldName="accommodationLocationName"
+    prefix={`${prefix}-accommodation`}
+    queryFieldLabel={t('accommodation.form.location')}
+    queryFieldName="accommodationLocationQuery"
+    searchButtonName={t('accommodation.location.search')}
+  />
+</div>

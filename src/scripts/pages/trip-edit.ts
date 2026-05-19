@@ -1,4 +1,8 @@
 import type { Locale } from '../../config/site';
+import {
+  getAccommodationInputFromForm,
+  getAccommodationLocationLabel,
+} from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { TripRecord } from '../../lib/app/models';
@@ -6,6 +10,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
+import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -18,6 +23,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
+  initLocationPickers();
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -32,6 +38,17 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
       (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
       (form.elements.namedItem('endDate') as HTMLInputElement).value = trip.endDate;
       (form.elements.namedItem('status') as HTMLSelectElement).value = trip.status;
+      (form.elements.namedItem('accommodationName') as HTMLInputElement).value =
+        trip.accommodation?.name ?? '';
+      (form.elements.namedItem('accommodationLocationName') as HTMLInputElement).value =
+        trip.accommodation?.locationName ?? '';
+      (form.elements.namedItem('accommodationLocationLat') as HTMLInputElement).value =
+        typeof trip.accommodation?.locationLat === 'number' ? String(trip.accommodation.locationLat) : '';
+      (form.elements.namedItem('accommodationLocationLng') as HTMLInputElement).value =
+        typeof trip.accommodation?.locationLng === 'number' ? String(trip.accommodation.locationLng) : '';
+      (form.elements.namedItem('accommodationLocationQuery') as HTMLInputElement).value =
+        trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : '';
+      initLocationPickers();
     });
   });
   form.addEventListener('submit', async (event) => {
@@ -45,6 +62,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
         startDate: String(data.get('startDate') ?? ''),
         endDate: String(data.get('endDate') ?? ''),
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
+        accommodation: getAccommodationInputFromForm(form),
       });
       setMessage(message, t('trip.form.saved'), 'success');
     } catch (error) {

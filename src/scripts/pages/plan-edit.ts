@@ -7,7 +7,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { initPlanLocationPickers } from './plan-location-picker';
+import { initLocationPickers } from './plan-location-picker';
 import { ensureFirebaseReady, getPageTranslator, syncPlanShell, syncTripShell } from './shared';
 
 export function mountPlanEditPage({ locale }: { locale: Locale }) {
@@ -23,7 +23,7 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   if (!tripId || !planId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   if (backLink) backLink.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
-  initPlanLocationPickers();
+  initLocationPickers();
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -60,7 +60,7 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       (form.elements.namedItem('locationLng') as HTMLInputElement).value = plan.locationLng !== undefined ? String(plan.locationLng) : '';
       (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
       (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
-      initPlanLocationPickers();
+      initLocationPickers();
     });
   });
   form.addEventListener('submit', async (event) => {

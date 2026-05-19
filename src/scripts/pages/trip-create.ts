@@ -1,11 +1,13 @@
 import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
+import { getAccommodationInputFromForm } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
 import { createTrip } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator } from './shared';
+import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripCreatePage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
@@ -18,6 +20,7 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
     currentUser = user;
     if (!user) window.location.href = locale === 'es' ? '/' : `/${locale}/`;
   });
+  initLocationPickers();
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!currentUser) return;
@@ -30,6 +33,7 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
         startDate: String(data.get('startDate') ?? ''),
         endDate: String(data.get('endDate') ?? ''),
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
+        accommodation: getAccommodationInputFromForm(form),
       });
       setMessage(message, t('dashboard.created'), 'success');
       window.location.href = getAppUrl(locale, 'trip', { trip: tripId });

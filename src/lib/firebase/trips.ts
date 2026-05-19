@@ -14,6 +14,7 @@ import {
   type User,
 } from 'firebase/firestore';
 import type {
+  TripAccommodationRecord,
   TripInput,
   TripInviteRecord,
   TripMemberRecord,
@@ -21,6 +22,33 @@ import type {
   TripRecord,
 } from '../app/models';
 import { getFirebaseDb } from './config';
+
+function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const data = value as Record<string, unknown>;
+  const name = String(data.name ?? '').trim();
+
+  if (!name) {
+    return undefined;
+  }
+
+  return {
+    name,
+    locationName: data.locationName ? String(data.locationName) : undefined,
+    locationLat: typeof data.locationLat === 'number' ? data.locationLat : undefined,
+    locationLng: typeof data.locationLng === 'number' ? data.locationLng : undefined,
+  };
+}
+
+function getTripWriteData(input: TripInput) {
+  return {
+    ...input,
+    accommodation: input.accommodation ?? null,
+  };
+}
 
 function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripRecord {
   const data = snapshot.data();
@@ -32,6 +60,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     startDate: String(data.startDate ?? ''),
     endDate: String(data.endDate ?? ''),
     status: (data.status as TripRecord['status']) ?? 'idea',
+    accommodation: mapTripAccommodationRecord(data.accommodation),
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
@@ -114,7 +143,7 @@ export function subscribeTripMembers(tripId: string, callback: (members: TripMem
 export async function createTrip(user: User, input: TripInput) {
   const db = getFirebaseDb();
   const tripRef = await addDoc(collection(db, 'trips'), {
-    ...input,
+    ...getTripWriteData(input),
     ownerId: user.uid,
     ownerEmail: user.email ?? '',
     memberIds: [user.uid],
@@ -136,7 +165,7 @@ export async function updateTrip(tripId: string, input: TripInput) {
   const db = getFirebaseDb();
 
   await updateDoc(doc(db, 'trips', tripId), {
-    ...input,
+    ...getTripWriteData(input),
     updatedAt: serverTimestamp(),
   });
 }

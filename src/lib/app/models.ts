@@ -17,6 +17,13 @@ export type TripMemberRole = (typeof tripMemberRoles)[number];
 export type PlanCategory = (typeof planCategoryValues)[number];
 export type PlanStatus = (typeof planStatusValues)[number];
 
+export interface TripAccommodationRecord {
+  name: string;
+  locationName?: string;
+  locationLat?: number;
+  locationLng?: number;
+}
+
 export interface TripRecord {
   id: string;
   name: string;
@@ -24,6 +31,7 @@ export interface TripRecord {
   startDate: string;
   endDate: string;
   status: TripStatus;
+  accommodation?: TripAccommodationRecord;
   ownerId: string;
   ownerEmail: string;
   memberIds: string[];
@@ -35,6 +43,7 @@ export interface TripInput {
   startDate: string;
   endDate: string;
   status: TripStatus;
+  accommodation?: TripAccommodationRecord;
 }
 
 export interface TripMemberRecord {

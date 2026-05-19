@@ -6,7 +6,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { initPlanLocationPickers } from './plan-location-picker';
+import { initLocationPickers } from './plan-location-picker';
 import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
 
 export function mountPlanCreatePage({ locale }: { locale: Locale }) {
@@ -20,7 +20,7 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
-  initPlanLocationPickers();
+  initLocationPickers();
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;

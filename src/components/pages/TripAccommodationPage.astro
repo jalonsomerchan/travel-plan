@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppActionsMenu from '../app/AppActionsMenu.astro';
+import AppBackButton from '../app/AppBackButton.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import AccommodationFormFields from '../app/AccommodationFormFields.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('accommodation.metaTitle')} description={t('accommodation.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('accommodation.eyebrow')}
+    title={t('accommodation.title')}
+    description={t('accommodation.description')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('accommodation.breadcrumb'), key: 'trip-accommodation' },
+    ]}
+  >
+    <div slot="topbar" class="app-shell-topbar-row">
+      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
+      <AppActionsMenu
+        ariaLabel={t('accommodation.actionsMenu')}
+        label="..."
+        items={[
+          { href: dashboardUrl, id: 'accommodation-trip-link', label: t('accommodation.backToTrip') },
+          { href: dashboardUrl, id: 'accommodation-maps-link', label: t('accommodation.openGoogleMaps') },
+        ]}
+      />
+    </div>
+  </AppShell>
+
+  <Container class="grid gap-8 pb-12">
+    <section class="section-shell px-6 py-6">
+      <div data-accommodation-view>
+        <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
+          {t('common.loading')}
+        </article>
+      </div>
+    </section>
+
+    <section class="section-shell mx-auto w-full max-w-3xl px-6 py-6">
+      <h2 class="text-2xl font-black" data-accommodation-context>{t('accommodation.detailsTitle')}</h2>
+      <form class="mt-6 space-y-4" id="accommodation-form">
+        <AccommodationFormFields locale={locale} prefix="trip-accommodation" />
+        <p class="text-sm text-[var(--color-text-soft)]" id="accommodation-form-message">{t('accommodation.form.helper')}</p>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('accommodation.form.save')}</Button>
+        </div>
+      </form>
+    </section>
+  </Container>
+
+  <script>
+    import { mountTripAccommodationPage } from '../../scripts/pages/trip-accommodation';
+
+    mountTripAccommodationPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>
