@@ -66,12 +66,13 @@ export function redirectHome(locale: Locale) {
   window.location.href = locale === 'es' ? withBasePath('/') : withBasePath(`/${locale}/`);
 }
 
-export function bindSignOut(button: HTMLButtonElement | null, locale: Locale) {
+export function bindSignOut(button: HTMLElement | null, locale: Locale) {
   if (!button) {
     return;
   }
 
-  button.addEventListener('click', async () => {
+  button.addEventListener('click', async (event) => {
+    event.preventDefault();
     await signOutSession();
     redirectHome(locale);
   });
