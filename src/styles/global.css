@@ -517,6 +517,58 @@ main {
   font-size: 0.84rem;
 }
 
+.wizard-step-chip {
+  display: grid;
+  gap: 0.6rem;
+  align-items: center;
+  justify-items: center;
+  min-height: 7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  padding: 1rem;
+  text-align: center;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.wizard-step-chip[data-active="true"] {
+  border-color: color-mix(in srgb, var(--color-secondary), transparent 20%);
+  background: color-mix(in srgb, var(--color-secondary-soft), var(--color-surface-raised) 45%);
+  box-shadow: var(--shadow-xs);
+}
+
+.wizard-step-chip-index {
+  display: inline-flex;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.wizard-step-chip[data-active="true"] .wizard-step-chip-index {
+  background: var(--color-secondary);
+  color: #ffffff;
+}
+
+.wizard-step-chip-label {
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.wizard-step-chip[data-active="true"] .wizard-step-chip-label {
+  color: var(--color-secondary);
+}
+
 @media (min-width: 48rem) {
   .app-shell-layout {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -49,6 +49,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   const nextStepButton = document.querySelector<HTMLButtonElement>('#trip-ai-next-step');
   const submitButton = document.querySelector<HTMLButtonElement>('#trip-ai-submit');
   const stepSections = Array.from(document.querySelectorAll<HTMLElement>('[data-trip-ai-step]'));
+  const stepChips = Array.from(document.querySelectorAll<HTMLElement>('[data-step-chip]'));
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
@@ -73,6 +74,10 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   const updateStepUi = () => {
     stepSections.forEach((section, index) => {
       section.hidden = index !== currentStep;
+    });
+
+    stepChips.forEach((chip, index) => {
+      chip.dataset.active = index === currentStep ? 'true' : 'false';
     });
 
     if (progress) {
