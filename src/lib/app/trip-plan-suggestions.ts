@@ -17,13 +17,8 @@ export interface AiPlanSuggestion {
   title: string;
   description: string;
   type: PlanCategory;
-  locationName?: string;
-  latitude?: number;
-  longitude?: number;
-  suggestedDate?: string;
-  suggestedTime?: string;
-  estimatedDurationMinutes?: number;
-  reason?: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface AiPlanSuggestionsResponse {
@@ -98,29 +93,15 @@ export function toPlanInputFromAiSuggestion(plan: AiPlanSuggestion): PlanInput {
     name: plan.title,
     description: plan.description,
     category: plan.type,
-    locationName: plan.locationName,
+    locationName: undefined,
     locationLat: plan.latitude,
     locationLng: plan.longitude,
-    date: plan.suggestedDate,
-    time: plan.suggestedTime,
     status: 'pending',
   };
 }
 
 export function formatSuggestionCoordinates(plan: Pick<AiPlanSuggestion, 'latitude' | 'longitude'>) {
-  if (typeof plan.latitude !== 'number' || typeof plan.longitude !== 'number') {
-    return '';
-  }
-
   return `${plan.latitude.toFixed(5)}, ${plan.longitude.toFixed(5)}`;
-}
-
-export function isDateWithinTrip(date: string | undefined, trip: TripRecord) {
-  if (!date) {
-    return true;
-  }
-
-  return date >= trip.startDate && date <= trip.endDate;
 }
 
 function normalizeSuggestion(plan: AiPlanSuggestion): AiPlanSuggestion {
@@ -128,35 +109,23 @@ function normalizeSuggestion(plan: AiPlanSuggestion): AiPlanSuggestion {
     title: normalizeText(plan.title),
     description: normalizeText(plan.description),
     type: plan.type,
-    locationName: normalizeOptionalText(plan.locationName),
-    latitude: typeof plan.latitude === 'number' ? plan.latitude : undefined,
-    longitude: typeof plan.longitude === 'number' ? plan.longitude : undefined,
-    suggestedDate: plan.suggestedDate || undefined,
-    suggestedTime: plan.suggestedTime || undefined,
-    estimatedDurationMinutes:
-      typeof plan.estimatedDurationMinutes === 'number' ? Math.round(plan.estimatedDurationMinutes) : undefined,
-    reason: normalizeOptionalText(plan.reason),
+    latitude: plan.latitude,
+    longitude: plan.longitude,
   };
 }
 
 function hasPlanConflict(
   suggestion: AiPlanSuggestion,
-  trip: TripRecord,
+  _trip: TripRecord,
   existingPlans: PlanRecord[],
   seen: Set<string>,
 ) {
-  if (!isDateWithinTrip(suggestion.suggestedDate, trip)) {
-    return true;
-  }
-
   const titleKey = normalizeKey(suggestion.title);
-  const locationKey = normalizeKey(suggestion.locationName);
   const signature = [
     titleKey,
     suggestion.type,
-    suggestion.suggestedDate ?? '',
-    suggestion.suggestedTime ?? '',
-    locationKey,
+    suggestion.latitude.toFixed(5),
+    suggestion.longitude.toFixed(5),
   ].join('|');
 
   if (seen.has(signature)) {
@@ -165,17 +134,14 @@ function hasPlanConflict(
 
   const collidesWithExisting = existingPlans.some((plan) => {
     const planTitleKey = normalizeKey(plan.name);
-    const planLocationKey = normalizeKey(plan.locationName);
     const sameTitle = titleKey && planTitleKey === titleKey;
-    const sameLocation = locationKey && planLocationKey === locationKey;
-    const sameDate = Boolean(suggestion.suggestedDate && plan.date === suggestion.suggestedDate);
-    const sameTime = Boolean(suggestion.suggestedTime && plan.time === suggestion.suggestedTime);
+    const sameCoordinates =
+      typeof plan.locationLat === 'number' &&
+      typeof plan.locationLng === 'number' &&
+      Math.abs(plan.locationLat - suggestion.latitude) < 0.0005 &&
+      Math.abs(plan.locationLng - suggestion.longitude) < 0.0005;
 
-    if (sameTitle && (!suggestion.suggestedDate || sameDate || sameLocation)) {
-      return true;
-    }
-
-    return sameDate && sameTime && suggestion.type === plan.category && (sameLocation || sameTitle);
+    return suggestion.type === plan.category && (sameTitle || sameCoordinates);
   });
 
   if (collidesWithExisting) {

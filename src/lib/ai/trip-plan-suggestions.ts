@@ -66,39 +66,15 @@ export function createTripPlanSuggestionsValidator(trip: TripRecord): JsonValida
 }
 
 function getTripPlanSuggestionsSchema(trip: TripRecord) {
-  const timeSchema = z.string().regex(/^\d{2}:\d{2}$/);
-  const dateSchema = z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .refine((value) => value >= trip.startDate && value <= trip.endDate, {
-      message: 'Date outside trip range.',
-    });
+  void trip;
 
-  const planSchema = z
-    .object({
-      title: z.string().trim().min(2).max(120),
-      description: z.string().trim().min(8).max(420),
-      type: z.enum(['visit', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other']),
-      locationName: z.string().trim().min(2).max(180).optional(),
-      latitude: z.number().finite().min(-90).max(90).optional(),
-      longitude: z.number().finite().min(-180).max(180).optional(),
-      suggestedDate: dateSchema.optional(),
-      suggestedTime: timeSchema.optional(),
-      estimatedDurationMinutes: z.number().int().min(15).max(1440).optional(),
-      reason: z.string().trim().min(6).max(240).optional(),
-    })
-    .superRefine((value, context) => {
-      const hasLatitude = typeof value.latitude === 'number';
-      const hasLongitude = typeof value.longitude === 'number';
-
-      if (hasLatitude !== hasLongitude) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Coordinates must include both latitude and longitude.',
-          path: hasLatitude ? ['longitude'] : ['latitude'],
-        });
-      }
-    });
+  const planSchema = z.object({
+    title: z.string().trim().min(2).max(120),
+    description: z.string().trim().min(8).max(420),
+    type: z.enum(['visit', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other']),
+    latitude: z.number().finite().min(-90).max(90),
+    longitude: z.number().finite().min(-180).max(180),
+  });
 
   return z.object({
     plans: z.array(planSchema).max(maxReturnedPlans),
@@ -114,9 +90,9 @@ function buildTripPlanSuggestionsSystemPrompt(locale: string, trip: TripRecord) 
     'Task: suggest realistic candidate plans for an existing shared travel itinerary.',
     'Only return concise, practical suggestions that fit the trip dates, destination and transport constraints.',
     'Do not invent impossible routes, contradictory schedules or duplicate existing plans.',
-    `The response must be valid JSON with shape {"plans":[{"title":"...","description":"...","type":"visit|food|stay|transport|museum|shop|bathroom|other","locationName":"optional","latitude":0,"longitude":0,"suggestedDate":"YYYY-MM-DD","suggestedTime":"HH:MM","estimatedDurationMinutes":90,"reason":"optional"}]}.`,
-    `The trip runs from ${trip.startDate} to ${trip.endDate}. Never suggest dates outside this range.`,
-    'Use coordinates only when you are reasonably confident they are accurate. Otherwise omit them.',
+    'The response must be valid JSON with shape {"plans":[{"title":"...","type":"visit|food|stay|transport|museum|shop|bathroom|other","description":"...","latitude":0,"longitude":0}]}.',
+    `The trip runs from ${trip.startDate} to ${trip.endDate}. Use that range only as context for relevance, but do not return date fields.`,
+    'Every suggestion must include reliable latitude and longitude coordinates.',
   ]);
 }
 

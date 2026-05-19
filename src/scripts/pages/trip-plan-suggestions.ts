@@ -1,7 +1,7 @@
 import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
-import { formatDateRange, formatFriendlyDate } from '../../lib/app/format';
+import { formatDateRange } from '../../lib/app/format';
 import { getAppUrl } from '../../lib/app/routes';
 import {
   type AiPlanSuggestion,
@@ -31,21 +31,27 @@ interface SuggestionEntry {
 }
 
 export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
+  const totalSteps = 5;
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const form = document.querySelector<HTMLFormElement>('#trip-ai-form');
   const formMessage = document.querySelector<HTMLElement>('#trip-ai-form-message');
   const context = document.querySelector<HTMLElement>('[data-trip-ai-context]');
+  const progress = document.querySelector<HTMLElement>('[data-trip-ai-step-progress]');
   const backLink = document.querySelector<HTMLAnchorElement>('#trip-ai-back-link');
   const resultsMessage = document.querySelector<HTMLElement>('[data-trip-ai-results-message]');
   const resultsList = document.querySelector<HTMLElement>('[data-trip-ai-results-list]');
   const resultsLoading = document.querySelector<HTMLElement>('[data-trip-ai-results-loading]');
   const resultsCount = document.querySelector<HTMLElement>('[data-results-count]');
-  const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
+  const prevStepButton = document.querySelector<HTMLButtonElement>('#trip-ai-prev-step');
+  const nextStepButton = document.querySelector<HTMLButtonElement>('#trip-ai-next-step');
+  const submitButton = document.querySelector<HTMLButtonElement>('#trip-ai-submit');
+  const stepSections = Array.from(document.querySelectorAll<HTMLElement>('[data-trip-ai-step]'));
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let suggestions: SuggestionEntry[] = [];
   let currentUser: User | null = null;
+  let currentStep = 0;
 
   if (!tripId || !form || !resultsList || !resultsMessage || !resultsLoading) {
     return;
@@ -58,6 +64,67 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   if (backLink) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   }
+
+  const updateStepUi = () => {
+    stepSections.forEach((section, index) => {
+      section.hidden = index !== currentStep;
+    });
+
+    if (progress) {
+      progress.textContent = t('tripAi.form.stepProgress')
+        .replace('{current}', String(currentStep + 1))
+        .replace('{total}', String(totalSteps));
+    }
+
+    if (prevStepButton) {
+      prevStepButton.hidden = currentStep === 0;
+      prevStepButton.disabled = currentStep === 0;
+    }
+
+    if (nextStepButton) {
+      nextStepButton.hidden = currentStep === totalSteps - 1;
+    }
+
+    if (submitButton) {
+      submitButton.hidden = currentStep !== totalSteps - 1;
+    }
+  };
+
+  const validateCurrentStep = () => {
+    if (!currentTrip) {
+      return t('trip.notFound');
+    }
+
+    const filters = getTripPlanSuggestionFilters(form);
+
+    if (currentStep === 0 && filters.baseLocation.length < 2) {
+      return t('tripAi.error.invalidBaseLocation');
+    }
+
+    if (currentStep === 1 && (!Number.isFinite(filters.radiusKm) || filters.radiusKm < 1 || filters.radiusKm > 300)) {
+      return t('tripAi.error.invalidRadius');
+    }
+
+    if (currentStep === 2 && !filters.transportMode) {
+      return t('tripAi.error.invalidTransport');
+    }
+
+    if (currentStep === 3 && filters.types.length === 0) {
+      return t('tripAi.error.invalidTypes');
+    }
+
+    if (currentStep === 4) {
+      const validationError = validateTripPlanSuggestionFilters(filters, currentTrip);
+      return validationError ? getValidationMessage(validationError, locale) : null;
+    }
+
+    return null;
+  };
+
+  const goToStep = (step: number) => {
+    currentStep = Math.max(0, Math.min(totalSteps - 1, step));
+    updateStepUi();
+  };
 
   const syncResultsCount = () => {
     if (!resultsCount) {
@@ -84,13 +151,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
 
     resultsList.innerHTML = suggestions
       .map(({ id, isSaving, plan }) => {
-        const locationLabel = plan.locationName || formatSuggestionCoordinates(plan) || t('tripAi.results.locationMissing');
-        const timingBits = [plan.suggestedDate ? formatFriendlyDate(plan.suggestedDate, locale) : '', plan.suggestedTime ?? '']
-          .filter(Boolean)
-          .join(' · ');
-        const durationLabel = plan.estimatedDurationMinutes
-          ? t('tripAi.results.durationValue').replace('{minutes}', String(plan.estimatedDurationMinutes))
-          : '';
+        const locationLabel = formatSuggestionCoordinates(plan);
 
         return `
           <article class="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5">
@@ -102,17 +163,11 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
               <span class="status-pill" data-tone="primary">${escapeHtml(t('tripAi.results.candidate'))}</span>
             </div>
             <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.description)}</p>
-            <dl class="mt-4 grid gap-3 text-sm text-[var(--color-text-soft)] sm:grid-cols-2">
+            <dl class="mt-4 grid gap-3 text-sm text-[var(--color-text-soft)]">
               <div>
-                <dt class="font-semibold text-[var(--color-text)]">${escapeHtml(t('tripAi.results.when'))}</dt>
-                <dd class="mt-1">${escapeHtml(timingBits || t('calendar.unscheduled'))}</dd>
-              </div>
-              <div>
-                <dt class="font-semibold text-[var(--color-text)]">${escapeHtml(t('tripAi.results.where'))}</dt>
+                <dt class="font-semibold text-[var(--color-text)]">${escapeHtml(t('tripAi.results.coordinates'))}</dt>
                 <dd class="mt-1">${escapeHtml(locationLabel)}</dd>
               </div>
-              ${durationLabel ? `<div><dt class="font-semibold text-[var(--color-text)]">${escapeHtml(t('tripAi.results.duration'))}</dt><dd class="mt-1">${escapeHtml(durationLabel)}</dd></div>` : ''}
-              ${plan.reason ? `<div class="sm:col-span-2"><dt class="font-semibold text-[var(--color-text)]">${escapeHtml(t('tripAi.results.reason'))}</dt><dd class="mt-1">${escapeHtml(plan.reason)}</dd></div>` : ''}
             </dl>
             <div class="mt-5 flex flex-wrap gap-3">
               <button
@@ -297,6 +352,23 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     });
   });
 
+  prevStepButton?.addEventListener('click', () => {
+    setMessage(formMessage, t('tripAi.form.helper'));
+    goToStep(currentStep - 1);
+  });
+
+  nextStepButton?.addEventListener('click', () => {
+    const validationMessage = validateCurrentStep();
+
+    if (validationMessage) {
+      setMessage(formMessage, validationMessage, 'danger');
+      return;
+    }
+
+    setMessage(formMessage, t('tripAi.form.helper'));
+    goToStep(currentStep + 1);
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -305,13 +377,12 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const filters = getTripPlanSuggestionFilters(form);
-    const validationError = validateTripPlanSuggestionFilters(filters, currentTrip);
-
-    if (validationError) {
-      setMessage(formMessage, getValidationMessage(validationError, locale), 'danger');
+    const finalStepValidation = validateCurrentStep();
+    if (finalStepValidation) {
+      setMessage(formMessage, finalStepValidation, 'danger');
       return;
     }
+    const filters = getTripPlanSuggestionFilters(form);
 
     setButtonBusy(submitButton, true, t('tripAi.form.submit'), t('tripAi.form.submitting'));
     setMessage(formMessage, t('tripAi.form.running'));
@@ -328,6 +399,8 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       setButtonBusy(submitButton, false, t('tripAi.form.submit'), t('tripAi.form.submitting'));
     }
   });
+
+  updateStepUi();
 }
 
 function getValidationMessage(code: ReturnType<typeof validateTripPlanSuggestionFilters>, locale: Locale) {
