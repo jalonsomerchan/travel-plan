@@ -111,7 +111,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
               <label class="field-label" for="trip-ai-transport">{t('tripAi.form.transport')}</label>
               <select class="field-select" id="trip-ai-transport" name="transportMode">
                 {tripSuggestionTransportValues.map((transport) => (
-                  <option value={transport}>{t(`tripAi.transport.${transport}`)}</option>
+                  <option value={transport}>{transport ? t(`tripAi.transport.${transport}`) : ''}</option>
                 ))}
               </select>
             </div>

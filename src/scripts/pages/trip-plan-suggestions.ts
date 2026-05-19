@@ -110,10 +110,6 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       return t('tripAi.error.invalidRadius');
     }
 
-    if (currentStep === 2 && !filters.transportMode) {
-      return t('tripAi.error.invalidTransport');
-    }
-
     if (currentStep === 3 && !filters.budgetMode) {
       return t('tripAi.error.invalidBudget');
     }
@@ -451,7 +447,6 @@ function getValidationMessage(code: ReturnType<typeof validateTripPlanSuggestion
   const messages: Record<Exclude<typeof code, null>, string> = {
     baseLocation: t('tripAi.error.invalidBaseLocation'),
     radiusKm: t('tripAi.error.invalidRadius'),
-    transportMode: t('tripAi.error.invalidTransport'),
     budgetMode: t('tripAi.error.invalidBudget'),
     types: t('tripAi.error.invalidTypes'),
     dates: t('tripAi.error.invalidDates'),
