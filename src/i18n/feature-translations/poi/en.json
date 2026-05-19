@@ -29,6 +29,8 @@
   "poi.plan.noLocationTitle": "This plan does not have coordinates yet",
   "poi.plan.noLocationDescription": "Add a valid location to the plan to search nearby places with OpenStreetMap.",
   "poi.plan.addLocationAction": "Add plan location",
+  "plan.location.selectionRequired": "Select a search result or pin the point on the map to save its coordinates.",
+  "plan.location.invalidCoordinates": "The selected location does not have valid coordinates. Search again or pin the point on the map.",
   "tripPois.metaTitle": "Trip nearby places",
   "tripPois.metaDescription": "Search places of interest around the trip accommodation using Overpass API and OpenStreetMap.",
   "tripPois.eyebrow": "Local exploration",
