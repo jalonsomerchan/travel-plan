@@ -9,6 +9,7 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
+import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
@@ -127,6 +128,7 @@ function renderPlans(
     ${geolocation.error ? `<p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</p>` : ''}
     ${plans.map((plan) => {
       const description = plan.description?.trim();
+      const categoryLabel = getCategoryLabel(locale, plan.category);
       const accommodationDistance = getAccommodationDistanceLabel(locale, trip, plan);
       const currentLocationDistance = getCurrentLocationDistanceLabel(locale, geolocation.location, plan);
 
@@ -134,8 +136,11 @@ function renderPlans(
         <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
-              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
+              <div class="flex items-center gap-2">
+                <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+              </div>
+              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)}</p>
             </div>
             <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
           </div>
