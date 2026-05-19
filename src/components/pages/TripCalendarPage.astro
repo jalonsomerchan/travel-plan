@@ -22,6 +22,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     eyebrow={t('calendar.tripEyebrow')}
     title={t('calendar.tripTitle')}
     description={t('calendar.tripDescription')}
+    loading
+    loadingLabel={t('common.loading')}
     breadcrumbs={[
       { label: t('nav.home'), href: getLocalizedPath('/', locale) },
       { label: t('dashboard.breadcrumb'), href: dashboardUrl },

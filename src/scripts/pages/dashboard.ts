@@ -11,6 +11,7 @@ import {
   getPageTranslator,
   getTripStatusLabel,
   getTripStatusTone,
+  revealAppShell,
 } from './shared';
 
 function renderStats(locale: Locale, trips: TripRecord[]) {
@@ -70,6 +71,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
       return;
     }
     if (accountSummary) accountSummary.textContent = user.email ?? t('dashboard.sessionReady');
+    revealAppShell();
     subscribeUserTrips(user.uid, (trips) => {
       renderStats(locale, trips);
       renderTrips(locale, trips);

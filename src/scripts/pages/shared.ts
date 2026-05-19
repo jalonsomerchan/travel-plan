@@ -46,6 +46,18 @@ export function ensureFirebaseReady(locale: Locale) {
   return false;
 }
 
+export function revealAppShell() {
+  const loading = document.querySelector<HTMLElement>('[data-app-loading]');
+  const content = document.querySelector<HTMLElement>('[data-app-content]');
+
+  loading?.remove();
+
+  if (content) {
+    content.hidden = false;
+    content.removeAttribute('data-app-content');
+  }
+}
+
 export function redirectTo(locale: Locale, view: Parameters<typeof getAppUrl>[1], params = {}) {
   window.location.href = getAppUrl(locale, view, params);
 }
@@ -213,6 +225,7 @@ export function syncTripShell(locale: Locale, trip: TripRecord) {
     trip.ownerEmail,
   ]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  revealAppShell();
 }
 
 export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
@@ -234,6 +247,7 @@ export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
     t('accommodation.breadcrumb'),
     getAppUrl(locale, 'trip-accommodation', { trip: trip.id }),
   );
+  revealAppShell();
 }
 
 export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {
@@ -247,4 +261,5 @@ export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord
   ]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
   setBreadcrumbItem('plan', plan.name, getAppUrl(locale, 'plan', { trip: trip.id, plan: plan.id }));
+  revealAppShell();
 }
