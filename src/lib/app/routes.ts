@@ -1,7 +1,7 @@
 import { defaultLocale, type Locale } from '../../config/site';
 import { joinPathSegments, withBasePath } from '../../utils/paths';
 
-export type AppView = 'dashboard' | 'trip' | 'plan' | 'calendar' | 'global-calendar';
+export type AppView = 'dashboard' | 'trip' | 'plan' | 'calendar' | 'global-calendar' | 'map';
 
 const appPaths: Record<AppView, string> = {
   dashboard: 'app',
@@ -9,6 +9,7 @@ const appPaths: Record<AppView, string> = {
   plan: 'app/plan',
   calendar: 'app/calendar',
   'global-calendar': 'app/calendar/all',
+  map: 'app/map',
 };
 
 export function getLocalizedAppPath(locale: Locale, view: AppView) {

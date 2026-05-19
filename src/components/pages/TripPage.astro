@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import PlanLocationFields from '../app/PlanLocationFields.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -21,6 +22,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <div class="mt-8 flex flex-wrap gap-3">
       <Button href={dashboardUrl} variant="secondary">{t('trip.backToDashboard')}</Button>
       <Button id="trip-calendar-link" variant="secondary" href={dashboardUrl}>{t('trip.openCalendar')}</Button>
+      <Button id="trip-map-link" variant="secondary" href={dashboardUrl}>{t('trip.openMap')}</Button>
     </div>
   </AppShell>
 
@@ -135,6 +137,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
               <input class="field-input" id="plan-create-time" name="time" type="time" />
             </div>
           </div>
+          <PlanLocationFields locale={locale} prefix="plan-create" />
           <p class="text-sm text-[var(--color-text-soft)]" id="plan-create-message">{t('trip.plansHelper')}</p>
           <Button class="w-full" type="submit">{t('trip.plansAction')}</Button>
         </form>

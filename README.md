@@ -10,6 +10,8 @@ Incluye:
 - Vista de detalle para cada plan.
 - Calendario mensual por viaje.
 - Calendario global de todos los viajes.
+- Vista de mapa por viaje con Leaflet.
+- Localización de planes con búsqueda sobre OpenStreetMap.
 - i18n con `es` y `en`.
 - Diseño responsive con light mode y dark mode.
 - Compatibilidad con dominio raíz, subrutas y GitHub Pages.
@@ -99,6 +101,7 @@ src/
 - `/app/trip/?trip=ID`: detalle de viaje.
 - `/app/plan/?trip=ID&plan=ID`: detalle de plan.
 - `/app/calendar/?trip=ID`: calendario del viaje.
+- `/app/map/?trip=ID`: mapa del viaje.
 - `/app/calendar/all/`: calendario global.
 
 Se usan parámetros de búsqueda para mantener compatibilidad total con GitHub Pages, ya que el hosting es estático y no hay SSR.

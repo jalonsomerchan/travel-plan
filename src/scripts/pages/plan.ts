@@ -2,11 +2,13 @@ import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
+import { getPlanInputFromForm } from '../../lib/app/plan-location';
 import type { TripMemberRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, subscribeTripMembers } from '../../lib/firebase/trips';
+import { initPlanLocationPickers } from './plan-location-picker';
 import { disableForm, ensureFirebaseReady, getPageTranslator } from './shared';
 
 function canEditTrip(user: User | null, trip: TripRecord | null, members: TripMemberRecord[]) {
@@ -51,6 +53,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   }
 
+  initPlanLocationPickers();
+
   const syncPermissions = () => disableForm(form, !canEditTrip(currentUser, currentTrip, currentMembers));
 
   observeSession((user) => {
@@ -84,26 +88,24 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
       (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;
       (form.elements.namedItem('status') as HTMLSelectElement).value = plan.status;
+      (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
+      (form.elements.namedItem('locationLat') as HTMLInputElement).value =
+        plan.locationLat !== undefined ? String(plan.locationLat) : '';
+      (form.elements.namedItem('locationLng') as HTMLInputElement).value =
+        plan.locationLng !== undefined ? String(plan.locationLng) : '';
       (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
       (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
+      initPlanLocationPickers();
     });
   });
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = new FormData(form);
 
     setButtonBusy(button, true, t('plan.form.save'), t('common.saving'));
 
     try {
-      await updatePlan(tripId, planId, {
-        name: String(data.get('name') ?? ''),
-        description: String(data.get('description') ?? ''),
-        category: String(data.get('category') ?? 'visit') as import('../../lib/app/models').PlanRecord['category'],
-        date: String(data.get('date') ?? '') || undefined,
-        time: String(data.get('time') ?? '') || undefined,
-        status: String(data.get('status') ?? 'pending') as import('../../lib/app/models').PlanRecord['status'],
-      });
+      await updatePlan(tripId, planId, getPlanInputFromForm(form));
       setMessage(message, t('plan.form.saved'), 'success');
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('plan.form.error'), 'danger');

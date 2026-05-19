@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import PlanLocationFields from '../app/PlanLocationFields.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -66,6 +67,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
             <input class="field-input" id="plan-edit-time" name="time" type="time" />
           </div>
         </div>
+        <PlanLocationFields locale={locale} prefix="plan-edit" />
         <p class="text-sm text-[var(--color-text-soft)]" id="plan-form-message">{t('plan.form.helper')}</p>
         <Button class="w-full" type="submit">{t('plan.form.save')}</Button>
       </form>

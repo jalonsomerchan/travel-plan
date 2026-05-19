@@ -64,6 +64,9 @@ export interface PlanRecord {
   name: string;
   description: string;
   category: PlanCategory;
+  locationName?: string;
+  locationLat?: number;
+  locationLng?: number;
   date?: string;
   time?: string;
   status: PlanStatus;
@@ -73,6 +76,9 @@ export interface PlanInput {
   name: string;
   description: string;
   category: PlanCategory;
+  locationName?: string;
+  locationLat?: number;
+  locationLng?: number;
   date?: string;
   time?: string;
   status: PlanStatus;

@@ -49,6 +49,8 @@ describe('project smoke checks', () => {
       'src/pages/404.astro',
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
+      'src/pages/app/map/index.astro',
+      'src/pages/[locale]/app/map/index.astro',
       'src/layouts/BaseLayout.astro',
       'src/config/site.ts',
       'src/i18n/ui.ts',
