@@ -57,6 +57,36 @@ Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nom
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
 - `tripInvites/{tripId_emailLower}`: invitaciones pendientes por correo. El cliente no consulta `users` para saber si ese correo tiene cuenta; al aceptar, se asigna el `userId` del usuario autenticado.
 
+## Estructura recomendada para planes
+
+Los documentos de `trips/{tripId}/plans/{planId}` pueden incluir enlaces asociados en el campo `links`.
+
+```json
+{
+  "name": "Museo local",
+  "description": "Visita principal de la mañana",
+  "category": "museum",
+  "status": "pending",
+  "links": [
+    {
+      "label": "Entradas",
+      "url": "https://example.com/tickets"
+    }
+  ]
+}
+```
+
+Campos de `links`:
+
+- `label`: texto corto visible para identificar el enlace. Si se guarda vacío desde cliente, se usa la propia URL como etiqueta.
+- `url`: URL externa completa. La UI solo acepta y muestra enlaces `http://` o `https://`.
+
+Compatibilidad:
+
+- Los planes antiguos sin `links` se interpretan como `links: []`.
+- Los enlaces se guardan como una lista pequeña de objetos `{ label, url }`, sin crear subcolecciones para evitar complejidad innecesaria.
+- En las vistas de lectura los enlaces externos se abren en una pestaña nueva con `rel="noopener noreferrer"`.
+
 ## Estructura recomendada para checklist de viaje
 
 La checklist de preparación debe mantenerse separada de los planes del itinerario.
