@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
 import ChecklistItemFormFields from '../app/ChecklistItemFormFields.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
@@ -32,37 +32,34 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('tripChecklist.breadcrumb'), key: 'trip-checklist' },
     ]}
   >
-    <AppToolbar>
-      <div slot="secondary">
+    <div slot="topbar" class="app-shell-topbar-row">
+      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
+      <div>
         <Button id="trip-checklist-back-link" href={dashboardUrl} variant="ghost">
           {t('tripChecklist.backToTrip')}
         </Button>
       </div>
-    </AppToolbar>
+    </div>
   </AppShell>
   <Container class="pb-12">
-    <section class="section-shell px-6 py-6 md:px-8">
-      <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="min-w-0">
-          <h2 class="text-2xl font-black" data-trip-context>{t('tripChecklist.sectionTitle')}</h2>
-          <div class="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
-            <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>
-          </div>
-          <form class="mt-6 space-y-4" id="trip-checklist-form">
-            <ChecklistItemFormFields locale={locale} prefix="trip-checklist" />
-            <p class="text-sm text-[var(--color-text-soft)]" id="trip-checklist-message">
-              {t('tripChecklist.form.helper')}
-            </p>
-            <div class="flex flex-wrap gap-3">
-              <Button type="submit">{t('tripChecklist.form.add')}</Button>
-            </div>
-          </form>
+    <section class="section-shell mx-auto max-w-4xl px-6 py-6 md:px-8">
+      <h2 class="text-2xl font-black" data-trip-context>{t('tripChecklist.sectionTitle')}</h2>
+      <div class="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
+        <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
+        <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>
+      </div>
+      <form class="mt-6 space-y-4" id="trip-checklist-form">
+        <ChecklistItemFormFields locale={locale} prefix="trip-checklist" />
+        <p class="text-sm text-[var(--color-text-soft)]" id="trip-checklist-message">
+          {t('tripChecklist.form.helper')}
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('tripChecklist.form.add')}</Button>
         </div>
-        <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
-          <div class="grid gap-4" data-checklist-list>
-            <LoadingState label={t('common.loading')} />
-          </div>
+      </form>
+      <div class="mt-8 border-t border-[var(--color-border)] pt-8">
+        <div class="grid gap-4" data-checklist-list>
+          <LoadingState label={t('common.loading')} />
         </div>
       </div>
     </section>
