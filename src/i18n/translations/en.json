@@ -46,6 +46,7 @@
   "firebase.configPending": "Firebase public environment variables are still missing, so auth and Firestore are not active yet.",
   "firebase.configReady": "Firebase is configured and the app can connect.",
   "firebase.configMissing": "Missing Firebase public variables:",
+  "firebase.permissionDenied": "Firestore rejected the read. Review and publish your Firebase project rules.",
   "common.loading": "Loading...",
   "common.saving": "Saving...",
   "dashboard.metaTitle": "Trips dashboard",

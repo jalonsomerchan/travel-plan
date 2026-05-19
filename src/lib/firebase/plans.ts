@@ -30,16 +30,21 @@ export function subscribeTripPlans(tripId: string, callback: (plans: PlanRecord[
   const db = getFirebaseDb();
   const plansRef = collection(db, 'trips', tripId, 'plans');
 
-  return onSnapshot(plansRef, (snapshot) =>
-    callback(
-      snapshot.docs
-        .map(mapPlanRecord)
-        .sort((left, right) =>
-          `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
-            `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
+  return onSnapshot(
+    plansRef,
+    (snapshot) =>
+      callback(
+        snapshot.docs
+          .map(mapPlanRecord)
+          .sort((left, right) =>
+            `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
+              `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
+            ),
           ),
-        ),
-    ),
+      ),
+    (error) => {
+      console.error('subscribeTripPlans', error);
+    },
   );
 }
 
@@ -50,8 +55,12 @@ export function subscribePlan(
 ) {
   const db = getFirebaseDb();
 
-  return onSnapshot(doc(db, 'trips', tripId, 'plans', planId), (snapshot) =>
-    callback(snapshot.exists() ? mapPlanRecord(snapshot) : null),
+  return onSnapshot(
+    doc(db, 'trips', tripId, 'plans', planId),
+    (snapshot) => callback(snapshot.exists() ? mapPlanRecord(snapshot) : null),
+    (error) => {
+      console.error('subscribePlan', error);
+    },
   );
 }
 

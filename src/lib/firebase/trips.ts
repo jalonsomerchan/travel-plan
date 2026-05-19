@@ -76,21 +76,39 @@ export function subscribeUserTrips(userId: string, callback: (trips: TripRecord[
     orderBy('startDate', 'asc'),
   );
 
-  return onSnapshot(tripsQuery, (snapshot) => callback(snapshot.docs.map(mapTripRecord)));
+  return onSnapshot(
+    tripsQuery,
+    (snapshot) => callback(snapshot.docs.map(mapTripRecord)),
+    (error) => {
+      console.error('subscribeUserTrips', error);
+    },
+  );
 }
 
 export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null) => void) {
   const db = getFirebaseDb();
   const tripRef = doc(db, 'trips', tripId);
 
-  return onSnapshot(tripRef, (snapshot) => callback(snapshot.exists() ? mapTripRecord(snapshot) : null));
+  return onSnapshot(
+    tripRef,
+    (snapshot) => callback(snapshot.exists() ? mapTripRecord(snapshot) : null),
+    (error) => {
+      console.error('subscribeTrip', error);
+    },
+  );
 }
 
 export function subscribeTripMembers(tripId: string, callback: (members: TripMemberRecord[]) => void) {
   const db = getFirebaseDb();
   const membersQuery = query(collection(db, 'trips', tripId, 'members'), orderBy('email', 'asc'));
 
-  return onSnapshot(membersQuery, (snapshot) => callback(snapshot.docs.map(mapMemberRecord)));
+  return onSnapshot(
+    membersQuery,
+    (snapshot) => callback(snapshot.docs.map(mapMemberRecord)),
+    (error) => {
+      console.error('subscribeTripMembers', error);
+    },
+  );
 }
 
 export async function createTrip(user: User, input: TripInput) {
@@ -163,7 +181,13 @@ export function subscribePendingInvites(email: string, callback: (invites: TripI
     where('status', '==', 'pending'),
   );
 
-  return onSnapshot(invitesQuery, (snapshot) => callback(snapshot.docs.map(mapInviteRecord)));
+  return onSnapshot(
+    invitesQuery,
+    (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
+    (error) => {
+      console.error('subscribePendingInvites', error);
+    },
+  );
 }
 
 export async function acceptInvite(user: User, invite: TripInviteRecord) {

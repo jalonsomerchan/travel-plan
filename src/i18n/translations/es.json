@@ -46,6 +46,7 @@
   "firebase.configPending": "Falta configurar las variables públicas de Firebase para activar autenticación y Firestore.",
   "firebase.configReady": "Firebase está configurado y la app puede conectarse.",
   "firebase.configMissing": "Faltan variables públicas de Firebase:",
+  "firebase.permissionDenied": "Firestore ha rechazado la lectura. Revisa y publica las reglas del proyecto en Firebase.",
   "common.loading": "Cargando...",
   "common.saving": "Guardando...",
   "dashboard.metaTitle": "Dashboard de viajes",
