@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Container from '../Container.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={t('invites.metaTitle')} description={t('invites.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('invites.eyebrow')}
+    title={t('invites.title')}
+    description={t('invites.description')}
+    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: getLocalizedPath('/app/', locale) }, { label: t('invites.breadcrumb') }]}
+  />
+  <Container class="pb-12">
+    <section class="section-shell px-6 py-6">
+      <div class="grid gap-4" data-invite-list>
+        <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
+          {t('common.loading')}
+        </article>
+      </div>
+    </section>
+  </Container>
+  <script>
+    import { mountTripInvitesPage } from '../../scripts/pages/trip-invites';
+
+    mountTripInvitesPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

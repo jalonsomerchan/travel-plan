@@ -1,0 +1,46 @@
+import type { Locale } from '../../config/site';
+import { setButtonBusy, setMessage } from '../../lib/app/dom';
+import { formatDateRange } from '../../lib/app/format';
+import { getPlanInputFromForm } from '../../lib/app/plan-location';
+import { getAppUrl } from '../../lib/app/routes';
+import { createPlan } from '../../lib/firebase/plans';
+import { observeSession } from '../../lib/firebase/session';
+import { subscribeTrip } from '../../lib/firebase/trips';
+import { initPlanLocationPickers } from './plan-location-picker';
+import { ensureFirebaseReady, getPageTranslator } from './shared';
+
+export function mountPlanCreatePage({ locale }: { locale: Locale }) {
+  const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
+  const form = document.querySelector<HTMLFormElement>('#plan-create-form');
+  const message = document.querySelector<HTMLElement>('#plan-create-message');
+  const context = document.querySelector<HTMLElement>('[data-plan-create-context]');
+  const backLink = document.querySelector<HTMLAnchorElement>('#plan-create-back-link');
+  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
+  const t = getPageTranslator(locale);
+  if (!tripId || !form) return;
+  if (!ensureFirebaseReady(locale)) return;
+  if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
+  initPlanLocationPickers();
+  observeSession((user) => {
+    if (!user) {
+      window.location.href = locale === 'es' ? '/' : `/${locale}/`;
+      return;
+    }
+    subscribeTrip(tripId, (trip) => {
+      if (trip && context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+    });
+  });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
+    try {
+      const planId = await createPlan(tripId, getPlanInputFromForm(form));
+      setMessage(message, t('trip.plansCreated'), 'success');
+      window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
+    } catch (error) {
+      setMessage(message, error instanceof Error ? error.message : t('trip.plansError'), 'danger');
+    } finally {
+      setButtonBusy(button, false, t('trip.plansAction'), t('trip.plansCreating'));
+    }
+  });
+}

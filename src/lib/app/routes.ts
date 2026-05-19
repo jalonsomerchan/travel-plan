@@ -1,12 +1,30 @@
 import { defaultLocale, type Locale } from '../../config/site';
 import { joinPathSegments, withBasePath } from '../../utils/paths';
 
-export type AppView = 'dashboard' | 'trip' | 'plan' | 'calendar' | 'global-calendar' | 'map';
+export type AppView =
+  | 'dashboard'
+  | 'trip'
+  | 'trip-create'
+  | 'trip-edit'
+  | 'trip-members'
+  | 'trip-invites'
+  | 'plan'
+  | 'plan-create'
+  | 'plan-edit'
+  | 'calendar'
+  | 'global-calendar'
+  | 'map';
 
 const appPaths: Record<AppView, string> = {
   dashboard: 'app',
   trip: 'app/trip',
+  'trip-create': 'app/trip-create',
+  'trip-edit': 'app/trip-edit',
+  'trip-members': 'app/trip-members',
+  'trip-invites': 'app/trip-invites',
   plan: 'app/plan',
+  'plan-create': 'app/plan-create',
+  'plan-edit': 'app/plan-edit',
   calendar: 'app/calendar',
   'global-calendar': 'app/calendar/all',
   map: 'app/map',

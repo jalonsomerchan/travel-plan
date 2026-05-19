@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import TripFormFields from '../app/TripFormFields.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('tripEdit.metaTitle')} description={t('tripEdit.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('tripEdit.eyebrow')}
+    title={t('tripEdit.title')}
+    description={t('tripEdit.description')}
+    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('trip.breadcrumb') }, { label: t('tripEdit.breadcrumb') }]}
+  />
+  <Container class="pb-12">
+    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
+      <h2 class="text-2xl font-black" data-trip-context>{t('trip.detailsTitle')}</h2>
+      <form class="mt-6 space-y-4" id="trip-form">
+        <TripFormFields locale={locale} prefix="trip-edit" />
+        <p class="text-sm text-[var(--color-text-soft)]" id="trip-form-message">{t('trip.form.helper')}</p>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('trip.form.save')}</Button>
+          <Button id="trip-edit-back-link" href={dashboardUrl} variant="secondary">{t('common.cancel')}</Button>
+        </div>
+      </form>
+    </section>
+  </Container>
+  <script>
+    import { mountTripEditPage } from '../../scripts/pages/trip-edit';
+
+    mountTripEditPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

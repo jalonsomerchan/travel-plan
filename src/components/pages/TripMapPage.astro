@@ -16,7 +16,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 ---
 
 <BaseLayout title={t('map.metaTitle')} description={t('map.metaDescription')} locale={locale}>
-  <AppShell eyebrow={t('map.eyebrow')} title={t('map.title')} description={t('map.description')}>
+  <AppShell
+    eyebrow={t('map.eyebrow')}
+    title={t('map.title')}
+    description={t('map.description')}
+    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('trip.breadcrumb') }, { label: t('map.breadcrumb') }]}
+  >
     <div class="mt-8 flex flex-wrap gap-3">
       <Button id="map-back-trip-link" variant="secondary" href={dashboardUrl}>{t('map.backToTrip')}</Button>
       <Button id="map-calendar-link" variant="secondary" href={dashboardUrl}>{t('map.openCalendar')}</Button>

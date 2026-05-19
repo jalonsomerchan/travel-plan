@@ -1,0 +1,54 @@
+---
+import { useTranslations } from '../../i18n/ui';
+import type { Locale } from '../../config/site';
+import { planCategoryValues, planStatusValues } from '../../lib/app/models';
+import PlanLocationFields from './PlanLocationFields.astro';
+
+interface Props {
+  locale: Locale;
+  prefix: string;
+}
+
+const { locale, prefix } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class="space-y-4">
+  <div>
+    <label class="field-label" for={`${prefix}-name`}>{t('plan.form.name')}</label>
+    <input class="field-input" id={`${prefix}-name`} name="name" required />
+  </div>
+  <div>
+    <label class="field-label" for={`${prefix}-description`}>{t('plan.form.description')}</label>
+    <textarea class="field-textarea" id={`${prefix}-description`} name="description"></textarea>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div>
+      <label class="field-label" for={`${prefix}-category`}>{t('plan.form.category')}</label>
+      <select class="field-select" id={`${prefix}-category`} name="category">
+        {planCategoryValues.map((category) => (
+          <option value={category}>{t(`category.${category}`)}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label class="field-label" for={`${prefix}-status`}>{t('plan.form.status')}</label>
+      <select class="field-select" id={`${prefix}-status`} name="status">
+        {planStatusValues.map((status) => (
+          <option value={status}>{t(`status.plan.${status}`)}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div>
+      <label class="field-label" for={`${prefix}-date`}>{t('plan.form.date')}</label>
+      <input class="field-input" id={`${prefix}-date`} name="date" type="date" />
+    </div>
+    <div>
+      <label class="field-label" for={`${prefix}-time`}>{t('plan.form.time')}</label>
+      <input class="field-input" id={`${prefix}-time`} name="time" type="time" />
+    </div>
+  </div>
+  <PlanLocationFields locale={locale} prefix={prefix} />
+</div>

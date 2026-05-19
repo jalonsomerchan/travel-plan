@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import TripFormFields from '../app/TripFormFields.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homeUrl = getLocalizedPath('/', locale);
+---
+
+<BaseLayout title={t('tripCreate.metaTitle')} description={t('tripCreate.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('tripCreate.eyebrow')}
+    title={t('tripCreate.title')}
+    description={t('tripCreate.description')}
+    breadcrumbs={[{ label: t('nav.home'), href: homeUrl }, { label: t('dashboard.breadcrumb'), href: getLocalizedPath('/app/', locale) }, { label: t('tripCreate.breadcrumb') }]}
+  />
+  <Container class="pb-12">
+    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
+      <form class="space-y-4" id="trip-create-form">
+        <TripFormFields locale={locale} prefix="trip-create" />
+        <p class="text-sm text-[var(--color-text-soft)]" id="trip-create-message">{t('dashboard.createHint')}</p>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('dashboard.createAction')}</Button>
+          <Button href={getLocalizedPath('/app/', locale)} variant="secondary">{t('common.cancel')}</Button>
+        </div>
+      </form>
+    </section>
+  </Container>
+  <script>
+    import { mountTripCreatePage } from '../../scripts/pages/trip-create';
+
+    mountTripCreatePage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

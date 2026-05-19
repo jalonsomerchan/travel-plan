@@ -1,116 +1,52 @@
-import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
-import { setButtonBusy, setMessage } from '../../lib/app/dom';
-import { formatDateRange } from '../../lib/app/format';
-import { getPlanInputFromForm } from '../../lib/app/plan-location';
-import type { TripMemberRecord, TripRecord } from '../../lib/app/models';
+import { escapeHtml } from '../../lib/app/dom';
+import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
-import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
+import { subscribePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
-import { subscribeTrip, subscribeTripMembers } from '../../lib/firebase/trips';
-import { initPlanLocationPickers } from './plan-location-picker';
-import { disableForm, ensureFirebaseReady, getPageTranslator } from './shared';
-
-function canEditTrip(user: User | null, trip: TripRecord | null, members: TripMemberRecord[]) {
-  if (!user || !trip) {
-    return false;
-  }
-
-  if (trip.ownerId === user.uid) {
-    return true;
-  }
-
-  return members.some((member) => member.userId === user.uid && member.role === 'editor');
-}
+import { subscribeTrip } from '../../lib/firebase/trips';
+import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getPlanStatusTone } from './shared';
 
 export function mountPlanPage({ locale }: { locale: Locale }) {
-  const t = getPageTranslator(locale);
   const params = new URL(window.location.href).searchParams;
   const tripId = params.get('trip') ?? '';
   const planId = params.get('plan') ?? '';
-  const form = document.querySelector<HTMLFormElement>('#plan-form');
-  const message = document.querySelector<HTMLElement>('#plan-form-message');
-  const context = document.querySelector<HTMLElement>('[data-plan-context]');
+  const view = document.querySelector<HTMLElement>('[data-plan-view]');
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-back-trip-link');
-  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
-  let currentUser: User | null = null;
-  let currentTrip: TripRecord | null = null;
-  let currentMembers: TripMemberRecord[] = [];
-
-  if (!tripId || !planId) {
-    if (context) {
-      context.textContent = t('plan.missingId');
-    }
-    disableForm(form, true);
-    return;
-  }
-
-  if (!ensureFirebaseReady(locale)) {
-    return;
-  }
-
-  if (backLink) {
-    backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
-  }
-
-  initPlanLocationPickers();
-
-  const syncPermissions = () => disableForm(form, !canEditTrip(currentUser, currentTrip, currentMembers));
-
+  const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
+  const t = getPageTranslator(locale);
+  if (!tripId || !planId || !view) return;
+  if (!ensureFirebaseReady(locale)) return;
+  if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
+  if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   observeSession((user) => {
-    currentUser = user;
-
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-
     subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
-      syncPermissions();
-
-      if (trip && context) {
-        context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-      }
+      if (!trip) return;
+      subscribePlan(tripId, planId, (plan) => {
+        if (!plan) return;
+        view.innerHTML = `
+          <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 shadow-[var(--shadow-xs)]">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 class="text-2xl font-black">${escapeHtml(plan.name)}</h2>
+                <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.name)} · ${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
+              </div>
+              <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+            </div>
+            <dl class="mt-6 grid gap-4 md:grid-cols-2">
+              <div><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.category'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</dd></div>
+              <div><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.date'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</dd></div>
+              <div class="md:col-span-2"><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.description'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</dd></div>
+              ${hasPlanLocation(plan) ? `<div class="md:col-span-2"><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.selected'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(getPlanLocationLabel(plan))}</dd></div>` : ''}
+            </dl>
+          </article>
+        `;
+      });
     });
-
-    subscribeTripMembers(tripId, (members) => {
-      currentMembers = members;
-      syncPermissions();
-    });
-
-    subscribePlan(tripId, planId, (plan) => {
-      if (!plan || !form) {
-        return;
-      }
-
-      (form.elements.namedItem('name') as HTMLInputElement).value = plan.name;
-      (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
-      (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;
-      (form.elements.namedItem('status') as HTMLSelectElement).value = plan.status;
-      (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
-      (form.elements.namedItem('locationLat') as HTMLInputElement).value =
-        plan.locationLat !== undefined ? String(plan.locationLat) : '';
-      (form.elements.namedItem('locationLng') as HTMLInputElement).value =
-        plan.locationLng !== undefined ? String(plan.locationLng) : '';
-      (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
-      (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
-      initPlanLocationPickers();
-    });
-  });
-
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    setButtonBusy(button, true, t('plan.form.save'), t('common.saving'));
-
-    try {
-      await updatePlan(tripId, planId, getPlanInputFromForm(form));
-      setMessage(message, t('plan.form.saved'), 'success');
-    } catch (error) {
-      setMessage(message, error instanceof Error ? error.message : t('plan.form.error'), 'danger');
-    } finally {
-      setButtonBusy(button, false, t('plan.form.save'), t('common.saving'));
-    }
   });
 }

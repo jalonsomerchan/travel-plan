@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import PlanFormFields from '../app/PlanFormFields.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('planCreate.metaTitle')} description={t('planCreate.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('planCreate.eyebrow')}
+    title={t('planCreate.title')}
+    description={t('planCreate.description')}
+    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('trip.breadcrumb') }, { label: t('planCreate.breadcrumb') }]}
+  />
+  <Container class="pb-12">
+    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
+      <h2 class="text-2xl font-black" data-plan-create-context>{t('trip.plansTitle')}</h2>
+      <form class="mt-6 space-y-4" id="plan-create-form">
+        <PlanFormFields locale={locale} prefix="plan-create" />
+        <p class="text-sm text-[var(--color-text-soft)]" id="plan-create-message">{t('trip.plansHelper')}</p>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('trip.plansAction')}</Button>
+          <Button id="plan-create-back-link" href={dashboardUrl} variant="secondary">{t('common.cancel')}</Button>
+        </div>
+      </form>
+    </section>
+  </Container>
+  <script>
+    import { mountPlanCreatePage } from '../../scripts/pages/plan-create';
+
+    mountPlanCreatePage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

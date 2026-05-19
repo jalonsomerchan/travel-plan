@@ -1,17 +1,20 @@
 ---
 import Container from '../Container.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
 
 interface Props {
   eyebrow: string;
   title: string;
   description: string;
+  breadcrumbs?: Array<{ href?: string; label: string }>;
 }
 
-const { eyebrow, title, description } = Astro.props;
+const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
 ---
 
 <Container class="py-8 md:py-12">
   <section class="section-shell overflow-hidden px-6 py-8 md:px-10 md:py-10">
+    {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
     <div class="max-w-3xl">
       <span class="eyebrow">{eyebrow}</span>
       <h1 class="mt-5 text-3xl font-black tracking-tight text-[var(--color-text)] md:text-5xl">{title}</h1>
