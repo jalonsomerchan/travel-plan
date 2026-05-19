@@ -3,9 +3,10 @@ import type { Locale } from '../../config/site';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { TripMemberRecord, TripRecord } from '../../lib/app/models';
+import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
 import { inviteUserToTrip, subscribeTrip, subscribeTripMembers } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, getRoleLabel } from './shared';
+import { ensureFirebaseReady, getPageTranslator, getRoleLabel, syncTripShell } from './shared';
 
 function renderMembers(locale: Locale, members: TripMemberRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-member-list]');
@@ -23,12 +24,14 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
   const form = document.querySelector<HTMLFormElement>('#invite-form');
   const message = document.querySelector<HTMLElement>('#invite-message');
   const context = document.querySelector<HTMLElement>('[data-trip-context]');
+  const backLink = document.querySelector<HTMLAnchorElement>('#trip-members-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
   let currentUser: User | null = null;
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
+  if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   observeSession((user) => {
     currentUser = user;
     if (!user) {
@@ -37,7 +40,10 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
     }
     subscribeTrip(tripId, (trip) => {
       currentTrip = trip;
-      if (trip && context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      if (trip) {
+        syncTripShell(locale, trip);
+        if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      }
     });
     subscribeTripMembers(tripId, (members) => renderMembers(locale, members));
   });

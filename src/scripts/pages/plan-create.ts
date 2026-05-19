@@ -7,7 +7,7 @@ import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initPlanLocationPickers } from './plan-location-picker';
-import { ensureFirebaseReady, getPageTranslator } from './shared';
+import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
 
 export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -27,7 +27,10 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
       return;
     }
     subscribeTrip(tripId, (trip) => {
-      if (trip && context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      if (trip) {
+        syncTripShell(locale, trip);
+        if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      }
     });
   });
   form.addEventListener('submit', async (event) => {

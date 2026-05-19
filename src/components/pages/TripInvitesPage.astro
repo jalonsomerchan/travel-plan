@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import AppToolbar from '../app/AppToolbar.astro';
+import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -16,7 +18,13 @@ const t = useTranslations(locale);
     title={t('invites.title')}
     description={t('invites.description')}
     breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: getLocalizedPath('/app/', locale) }, { label: t('invites.breadcrumb') }]}
-  />
+  >
+    <AppToolbar>
+      <div slot="secondary">
+        <Button href={getLocalizedPath('/app/', locale)} variant="ghost">{t('trip.backToDashboard')}</Button>
+      </div>
+    </AppToolbar>
+  </AppShell>
   <Container class="pb-12">
     <section class="section-shell px-6 py-6">
       <div class="grid gap-4" data-invite-list>

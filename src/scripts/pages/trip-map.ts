@@ -9,7 +9,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel } from './shared';
+import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripShell } from './shared';
 
 function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const t = getPageTranslator(locale);
@@ -38,7 +38,7 @@ function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getPlanLocationLabel(plan))}</p>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
-          <a class="mt-4 inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-text)]" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+          <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
             ${escapeHtml(t('trip.openPlan'))}
           </a>
         </article>
@@ -96,6 +96,9 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         tripName.textContent = trip
           ? `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`
           : t('trip.notFound');
+      }
+      if (trip) {
+        syncTripShell(locale, trip);
       }
     });
 

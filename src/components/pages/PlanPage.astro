@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -17,12 +18,21 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     eyebrow={t('plan.eyebrow')}
     title={t('plan.title')}
     description={t('plan.description')}
-    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('trip.breadcrumb') }, { label: t('plan.breadcrumb') }]}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('plan.breadcrumb'), key: 'plan' },
+    ]}
   >
-    <div class="mt-8 flex flex-wrap gap-3">
-      <Button id="plan-back-trip-link" variant="secondary" href={dashboardUrl}>{t('plan.backToTrip')}</Button>
-      <Button id="plan-edit-link" href={dashboardUrl}>{t('plan.goEdit')}</Button>
-    </div>
+    <AppToolbar>
+      <div slot="secondary">
+        <Button id="plan-back-trip-link" variant="ghost" href={dashboardUrl}>{t('plan.backToTrip')}</Button>
+      </div>
+      <div slot="primary">
+        <Button id="plan-edit-link" href={dashboardUrl}>{t('plan.goEdit')}</Button>
+      </div>
+    </AppToolbar>
   </AppShell>
   <Container class="pb-12">
     <section class="section-shell mx-auto max-w-3xl px-6 py-6">

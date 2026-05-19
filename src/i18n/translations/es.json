@@ -121,7 +121,7 @@
   "trip.plansError": "No se ha podido crear el plan.",
   "trip.missingId": "Falta el identificador del viaje en la URL.",
   "trip.notFound": "No se ha encontrado el viaje solicitado.",
-  "trip.openPlan": "Editar plan",
+  "trip.openPlan": "Ver plan",
   "trip.summaryOwner": "Propietario",
   "tripCreate.metaTitle": "Crear viaje",
   "tripCreate.metaDescription": "Crea un viaje nuevo en una página dedicada.",

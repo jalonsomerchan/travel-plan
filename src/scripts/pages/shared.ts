@@ -1,13 +1,18 @@
 import { type Locale } from '../../config/site';
 import { useTranslations } from '../../i18n/ui';
+import { escapeHtml } from '../../lib/app/dom';
+import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { withBasePath } from '../../utils/paths';
 import {
   planCategoryValues,
   planStatusValues,
   tripMemberRoles,
   tripStatusValues,
+  type PlanRecord,
   type PlanCategory,
   type PlanStatus,
+  type TripRecord,
   type TripMemberRole,
   type TripStatus,
 } from '../../lib/app/models';
@@ -139,4 +144,80 @@ export function getCategoryOptions(locale: Locale) {
 
 export function getRoleOptions(locale: Locale) {
   return tripMemberRoles.map((role) => ({ value: role, label: getRoleLabel(locale, role) }));
+}
+
+export function setAppShellTitle(title: string) {
+  const target = document.querySelector<HTMLElement>('[data-app-title]');
+
+  if (target) {
+    target.textContent = title;
+  }
+}
+
+export function setAppShellDescription(description?: string) {
+  const target = document.querySelector<HTMLElement>('[data-app-description]');
+
+  if (!target) {
+    return;
+  }
+
+  if (!description) {
+    target.hidden = true;
+    return;
+  }
+
+  target.hidden = false;
+  target.textContent = description;
+}
+
+export function setAppShellMeta(items: string[]) {
+  const target = document.querySelector<HTMLElement>('[data-app-meta]');
+  const filtered = items.filter(Boolean);
+
+  if (!target) {
+    return;
+  }
+
+  if (filtered.length === 0) {
+    target.hidden = true;
+    target.innerHTML = '';
+    return;
+  }
+
+  target.hidden = false;
+  target.innerHTML = filtered
+    .map((item) => `<span class="app-shell-meta-item">${escapeHtml(item)}</span>`)
+    .join('');
+}
+
+export function setBreadcrumbLabel(key: string, label: string) {
+  const target = document.querySelector<HTMLElement>(`[data-breadcrumb-key="${key}"]`);
+
+  if (target) {
+    target.textContent = label;
+  }
+}
+
+export function syncTripShell(locale: Locale, trip: TripRecord) {
+  setAppShellTitle(trip.name);
+  setAppShellDescription(trip.location);
+  setAppShellMeta([
+    formatDateRange(trip.startDate, trip.endDate, locale),
+    getTripStatusLabel(locale, trip.status),
+    trip.ownerEmail,
+  ]);
+  setBreadcrumbLabel('trip', trip.name);
+}
+
+export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {
+  setAppShellTitle(plan.name);
+  setAppShellDescription(plan.description || getCategoryLabel(locale, plan.category));
+  setAppShellMeta([
+    trip.name,
+    formatPlanMoment(plan, locale) || getPageTranslator(locale)('calendar.unscheduled'),
+    getPlanStatusLabel(locale, plan.status),
+    hasPlanLocation(plan) ? getPlanLocationLabel(plan) : '',
+  ]);
+  setBreadcrumbLabel('trip', trip.name);
+  setBreadcrumbLabel('plan', plan.name);
 }

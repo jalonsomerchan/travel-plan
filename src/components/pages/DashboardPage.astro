@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { siteConfig, type Locale } from '../../config/site';
@@ -22,12 +23,16 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     description={t('dashboard.description')}
     breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb') }]}
   >
-    <div class="mt-8 flex flex-wrap gap-3">
-      <Button href={dashboardUrl}>{t('dashboard.breadcrumb')}</Button>
-      <Button id="dashboard-create-trip-link" href={dashboardUrl} variant="secondary">{t('dashboard.goCreateTrip')}</Button>
-      <Button id="dashboard-invites-link" href={dashboardUrl} variant="secondary">{t('dashboard.goInvites')}</Button>
-    </div>
-    <div class="mt-8 flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 md:flex-row md:items-center md:justify-between">
+    <AppToolbar>
+      <div slot="secondary">
+        <Button href={dashboardUrl} variant="ghost">{t('dashboard.breadcrumb')}</Button>
+        <Button id="dashboard-invites-link" href={dashboardUrl} variant="ghost">{t('dashboard.goInvites')}</Button>
+      </div>
+      <div slot="primary">
+        <Button id="dashboard-create-trip-link" href={dashboardUrl}>{t('dashboard.goCreateTrip')}</Button>
+      </div>
+    </AppToolbar>
+    <div class="mt-6 flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 md:flex-row md:items-center md:justify-between">
       <div>
         <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">{siteConfig.name}</p>
         <p class="mt-2 text-lg font-semibold text-[var(--color-text)]" data-account-summary>{t('dashboard.sessionLoading')}</p>

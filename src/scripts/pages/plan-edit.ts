@@ -1,13 +1,14 @@
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
+import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getPlanInputFromForm } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initPlanLocationPickers } from './plan-location-picker';
-import { ensureFirebaseReady, getPageTranslator } from './shared';
+import { ensureFirebaseReady, getPageTranslator, syncPlanShell, syncTripShell } from './shared';
 
 export function mountPlanEditPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
@@ -28,11 +29,28 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
+    let currentTrip: TripRecord | null = null;
+    let currentPlan: PlanRecord | null = null;
+
+    const syncShell = () => {
+      if (currentTrip && currentPlan) {
+        syncPlanShell(locale, currentTrip, currentPlan);
+      } else if (currentTrip) {
+        syncTripShell(locale, currentTrip);
+      }
+    };
+
     subscribeTrip(tripId, (trip) => {
-      if (trip && context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      if (trip) {
+        currentTrip = trip;
+        syncShell();
+        if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      }
     });
     subscribePlan(tripId, planId, (plan) => {
       if (!plan) return;
+      currentPlan = plan;
+      syncShell();
       (form.elements.namedItem('name') as HTMLInputElement).value = plan.name;
       (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
       (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;

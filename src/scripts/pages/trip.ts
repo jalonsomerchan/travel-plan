@@ -1,32 +1,23 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
-import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import { formatPlanMoment } from '../../lib/app/format';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import type { PlanRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getPlanStatusTone, getTripStatusLabel, getTripStatusTone } from './shared';
-
-function renderTripSummary(locale: Locale, trip: TripRecord | null) {
-  const target = document.querySelector<HTMLElement>('[data-trip-summary]');
-  const t = getPageTranslator(locale);
-  if (!target || !trip) return;
-  target.innerHTML = `
-    <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)]">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 class="text-xl font-bold">${escapeHtml(trip.name)}</h3>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.location)}</p>
-        </div>
-        <span class="status-pill" data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
-      </div>
-      <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
-      <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('trip.summaryOwner'))}: ${escapeHtml(trip.ownerEmail)}</p>
-    </article>
-  `;
-}
+import {
+  ensureFirebaseReady,
+  getCategoryLabel,
+  getPageTranslator,
+  getPlanStatusLabel,
+  getPlanStatusTone,
+  setAppShellDescription,
+  setAppShellMeta,
+  setAppShellTitle,
+  syncTripShell,
+} from './shared';
 
 function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-plan-list]');
@@ -48,9 +39,9 @@ function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
       <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</p>
       <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
       ${hasPlanLocation(plan) ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.selected'))}: ${escapeHtml(getPlanLocationLabel(plan))}</p>` : ''}
-      <div class="mt-5 flex flex-wrap gap-3">
-        <a class="inline-flex rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-contrast)]" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">${escapeHtml(t('trip.openPlan'))}</a>
-        <a class="inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-text)]" href="${getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id })}">${escapeHtml(t('plan.goEdit'))}</a>
+      <div class="app-inline-actions">
+        <a class="app-card-link" data-variant="primary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">${escapeHtml(t('trip.openPlan'))}</a>
+        <a class="app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id })}">${escapeHtml(t('plan.goEdit'))}</a>
       </div>
     </article>
   `).join('');
@@ -58,7 +49,6 @@ function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
 
 export function mountTripPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
-  const tripContext = document.querySelector<HTMLElement>('[data-trip-context]');
   const calendarLink = document.querySelector<HTMLAnchorElement>('#trip-calendar-link');
   const mapLink = document.querySelector<HTMLAnchorElement>('#trip-map-link');
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
@@ -66,7 +56,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
   const t = getPageTranslator(locale);
   if (!tripId) {
-    if (tripContext) tripContext.textContent = t('trip.missingId');
+    setAppShellTitle(t('trip.missingId'));
+    setAppShellDescription('');
+    setAppShellMeta([]);
     return;
   }
   if (!ensureFirebaseReady(locale)) return;
@@ -81,8 +73,13 @@ export function mountTripPage({ locale }: { locale: Locale }) {
       return;
     }
     subscribeTrip(tripId, (trip) => {
-      if (tripContext) tripContext.textContent = trip ? `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}` : t('trip.notFound');
-      renderTripSummary(locale, trip);
+      if (trip) {
+        syncTripShell(locale, trip);
+      } else {
+        setAppShellTitle(t('trip.notFound'));
+        setAppShellDescription('');
+        setAppShellMeta([]);
+      }
     });
     subscribeTripPlans(tripId, (plans) => renderPlans(locale, tripId, plans));
   });

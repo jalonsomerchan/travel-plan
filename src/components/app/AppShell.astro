@@ -3,23 +3,32 @@ import Container from '../Container.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 
 interface Props {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  description: string;
-  breadcrumbs?: Array<{ href?: string; label: string }>;
+  description?: string;
+  breadcrumbs?: Array<{ href?: string; label: string; key?: string }>;
 }
 
 const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
 ---
 
 <Container class="py-8 md:py-12">
-  <section class="section-shell overflow-hidden px-6 py-8 md:px-10 md:py-10">
+  <section class="section-shell overflow-hidden px-6 py-7 md:px-10 md:py-8">
     {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
-    <div class="max-w-3xl">
-      <span class="eyebrow">{eyebrow}</span>
-      <h1 class="mt-5 text-3xl font-black tracking-tight text-[var(--color-text)] md:text-5xl">{title}</h1>
-      <p class="prose-copy mt-4 max-w-2xl text-base md:text-lg">{description}</p>
+    <div class="app-shell-layout">
+      <div class="app-shell-copy">
+        {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+        <h1 class="app-shell-title" data-app-title>{title}</h1>
+        {description && (
+          <p class="app-shell-description prose-copy" data-app-description>
+            {description}
+          </p>
+        )}
+        <div class="app-shell-meta" data-app-meta hidden></div>
+      </div>
+      <div class="app-shell-side">
+        <slot />
+      </div>
     </div>
-    <slot />
   </section>
 </Container>

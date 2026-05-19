@@ -6,7 +6,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getWeekdayLabels } from './shared';
+import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getWeekdayLabels, syncTripShell } from './shared';
 
 function renderWeekdays(locale: Locale, targetSelector: string) {
   const target = document.querySelector<HTMLElement>(targetSelector);
@@ -144,6 +144,9 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
     subscribeTrip(tripId, (trip: TripRecord | null) => {
       if (tripName) {
         tripName.textContent = trip?.name ?? t('trip.notFound');
+      }
+      if (trip) {
+        syncTripShell(locale, trip);
       }
     });
 

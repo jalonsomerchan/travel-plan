@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
+import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -22,9 +23,11 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     description={t('calendar.globalDescription')}
     breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('calendar.globalBreadcrumb') }]}
   >
-    <div class="mt-8 flex flex-wrap gap-3">
-      <Button href={dashboardUrl} variant="secondary">{t('calendar.backToDashboard')}</Button>
-    </div>
+    <AppToolbar>
+      <div slot="secondary">
+        <Button href={dashboardUrl} variant="ghost">{t('calendar.backToDashboard')}</Button>
+      </div>
+    </AppToolbar>
   </AppShell>
 
   <Container class="grid gap-8 pb-12 lg:grid-cols-[1.2fr_0.8fr]">

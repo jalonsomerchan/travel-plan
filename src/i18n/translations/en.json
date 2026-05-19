@@ -121,7 +121,7 @@
   "trip.plansError": "The plan could not be created.",
   "trip.missingId": "The trip identifier is missing from the URL.",
   "trip.notFound": "The requested trip could not be found.",
-  "trip.openPlan": "Edit plan",
+  "trip.openPlan": "View plan",
   "trip.summaryOwner": "Owner",
   "tripCreate.metaTitle": "Create trip",
   "tripCreate.metaDescription": "Create a new trip in a dedicated page.",

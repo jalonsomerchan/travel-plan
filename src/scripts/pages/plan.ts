@@ -6,7 +6,14 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getPlanStatusTone } from './shared';
+import {
+  ensureFirebaseReady,
+  getCategoryLabel,
+  getPageTranslator,
+  getPlanStatusLabel,
+  getPlanStatusTone,
+  syncPlanShell,
+} from './shared';
 
 export function mountPlanPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
@@ -29,6 +36,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       if (!trip) return;
       subscribePlan(tripId, planId, (plan) => {
         if (!plan) return;
+        syncPlanShell(locale, trip, plan);
         view.innerHTML = `
           <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 shadow-[var(--shadow-xs)]">
             <div class="flex flex-wrap items-start justify-between gap-3">

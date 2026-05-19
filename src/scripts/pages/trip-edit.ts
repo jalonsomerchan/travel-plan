@@ -5,7 +5,7 @@ import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator } from './shared';
+import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -25,6 +25,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
     }
     subscribeTrip(tripId, (trip) => {
       if (!trip) return;
+      syncTripShell(locale, trip);
       if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
       (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
       (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
