@@ -90,14 +90,26 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
             .bindPopup(escapeHtml(plan.name))
             .addTo(map);
 
-          if (hasAccommodationLocation(trip.accommodation)) {
-            const accommodationLabel = getAccommodationLocationLabel(trip.accommodation);
+          const accommodation = trip.accommodation;
 
-            L.marker([trip.accommodation.locationLat, trip.accommodation.locationLng], {
-              title: accommodationLabel || trip.accommodation.name,
+          if (hasAccommodationLocation(accommodation)) {
+            const accommodationLabel = getAccommodationLocationLabel(accommodation);
+            const accommodationLat = accommodation.locationLat;
+            const accommodationLng = accommodation.locationLng;
+
+            L.marker([accommodationLat, accommodationLng], {
+              title: accommodationLabel || accommodation.name,
             })
-              .bindPopup(escapeHtml(accommodationLabel || trip.accommodation.name))
+              .bindPopup(escapeHtml(accommodationLabel || accommodation.name))
               .addTo(map);
+
+            map.fitBounds(
+              L.latLngBounds([
+                [plan.locationLat, plan.locationLng],
+                [accommodationLat, accommodationLng],
+              ]),
+              { maxZoom: 15, padding: [48, 48] },
+            );
           }
         }
       });
