@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import ChecklistItemFormFields from '../app/ChecklistItemFormFields.astro';
 import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -29,14 +29,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('tripChecklist.breadcrumb'), key: 'trip-checklist' },
     ]}
   >
-    <div slot="topbar" class="app-shell-topbar-row">
-      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
-      <div>
-        <Button id="trip-checklist-back-link" href={dashboardUrl} variant="ghost">
-          {t('tripChecklist.backToTrip')}
-        </Button>
-      </div>
-    </div>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>

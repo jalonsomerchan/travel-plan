@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import Button from '../Button.astro';
 import LocationPickerFields from '../app/LocationPickerFields.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import { planCategoryValues } from '../../lib/app/models';
 import { tripSuggestionBudgetValues, tripSuggestionTransportValues } from '../../lib/app/trip-plan-suggestions';
 import { type Locale } from '../../config/site';
@@ -30,10 +30,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('tripAi.breadcrumb') },
     ]}
   >
-    <div slot="topbar" class="app-shell-topbar-row">
-      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
-      <Button id="trip-ai-back-link" href={dashboardUrl} variant="ghost">{t('common.cancel')}</Button>
-    </div>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap items-start justify-between gap-4">
           <div>

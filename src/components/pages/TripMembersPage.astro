@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -28,11 +28,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('tripMembers.breadcrumb') },
     ]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button id="trip-members-back-link" href={dashboardUrl} variant="ghost">{t('trip.backToDashboard')}</Button>
-      </div>
-    </AppToolbar>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div class="min-w-0">

@@ -234,6 +234,37 @@ export function setBreadcrumbItem(key: string, label: string, href?: string) {
   }
 }
 
+function setNavigationLinkHref(id: string, href: string) {
+  const link = document.querySelector<HTMLAnchorElement>(`#${id}`);
+
+  if (link) {
+    link.href = href;
+  }
+}
+
+export function syncTripNavigation(locale: Locale, tripId: string) {
+  const tripUrl = getAppUrl(locale, 'trip', { trip: tripId });
+  const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
+
+  document.querySelectorAll<HTMLButtonElement>('[data-trip-back-button]').forEach((button) => {
+    button.dataset.fallbackHref = tripUrl;
+  });
+
+  setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
+  setNavigationLinkHref('trip-checklist-link', getAppUrl(locale, 'trip-checklist', { trip: tripId }));
+  setNavigationLinkHref('trip-ai-link', getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId }));
+  setNavigationLinkHref('trip-accommodation-link', getAppUrl(locale, 'trip-accommodation', { trip: tripId }));
+  setNavigationLinkHref('trip-members-link', getAppUrl(locale, 'trip-members', { trip: tripId }));
+  setNavigationLinkHref('trip-calendar-link', getAppUrl(locale, 'calendar', { trip: tripId }));
+  setNavigationLinkHref('trip-map-link', getAppUrl(locale, 'map', { trip: tripId }));
+  setNavigationLinkHref('trip-edit-link', getAppUrl(locale, 'trip-edit', { trip: tripId }));
+
+  if (accommodationMapsLink) {
+    accommodationMapsLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
+    accommodationMapsLink.hidden = true;
+  }
+}
+
 export function syncTripShell(locale: Locale, trip: TripRecord) {
   setAppShellTitle(trip.name);
   setAppShellDescription(trip.location);

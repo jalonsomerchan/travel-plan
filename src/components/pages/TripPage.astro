@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppActionsMenu from '../app/AppActionsMenu.astro';
-import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -30,24 +29,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
       { label: t('trip.breadcrumb'), key: 'trip' },
     ]}
   >
-    <div slot="topbar" class="app-shell-topbar-row">
-      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
-      <AppActionsMenu
-        ariaLabel={t('trip.actionsMenu')}
-        label="..."
-        items={[
-          { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
-          { href: dashboardUrl, id: 'trip-checklist-link', label: t('tripChecklist.goChecklist') },
-          { href: dashboardUrl, id: 'trip-ai-link', label: t('trip.goAiSuggestions') },
-          { href: dashboardUrl, id: 'trip-accommodation-link', label: t('trip.goAccommodation') },
-          { href: dashboardUrl, id: 'trip-accommodation-maps-link', label: t('trip.openAccommodationMap') },
-          { href: dashboardUrl, id: 'trip-members-link', label: t('trip.goMembers') },
-          { href: dashboardUrl, id: 'trip-calendar-link', label: t('trip.openCalendar') },
-          { href: dashboardUrl, id: 'trip-map-link', label: t('trip.openMap') },
-          { href: dashboardUrl, id: 'trip-edit-link', label: t('trip.goEdit') },
-        ]}
-      />
-    </div>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
 
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

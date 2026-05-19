@@ -16,6 +16,7 @@ import { addMapTools } from '../maps/leaflet-map-tools';
 import {
   ensureFirebaseReady,
   getPageTranslator,
+  syncTripNavigation,
   syncPlanShell,
 } from './shared';
 
@@ -44,6 +45,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   let map: L.Map | null = null;
   if (!tripId || !planId || !view) return;
   if (!ensureFirebaseReady(locale)) return;
+  syncTripNavigation(locale, tripId);
   if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   observeSession((user) => {
     if (!user) {

@@ -4,7 +4,7 @@ interface Props {
   label: string;
 }
 
-const { fallbackHref, label } = Astro.props;
+const { fallbackHref, label, ...attrs } = Astro.props;
 ---
 
 <button
@@ -12,6 +12,7 @@ const { fallbackHref, label } = Astro.props;
   data-history-back
   data-fallback-href={fallbackHref}
   type="button"
+  {...attrs}
 >
   <span aria-hidden="true">←</span>
   <span>{label}</span>

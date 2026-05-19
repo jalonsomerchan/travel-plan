@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppActionsMenu from '../app/AppActionsMenu.astro';
-import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -27,16 +26,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('plan.breadcrumb'), key: 'plan' },
     ]}
   >
-    <div slot="topbar" class="app-shell-topbar-row">
-      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
-      <AppActionsMenu
-        ariaLabel={t('plan.actionsMenu')}
-        label="..."
-        items={[
-          { href: dashboardUrl, id: 'plan-edit-link', label: t('plan.goEdit') },
-        ]}
-      />
-    </div>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" data-plan-view>
       <LoadingState class="mt-8" label={t('common.loading')} />
     </div>

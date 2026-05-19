@@ -28,6 +28,7 @@ import {
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
+  syncTripNavigation,
   syncTripShell,
 } from './shared';
 
@@ -208,6 +209,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     return;
   }
   if (!ensureFirebaseReady(locale)) return;
+  syncTripNavigation(locale, tripId);
   if (calendarLink) calendarLink.href = getAppUrl(locale, 'calendar', { trip: tripId });
   if (mapLink) mapLink.href = getAppUrl(locale, 'map', { trip: tripId });
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });

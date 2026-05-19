@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
-import Button from '../Button.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -30,12 +29,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('map.breadcrumb') },
     ]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button id="map-back-trip-link" variant="ghost" href={dashboardUrl}>{t('map.backToTrip')}</Button>
-        <Button id="map-calendar-link" variant="ghost" href={dashboardUrl}>{t('map.openCalendar')}</Button>
-      </div>
-    </AppToolbar>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="grid gap-8 lg:grid-cols-[1.18fr_0.82fr]">
         <div class="min-w-0">
@@ -49,16 +43,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
             <span class="status-pill" data-tone="primary" data-map-count>0</span>
           </div>
           <div class="mt-6 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
-            <div class="trip-map-canvas" data-trip-map-canvas></div>
+            <div class="trip-map-canvas" data-trip-map-canvas aria-label={t('map.canvasTitle')}></div>
           </div>
         </div>
-        <span class="status-pill" data-tone="primary" data-map-count>0</span>
-      </div>
-      <div class="mt-6 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
-        <div class="trip-map-canvas" data-trip-map-canvas aria-label={t('map.canvasTitle')}></div>
-      </div>
-    </section>
-
         <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
           <div>
             <span class="eyebrow">{t('map.listEyebrow')}</span>

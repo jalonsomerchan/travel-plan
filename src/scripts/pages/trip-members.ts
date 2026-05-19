@@ -11,7 +11,7 @@ import {
   subscribeTrip,
   subscribeTripMembers,
 } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, getRoleLabel, syncTripShell } from './shared';
+import { ensureFirebaseReady, getPageTranslator, getRoleLabel, syncTripNavigation, syncTripShell } from './shared';
 
 const inviteErrorMessages: Record<Locale, Record<string, string>> = {
   es: {
@@ -59,6 +59,7 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
   let currentUser: User | null = null;
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
+  syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   observeSession((user) => {
     currentUser = user;

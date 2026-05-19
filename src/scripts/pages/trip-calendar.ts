@@ -7,7 +7,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripShell } from './shared';
+import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripNavigation, syncTripShell } from './shared';
 
 function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const t = getPageTranslator(locale);
@@ -107,6 +107,8 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
   if (!ensureFirebaseReady(locale)) {
     return;
   }
+
+  syncTripNavigation(locale, tripId);
 
   if (backLink) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });

@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppActionsMenu from '../app/AppActionsMenu.astro';
-import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import Button from '../Button.astro';
 import AccommodationFormFields from '../app/AccommodationFormFields.astro';
 import { type Locale } from '../../config/site';
@@ -32,17 +31,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       { label: t('accommodation.breadcrumb'), key: 'trip-accommodation' },
     ]}
   >
-    <div slot="topbar" class="app-shell-topbar-row">
-      <AppBackButton fallbackHref={dashboardUrl} label={t('common.goBack')} />
-      <AppActionsMenu
-        ariaLabel={t('accommodation.actionsMenu')}
-        label="..."
-        items={[
-          { href: dashboardUrl, id: 'accommodation-trip-link', label: t('accommodation.backToTrip') },
-          { href: dashboardUrl, id: 'accommodation-maps-link', label: t('accommodation.openGoogleMaps') },
-        ]}
-      />
-    </div>
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div data-accommodation-view>
         <LoadingState label={t('common.loading')} />

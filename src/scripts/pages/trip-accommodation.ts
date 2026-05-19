@@ -20,6 +20,7 @@ import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
   getPageTranslator,
+  syncTripNavigation,
   syncAccommodationShell,
 } from './shared';
 import { initLocationPickers } from './plan-location-picker';
@@ -112,8 +113,7 @@ export function mountTripAccommodationPage({ locale }: { locale: Locale }) {
   const message = document.querySelector<HTMLElement>('#accommodation-form-message');
   const context = document.querySelector<HTMLElement>('[data-accommodation-context]');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
-  const tripLink = document.querySelector<HTMLAnchorElement>('#accommodation-trip-link');
-  const mapsLink = document.querySelector<HTMLAnchorElement>('#accommodation-maps-link');
+  const mapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
 
@@ -125,9 +125,7 @@ export function mountTripAccommodationPage({ locale }: { locale: Locale }) {
     return;
   }
 
-  if (tripLink) {
-    tripLink.href = getAppUrl(locale, 'trip', { trip: tripId });
-  }
+  syncTripNavigation(locale, tripId);
 
   if (mapsLink) {
     mapsLink.hidden = true;

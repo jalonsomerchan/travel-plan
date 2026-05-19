@@ -21,6 +21,7 @@ import {
   getCategoryLabel,
   getPageTranslator,
   redirectHome,
+  syncTripNavigation,
   syncTripShell,
 } from './shared';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
@@ -66,6 +67,8 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   if (!ensureFirebaseReady(locale)) {
     return;
   }
+
+  syncTripNavigation(locale, tripId);
 
   if (backLink) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });

@@ -9,7 +9,7 @@ import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
+import { ensureFirebaseReady, getPageTranslator, syncTripNavigation, syncTripShell } from './shared';
 import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {
@@ -22,6 +22,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
+  syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   initLocationPickers();
   observeSession((user) => {

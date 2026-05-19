@@ -19,6 +19,7 @@ import {
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
+  syncTripNavigation,
   syncChecklistShell,
 } from './shared';
 
@@ -114,6 +115,8 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   if (!ensureFirebaseReady(locale)) {
     return;
   }
+
+  syncTripNavigation(locale, tripId);
 
   if (backLink) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });

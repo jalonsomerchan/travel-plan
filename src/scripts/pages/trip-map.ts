@@ -23,6 +23,7 @@ import {
   getCategoryLabel,
   getPageTranslator,
   getPlanStatusLabel,
+  syncTripNavigation,
   syncTripShell,
 } from './shared';
 
@@ -119,6 +120,8 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   if (!ensureFirebaseReady(locale)) {
     return;
   }
+
+  syncTripNavigation(locale, tripId);
 
   if (backTripLink) {
     backTripLink.href = getAppUrl(locale, 'trip', { trip: tripId });
