@@ -150,9 +150,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </section>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountTripPage } from '../../scripts/pages/trip';
 
-    mountTripPage({ locale });
+    mountTripPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

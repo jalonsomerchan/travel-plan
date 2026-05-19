@@ -74,9 +74,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </section>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountPlanPage } from '../../scripts/pages/plan';
 
-    mountPlanPage({ locale });
+    mountPlanPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

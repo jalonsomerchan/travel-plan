@@ -100,9 +100,9 @@ const t = useTranslations(locale);
     </section>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountDashboardPage } from '../../scripts/pages/dashboard';
 
-    mountDashboardPage({ locale });
+    mountDashboardPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

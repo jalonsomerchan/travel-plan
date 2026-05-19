@@ -47,9 +47,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </aside>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountGlobalCalendarPage } from '../../scripts/pages/global-calendar';
 
-    mountGlobalCalendarPage({ locale });
+    mountGlobalCalendarPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

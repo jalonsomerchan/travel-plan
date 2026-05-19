@@ -49,9 +49,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </aside>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountTripCalendarPage } from '../../scripts/pages/trip-calendar';
 
-    mountTripCalendarPage({ locale });
+    mountTripCalendarPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

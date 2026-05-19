@@ -98,9 +98,9 @@ const highlights = [
     </section>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountLandingPage } from '../../scripts/pages/landing';
 
-    mountLandingPage({ locale });
+    mountLandingPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>

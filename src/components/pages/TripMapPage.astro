@@ -52,9 +52,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     </aside>
   </Container>
 
-  <script define:vars={{ locale }}>
+  <script>
     import { mountTripMapPage } from '../../scripts/pages/trip-map';
 
-    mountTripMapPage({ locale });
+    mountTripMapPage({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>
