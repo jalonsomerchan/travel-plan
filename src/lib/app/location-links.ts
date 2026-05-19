@@ -5,6 +5,14 @@ export function getGoogleMapsPlaceUrl(locationName: string) {
   return url.toString();
 }
 
+export function getOpenStreetMapPlaceUrlFromCoordinates(latitude: number, longitude: number) {
+  const url = new URL('https://www.openstreetmap.org/');
+  url.searchParams.set('mlat', String(latitude));
+  url.searchParams.set('mlon', String(longitude));
+  url.hash = `map=18/${latitude}/${longitude}`;
+  return url.toString();
+}
+
 export function getGoogleMapsPlaceUrlFromCoordinates(latitude: number, longitude: number) {
   const url = new URL('https://www.google.com/maps/search/');
   url.searchParams.set('api', '1');

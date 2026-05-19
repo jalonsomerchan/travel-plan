@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
+import NearbyPoiExplorer from '../app/NearbyPoiExplorer.astro';
 import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -27,8 +28,39 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <div slot="body" data-plan-view>
-      <LoadingState class="mt-8" label={t('common.loading')} />
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <dl class="grid gap-4">
+        <div>
+          <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">
+            {t('plan.form.description')}
+          </dt>
+          <dd class="mt-1 text-base text-[var(--color-text)]" data-plan-description>
+            {t('common.loading')}
+          </dd>
+        </div>
+        <div data-plan-map-section hidden>
+          <div class="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)]">
+            <div class="h-[30rem] w-full" data-plan-map aria-label={t('map.canvasTitle')}></div>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-3">
+            <a class="app-card-link" data-plan-open-osm data-variant="secondary" href="#" rel="noopener noreferrer" target="_blank">
+              {t('poi.openStreetMap')}
+            </a>
+            <a class="app-card-link" data-plan-open-google data-variant="secondary" href="#" rel="noopener noreferrer" target="_blank">
+              {t('plan.location.openMap')}
+            </a>
+            <a class="app-card-link" data-plan-open-directions data-variant="primary" href="#" rel="noopener noreferrer" target="_blank">
+              {t('plan.location.getDirections')}
+            </a>
+          </div>
+        </div>
+      </dl>
+      <NearbyPoiExplorer
+        locale={locale}
+        title={t('poi.plan.title')}
+        description={t('poi.plan.description')}
+        emptyActionLabel={t('poi.plan.addLocationAction')}
+      />
     </div>
   </AppShell>
   <script>

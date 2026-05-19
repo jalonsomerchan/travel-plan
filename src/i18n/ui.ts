@@ -4,10 +4,16 @@ import en from './translations/en.json';
 import es from './translations/es.json';
 import mapEn from './feature-translations/map/en.json';
 import mapEs from './feature-translations/map/es.json';
+import poiEn from './feature-translations/poi/en.json';
+import poiEs from './feature-translations/poi/es.json';
 import tripValidationEn from './feature-translations/trip-validation/en.json';
 import tripValidationEs from './feature-translations/trip-validation/es.json';
 
-export type TranslationKey = keyof typeof es | keyof typeof mapEs | keyof typeof tripValidationEs;
+export type TranslationKey =
+  | keyof typeof es
+  | keyof typeof mapEs
+  | keyof typeof poiEs
+  | keyof typeof tripValidationEs;
 
 type TranslationDictionary = Record<string, string>;
 
@@ -15,11 +21,13 @@ const translations: Record<Locale, TranslationDictionary> = {
   es: {
     ...es,
     ...mapEs,
+    ...poiEs,
     ...tripValidationEs,
   },
   en: {
     ...en,
     ...mapEn,
+    ...poiEn,
     ...tripValidationEn,
   },
 };

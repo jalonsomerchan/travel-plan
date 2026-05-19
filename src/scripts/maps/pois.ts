@@ -5,14 +5,27 @@ import type { MapTranslate } from './layers';
 
 interface OverpassElement {
   id: number;
+  type?: 'node' | 'way' | 'relation';
   lat?: number;
   lon?: number;
+  center?: {
+    lat?: number;
+    lon?: number;
+  };
   tags?: {
     name?: string;
     amenity?: string;
     tourism?: string;
     railway?: string;
   };
+}
+
+function buildFilterClause(filter: { key: string; value: string; useRegex?: boolean }) {
+  if (filter.useRegex) {
+    return `["${filter.key}"~"${filter.value}"]`;
+  }
+
+  return `["${filter.key}"="${filter.value}"]`;
 }
 
 function buildOverpassQuery(categoryIds: string[], bounds: L.LatLngBounds) {
@@ -26,10 +39,14 @@ function buildOverpassQuery(categoryIds: string[], bounds: L.LatLngBounds) {
   const filters = mapPoiCategories
     .filter((category) => categoryIds.includes(category.id))
     .flatMap((category) => category.overpassFilters)
-    .map((filter) => `${filter}(${bbox});`)
+    .flatMap((filter) =>
+      ['node', 'way', 'relation'].map(
+        (type) => `${type}${buildFilterClause(filter)}(${bbox});`,
+      ),
+    )
     .join('\n');
 
-  return `[out:json][timeout:8];\n(\n${filters}\n);\nout tags ${mapPoiLimit};`;
+  return `[out:json][timeout:8];\n(\n${filters}\n);\nout center tags ${mapPoiLimit};`;
 }
 
 function getPoiLabel(element: OverpassElement, t: MapTranslate) {
@@ -50,6 +67,18 @@ function getPoiLabel(element: OverpassElement, t: MapTranslate) {
   }
 
   return t('map.poi.food');
+}
+
+function getPoiCoordinates(element: OverpassElement) {
+  if (typeof element.lat === 'number' && typeof element.lon === 'number') {
+    return [element.lat, element.lon] as const;
+  }
+
+  if (typeof element.center?.lat === 'number' && typeof element.center?.lon === 'number') {
+    return [element.center.lat, element.center.lon] as const;
+  }
+
+  return null;
 }
 
 export function addPoiControl(map: L.Map, t: MapTranslate) {
@@ -83,13 +112,18 @@ export function addPoiControl(map: L.Map, t: MapTranslate) {
 
       const data = (await response.json()) as { elements?: OverpassElement[] };
       const pois = (data.elements ?? [])
-        .filter((element) => Number.isFinite(element.lat) && Number.isFinite(element.lon))
+        .filter((element) => Boolean(getPoiCoordinates(element)))
         .slice(0, mapPoiLimit);
 
       pois.forEach((element) => {
         const label = getPoiLabel(element, t);
+        const coordinates = getPoiCoordinates(element);
 
-        L.circleMarker([element.lat as number, element.lon as number], {
+        if (!coordinates) {
+          return;
+        }
+
+        L.circleMarker(coordinates, {
           radius: 7,
           color: '#f97316',
           fillColor: '#fed7aa',

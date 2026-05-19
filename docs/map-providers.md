@@ -28,10 +28,11 @@ El botón de ubicación usa `navigator.geolocation.getCurrentPosition()` solo de
 
 La primera implementación usa Overpass API como fuente pública sin secretos privados en cliente. Para no saturar el mapa ni abusar del servicio:
 
-- los POIs se consultan solo cuando la persona activa una categoría;
-- la búsqueda se limita al viewport visible del mapa;
-- se limita el número de resultados con `mapPoiLimit`;
-- existe botón de refresco manual para volver a consultar la zona visible;
-- se muestran estados de carga, vacío y error.
+- las búsquedas cercanas del viaje y del plan usan `POST https://overpass-api.de/api/interpreter`;
+- las consultas se limitan por coordenadas, radio y categorías OSM conocidas;
+- el radio se acota en frontend y el número máximo de resultados también;
+- existe cache temporal en memoria por combinación de coordenadas, radio y categorías;
+- se muestran estados de carga, vacío, timeout, rate limit y demasiados resultados;
+- no se guardan resultados masivos en Firestore.
 
 Si en el futuro el tráfico crece, conviene mover los POIs a un backend propio, cachearlos o usar un proveedor con contrato y cuotas claras.

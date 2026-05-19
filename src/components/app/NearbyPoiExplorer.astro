@@ -1,0 +1,109 @@
+---
+import type { Locale } from '../../config/site';
+import { getNearbyPoiCategories, getNearbyPoiDefaultRadius } from '../../lib/app/poi';
+import { useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  emptyActionLabel: string;
+  showMap?: boolean;
+}
+
+const { locale, title, description, emptyActionLabel, showMap = false } = Astro.props;
+const t = useTranslations(locale);
+const radiusOptions = [250, 500, 1000, 2000, 5000];
+const categories = getNearbyPoiCategories();
+const defaultCategories = new Set(['food', 'culture', 'parks']);
+---
+
+<section
+  class="mt-8 border-t border-[var(--color-border)] pt-8"
+  data-nearby-poi
+  data-show-map={showMap ? 'true' : 'false'}
+  data-empty-action-label={emptyActionLabel}
+>
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <span class="eyebrow">{t('poi.eyebrow')}</span>
+      <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{title}</h2>
+      <p class="mt-3 max-w-3xl text-sm text-[var(--color-text-soft)]">{description}</p>
+    </div>
+    <span class="status-pill" data-nearby-poi-count data-tone="warning">0</span>
+  </div>
+
+  <div class="mt-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5">
+    <form class="grid gap-5" data-nearby-poi-controls>
+      <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)] sm:max-w-xs">
+        <span>{t('poi.radius.label')}</span>
+        <select
+          class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+          data-nearby-poi-radius
+          name="radius"
+        >
+          {radiusOptions.map((radius) => (
+            <option selected={radius === getNearbyPoiDefaultRadius()} value={String(radius)}>
+              {t('poi.radius.option').replace('{distance}', radius >= 1000 ? `${radius / 1000} km` : `${radius} m`)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <fieldset class="grid gap-3">
+        <legend class="text-sm font-semibold text-[var(--color-text-muted)]">
+          {t('poi.categories.label')}
+        </legend>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {categories.map((category) => (
+            <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)]">
+              <input
+                checked={defaultCategories.has(category.id)}
+                data-nearby-poi-category
+                name="categories"
+                type="checkbox"
+                value={category.id}
+              />
+              <span>{t(category.labelKey)}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    </form>
+    <p class="mt-4 text-xs text-[var(--color-text-soft)]">{t('poi.attribution')}</p>
+  </div>
+
+  <article
+    class="mt-6 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center"
+    data-nearby-poi-empty-state
+    hidden
+  >
+    <h3 class="text-lg font-bold text-[var(--color-text)]" data-nearby-poi-empty-title></h3>
+    <p class="mt-3 text-sm text-[var(--color-text-soft)]" data-nearby-poi-empty-description></p>
+    <a
+      class="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)]"
+      data-nearby-poi-empty-action
+      href="#"
+    >
+      {emptyActionLabel}
+    </a>
+  </article>
+
+  <p
+    class="mt-5 text-sm text-[var(--color-text-soft)]"
+    data-nearby-poi-status
+    role="status"
+    aria-live="polite"
+  ></p>
+
+  {showMap ? (
+    <div class="mt-6 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+      <div class="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
+        <div class="h-[24rem] w-full" data-nearby-poi-map aria-label={t('poi.map.label')}></div>
+      </div>
+      <div class="grid gap-4" data-nearby-poi-list></div>
+    </div>
+  ) : (
+    <div class="mt-6 grid gap-4" data-nearby-poi-list></div>
+  )}
+</section>

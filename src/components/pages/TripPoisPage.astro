@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import LoadingState from '../app/LoadingState.astro';
+import NearbyPoiExplorer from '../app/NearbyPoiExplorer.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('tripPois.metaTitle')} description={t('tripPois.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('tripPois.eyebrow')}
+    title={t('tripPois.title')}
+    description={t('tripPois.description')}
+    loading
+    loadingLabel={t('common.loading')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('tripPois.breadcrumb'), key: 'trip-pois' },
+    ]}
+  >
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <div data-trip-pois-context>
+        <LoadingState label={t('common.loading')} />
+      </div>
+      <NearbyPoiExplorer
+        locale={locale}
+        title={t('tripPois.explorerTitle')}
+        description={t('tripPois.explorerDescription')}
+        emptyActionLabel={t('tripPois.configureAccommodation')}
+        showMap
+      />
+    </div>
+  </AppShell>
+
+  <script>
+    import { mountTripPoisPage } from '../../scripts/pages/trip-pois';
+
+    mountTripPoisPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

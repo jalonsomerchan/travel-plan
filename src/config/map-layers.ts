@@ -1,3 +1,5 @@
+import { nearbyPoiCategories, nearbyPoiResultLimit } from './poi';
+
 export type MapLayerTheme = 'light' | 'dark' | 'mixed';
 
 export interface MapLayerConfig {
@@ -49,33 +51,8 @@ export const mapLayers: MapLayerConfig[] = [
   },
 ];
 
-export interface MapPoiCategoryConfig {
-  id: string;
-  labelKey: string;
-  overpassFilters: string[];
-}
+export const mapPoiLimit = Math.min(nearbyPoiResultLimit, 20);
 
-export const mapPoiLimit = 20;
-
-export const mapPoiCategories: MapPoiCategoryConfig[] = [
-  {
-    id: 'food',
-    labelKey: 'map.poi.food',
-    overpassFilters: ['node["amenity"~"^(restaurant|cafe|bar)$"]'],
-  },
-  {
-    id: 'museum',
-    labelKey: 'map.poi.museum',
-    overpassFilters: ['node["tourism"="museum"]'],
-  },
-  {
-    id: 'transport',
-    labelKey: 'map.poi.transport',
-    overpassFilters: ['node["railway"="station"]', 'node["amenity"="bus_station"]'],
-  },
-  {
-    id: 'viewpoint',
-    labelKey: 'map.poi.viewpoint',
-    overpassFilters: ['node["tourism"="viewpoint"]'],
-  },
-];
+export const mapPoiCategories = nearbyPoiCategories.filter((category) =>
+  ['food', 'culture', 'transport', 'parks'].includes(category.id),
+);

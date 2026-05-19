@@ -7,12 +7,14 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
+import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
+import { mountNearbyPoiExplorer } from './nearby-poi-explorer';
 import {
   ensureFirebaseReady,
   getPageTranslator,
@@ -39,14 +41,21 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
   const tripId = params.get('trip') ?? '';
   const planId = params.get('plan') ?? '';
-  const view = document.querySelector<HTMLElement>('[data-plan-view]');
+  const description = document.querySelector<HTMLElement>('[data-plan-description]');
+  const mapSection = document.querySelector<HTMLElement>('[data-plan-map-section]');
+  const mapTarget = document.querySelector<HTMLElement>('[data-plan-map]');
   const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
+  const openOsmLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-osm]');
+  const openGoogleLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-google]');
+  const openDirectionsLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-directions]');
+  const nearbyPoiRoot = document.querySelector<HTMLElement>('[data-nearby-poi]');
   const t = getPageTranslator(locale);
   let map: L.Map | null = null;
-  if (!tripId || !planId || !view) return;
+  if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
   if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
+  const nearbyPoiExplorer = mountNearbyPoiExplorer(nearbyPoiRoot, { locale });
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -57,38 +66,30 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       subscribePlan(tripId, planId, (plan) => {
         if (!plan) return;
         syncPlanShell(locale, trip, plan);
+        description.textContent = plan.description || t('plan.descriptionEmpty');
 
         if (map) {
           map.remove();
           map = null;
         }
 
-        view.innerHTML = `
-          <div class="mt-8 border-t border-[var(--color-border)] pt-6">
-            <dl class="grid gap-4">
-              <div><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.description'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</dd></div>
-              ${
-                hasPlanLocation(plan)
-                  ? `
-                    <div>
-                      <div class="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)]">
-                        <div class="h-[30rem] w-full" data-plan-map aria-label="${escapeHtml(t('map.canvasTitle'))}"></div>
-                      </div>
-                      <div class="mt-4 flex flex-wrap gap-3">
-                        <a class="app-card-link" data-variant="secondary" href="${escapeHtml(getGoogleMapsPlaceUrl(getPlanLocationLabel(plan)))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.openMap'))}</a>
-                        <a class="app-card-link" data-variant="primary" href="${escapeHtml(getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.getDirections'))}</a>
-                      </div>
-                    </div>
-                  `
-                  : ''
-              }
-            </dl>
-          </div>
-        `;
+        if (hasPlanLocation(plan) && mapTarget) {
+          if (mapSection) {
+            mapSection.hidden = false;
+          }
 
-        const mapTarget = view.querySelector<HTMLElement>('[data-plan-map]');
+          if (openOsmLink) {
+            openOsmLink.href = getOpenStreetMapPlaceUrlFromCoordinates(plan.locationLat, plan.locationLng);
+          }
 
-        if (mapTarget && hasPlanLocation(plan)) {
+          if (openGoogleLink) {
+            openGoogleLink.href = getGoogleMapsPlaceUrl(getPlanLocationLabel(plan));
+          }
+
+          if (openDirectionsLink) {
+            openDirectionsLink.href = getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng);
+          }
+
           map = L.map(mapTarget, {
             zoomControl: true,
             scrollWheelZoom: false,
@@ -129,6 +130,26 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
               { maxZoom: 15, padding: [48, 48] },
             );
           }
+        } else if (mapSection) {
+          mapSection.hidden = true;
+        }
+
+        if (hasPlanLocation(plan)) {
+          nearbyPoiExplorer.setSource({
+            latitude: plan.locationLat,
+            longitude: plan.locationLng,
+            label: plan.name,
+            emptyTitle: '',
+            emptyDescription: '',
+            emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
+          });
+        } else {
+          nearbyPoiExplorer.setSource({
+            label: plan.name,
+            emptyTitle: t('poi.plan.noLocationTitle'),
+            emptyDescription: t('poi.plan.noLocationDescription'),
+            emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
+          });
         }
       });
     });
