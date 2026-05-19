@@ -177,6 +177,10 @@ export function getRoleOptions(locale: Locale) {
   return tripMemberRoles.map((role) => ({ value: role, label: getRoleLabel(locale, role) }));
 }
 
+export function formatTripDateRange(locale: Locale, trip: Pick<TripRecord, 'startDate' | 'endDate'>) {
+  return formatDateRange(trip.startDate, trip.endDate, locale, getPageTranslator(locale)('trip.dateRange.invalid'));
+}
+
 export function setAppShellTitle(title: string) {
   const target = document.querySelector<HTMLElement>('[data-app-title]');
 
@@ -269,7 +273,7 @@ export function syncTripShell(locale: Locale, trip: TripRecord) {
   setAppShellTitle(trip.name);
   setAppShellDescription(trip.location);
   setAppShellMeta([
-    formatDateRange(trip.startDate, trip.endDate, locale),
+    formatTripDateRange(locale, trip),
     getTripStatusLabel(locale, trip.status),
     trip.ownerEmail,
   ]);

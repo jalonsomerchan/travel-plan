@@ -4,6 +4,7 @@ import { getAccommodationInputFromForm } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
 import { createTrip } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator } from './shared';
@@ -25,13 +26,22 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
     event.preventDefault();
     if (!currentUser) return;
     const data = new FormData(form);
+    const startDate = String(data.get('startDate') ?? '');
+    const endDate = String(data.get('endDate') ?? '');
+    const dateRangeValidation = validateTripDateRange(startDate, endDate);
+
+    if (!dateRangeValidation.valid) {
+      setMessage(message, t(dateRangeValidation.errorKey ?? 'trip.form.dateRangeError'), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('dashboard.createAction'), t('dashboard.creating'));
     try {
       const tripId = await createTrip(currentUser, {
         name: String(data.get('name') ?? ''),
         location: String(data.get('location') ?? ''),
-        startDate: String(data.get('startDate') ?? ''),
-        endDate: String(data.get('endDate') ?? ''),
+        startDate,
+        endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
         accommodation: getAccommodationInputFromForm(form),
       });
