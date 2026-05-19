@@ -15,6 +15,7 @@ import { generateTripPlanSuggestions } from '../../lib/ai/trip-plan-suggestions'
 import { createPlan, subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
+import { initLocationPickers } from './plan-location-picker';
 import {
   ensureFirebaseReady,
   getCategoryLabel,
@@ -31,7 +32,7 @@ interface SuggestionEntry {
 }
 
 export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
-  const totalSteps = 5;
+  const totalSteps = 6;
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const form = document.querySelector<HTMLFormElement>('#trip-ai-form');
   const formMessage = document.querySelector<HTMLElement>('#trip-ai-form-message');
@@ -42,6 +43,8 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   const resultsList = document.querySelector<HTMLElement>('[data-trip-ai-results-list]');
   const resultsLoading = document.querySelector<HTMLElement>('[data-trip-ai-results-loading]');
   const resultsCount = document.querySelector<HTMLElement>('[data-results-count]');
+  const resultsActions = document.querySelector<HTMLElement>('[data-trip-ai-results-actions]');
+  const loadMoreButton = document.querySelector<HTMLButtonElement>('#trip-ai-load-more');
   const prevStepButton = document.querySelector<HTMLButtonElement>('#trip-ai-prev-step');
   const nextStepButton = document.querySelector<HTMLButtonElement>('#trip-ai-next-step');
   const submitButton = document.querySelector<HTMLButtonElement>('#trip-ai-submit');
@@ -56,6 +59,8 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   if (!tripId || !form || !resultsList || !resultsMessage || !resultsLoading) {
     return;
   }
+
+  initLocationPickers();
 
   if (!ensureFirebaseReady(locale)) {
     return;
@@ -109,11 +114,15 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       return t('tripAi.error.invalidTransport');
     }
 
-    if (currentStep === 3 && filters.types.length === 0) {
+    if (currentStep === 3 && !filters.budgetMode) {
+      return t('tripAi.error.invalidBudget');
+    }
+
+    if (currentStep === 4 && filters.types.length === 0) {
       return t('tripAi.error.invalidTypes');
     }
 
-    if (currentStep === 4) {
+    if (currentStep === 5) {
       const validationError = validateTripPlanSuggestionFilters(filters, currentTrip);
       return validationError ? getValidationMessage(validationError, locale) : null;
     }
@@ -134,6 +143,9 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     const visibleCount = suggestions.length;
     resultsCount.textContent = String(visibleCount);
     resultsCount.dataset.tone = visibleCount > 0 ? 'primary' : 'warning';
+    if (resultsActions) {
+      resultsActions.hidden = visibleCount === 0;
+    }
   };
 
   const setResultsState = (message: string, tone: 'default' | 'success' | 'danger' = 'default') => {
@@ -201,13 +213,16 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     }
   };
 
-  const loadSuggestions = async (filters: TripPlanSuggestionFilters) => {
+  const loadSuggestions = async (filters: TripPlanSuggestionFilters, append = false) => {
     if (!currentTrip || !currentUser) {
       return 'error' as const;
     }
 
     setLoading(true);
     setResultsState(t('tripAi.results.loading'));
+    if (loadMoreButton) {
+      setButtonBusy(loadMoreButton, true, t('tripAi.results.loadMore'), t('tripAi.results.loadingMore'));
+    }
 
     try {
       const plans = await generateTripPlanSuggestions({
@@ -216,18 +231,25 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
         trip: currentTrip,
         existingPlans: currentPlans,
         filters,
+        alreadySuggestedPlans: suggestions.map((entry) => entry.plan),
       });
 
-      suggestions = plans.map((plan, index) => ({
+      const nextSuggestions = plans.map((plan, index) => ({
         id: `${Date.now()}-${index}`,
         plan,
         isSaving: false,
       }));
+      suggestions = append ? [...suggestions, ...nextSuggestions] : nextSuggestions;
 
       renderSuggestions();
 
-      if (suggestions.length === 0) {
+      if (nextSuggestions.length === 0 && !append) {
         setResultsState(t('tripAi.results.empty'));
+        return 'empty' as const;
+      }
+
+      if (nextSuggestions.length === 0 && append) {
+        setResultsState(t('tripAi.results.noMore'));
         return 'empty' as const;
       }
 
@@ -245,6 +267,9 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       return 'error' as const;
     } finally {
       setLoading(false);
+      if (loadMoreButton) {
+        setButtonBusy(loadMoreButton, false, t('tripAi.results.loadMore'), t('tripAi.results.loadingMore'));
+      }
     }
   };
 
@@ -324,7 +349,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
         context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
       }
 
-      const baseLocationInput = form.elements.namedItem('baseLocation') as HTMLInputElement | null;
+      const baseLocationInput = form.elements.namedItem('baseLocationQuery') as HTMLInputElement | null;
       const startDateInput = form.elements.namedItem('startDate') as HTMLInputElement | null;
       const endDateInput = form.elements.namedItem('endDate') as HTMLInputElement | null;
 
@@ -369,6 +394,23 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     goToStep(currentStep + 1);
   });
 
+  loadMoreButton?.addEventListener('click', async () => {
+    if (!currentTrip) {
+      setResultsState(t('trip.notFound'), 'danger');
+      return;
+    }
+
+    const filters = getTripPlanSuggestionFilters(form);
+    const validationError = validateTripPlanSuggestionFilters(filters, currentTrip);
+
+    if (validationError) {
+      setResultsState(getValidationMessage(validationError, locale), 'danger');
+      return;
+    }
+
+    await loadSuggestions(filters, true);
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -410,6 +452,7 @@ function getValidationMessage(code: ReturnType<typeof validateTripPlanSuggestion
     baseLocation: t('tripAi.error.invalidBaseLocation'),
     radiusKm: t('tripAi.error.invalidRadius'),
     transportMode: t('tripAi.error.invalidTransport'),
+    budgetMode: t('tripAi.error.invalidBudget'),
     types: t('tripAi.error.invalidTypes'),
     dates: t('tripAi.error.invalidDates'),
     dateOrder: t('tripAi.error.invalidDateOrder'),

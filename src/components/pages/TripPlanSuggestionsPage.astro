@@ -4,8 +4,9 @@ import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
+import LocationPickerFields from '../app/LocationPickerFields.astro';
 import { planCategoryValues } from '../../lib/app/models';
-import { tripSuggestionTransportValues } from '../../lib/app/trip-plan-suggestions';
+import { tripSuggestionBudgetValues, tripSuggestionTransportValues } from '../../lib/app/trip-plan-suggestions';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -48,7 +49,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
               {t('tripAi.form.title')}
             </h2>
             <p class="mt-3 text-sm font-semibold text-[var(--color-text-soft)]" data-trip-ai-step-progress>
-              {t('tripAi.form.stepProgress').replace('{current}', '1').replace('{total}', '5')}
+              {t('tripAi.form.stepProgress').replace('{current}', '1').replace('{total}', '6')}
             </p>
           </div>
           <span class="status-pill" data-tone="primary">{t('tripAi.form.badge')}</span>
@@ -62,8 +63,19 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
               <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAi.form.baseLocationHint')}</p>
             </div>
             <div>
-              <label class="field-label" for="trip-ai-base-location">{t('tripAi.form.baseLocation')}</label>
-              <input class="field-input" id="trip-ai-base-location" name="baseLocation" required />
+              <LocationPickerFields
+                clearButtonName={t('tripAi.form.baseLocationClear')}
+                helperKey="tripAi.form.baseLocationMapHint"
+                latFieldName="baseLocationLat"
+                locale={locale}
+                lngFieldName="baseLocationLng"
+                nameFieldName="baseLocationName"
+                prefix="trip-ai-base-location"
+                queryFieldLabel={t('tripAi.form.baseLocation')}
+                queryFieldName="baseLocationQuery"
+                queryPlaceholder={t('tripAi.form.baseLocationPlaceholder')}
+                searchButtonName={t('tripAi.form.baseLocationSearch')}
+              />
             </div>
           </section>
 
@@ -108,6 +120,22 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <section class="space-y-4" data-trip-ai-step="3" hidden>
             <div>
               <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '4')}</span>
+              <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAi.form.budgetQuestion')}</h3>
+              <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAi.form.budgetHint')}</p>
+            </div>
+            <div>
+              <label class="field-label" for="trip-ai-budget">{t('tripAi.form.budget')}</label>
+              <select class="field-select" id="trip-ai-budget" name="budgetMode">
+                {tripSuggestionBudgetValues.map((budget) => (
+                  <option value={budget}>{t(`tripAi.budget.${budget}`)}</option>
+                ))}
+              </select>
+            </div>
+          </section>
+
+          <section class="space-y-4" data-trip-ai-step="4" hidden>
+            <div>
+              <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '5')}</span>
               <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAi.form.typesQuestion')}</h3>
               <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAi.form.typesHint')}</p>
             </div>
@@ -131,9 +159,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
             </div>
           </section>
 
-          <section class="space-y-4" data-trip-ai-step="4" hidden>
+          <section class="space-y-4" data-trip-ai-step="5" hidden>
             <div>
-              <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '5')}</span>
+              <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '6')}</span>
               <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAi.form.datesQuestion')}</h3>
               <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAi.form.datesHint')}</p>
             </div>
@@ -180,6 +208,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           </div>
         </div>
         <div class="mt-5 grid gap-4" data-trip-ai-results-list></div>
+        <div class="mt-5 flex flex-wrap gap-3" data-trip-ai-results-actions hidden>
+          <Button id="trip-ai-load-more" type="button" variant="secondary">{t('tripAi.results.loadMore')}</Button>
+        </div>
         </div>
       </div>
     </section>

@@ -1,13 +1,18 @@
 import type { PlanCategory, PlanInput, PlanRecord, TripRecord } from './models';
 
-export const tripSuggestionTransportValues = ['car', 'bus', 'train', 'plane', 'urban-bus', 'metro'] as const;
+export const tripSuggestionTransportValues = ['', 'walk', 'bicycle', 'public-transport'] as const;
+export const tripSuggestionBudgetValues = ['free', 'paid', 'both'] as const;
 
 export type TripSuggestionTransportMode = (typeof tripSuggestionTransportValues)[number];
+export type TripSuggestionBudgetMode = (typeof tripSuggestionBudgetValues)[number];
 
 export interface TripPlanSuggestionFilters {
   baseLocation: string;
+  baseLatitude?: number;
+  baseLongitude?: number;
   radiusKm: number;
   transportMode: TripSuggestionTransportMode;
+  budgetMode: TripSuggestionBudgetMode;
   types: PlanCategory[];
   startDate: string;
   endDate: string;
@@ -31,13 +36,22 @@ export function getTripPlanSuggestionFilters(form: HTMLFormElement): TripPlanSug
     .getAll('types')
     .map((value) => String(value))
     .filter(isPlanCategory);
+  const baseLocationName = normalizeText(String(data.get('baseLocationName') ?? ''));
+  const baseLocationQuery = normalizeText(String(data.get('baseLocationQuery') ?? ''));
+  const baseLat = String(data.get('baseLocationLat') ?? '');
+  const baseLng = String(data.get('baseLocationLng') ?? '');
 
   return {
-    baseLocation: normalizeText(String(data.get('baseLocation') ?? '')),
+    baseLocation: baseLocationName || baseLocationQuery,
+    baseLatitude: baseLat ? Number(baseLat) : undefined,
+    baseLongitude: baseLng ? Number(baseLng) : undefined,
     radiusKm: Number(data.get('radiusKm') ?? 0),
     transportMode: isTransportMode(data.get('transportMode'))
       ? data.get('transportMode')
       : tripSuggestionTransportValues[0],
+    budgetMode: isBudgetMode(data.get('budgetMode'))
+      ? data.get('budgetMode')
+      : tripSuggestionBudgetValues[2],
     types: selectedTypes,
     startDate: String(data.get('startDate') ?? ''),
     endDate: String(data.get('endDate') ?? ''),
@@ -53,8 +67,8 @@ export function validateTripPlanSuggestionFilters(filters: TripPlanSuggestionFil
     return 'radiusKm';
   }
 
-  if (!isTransportMode(filters.transportMode)) {
-    return 'transportMode';
+  if (!isBudgetMode(filters.budgetMode)) {
+    return 'budgetMode';
   }
 
   if (filters.types.length === 0) {
@@ -154,6 +168,10 @@ function hasPlanConflict(
 
 function isTransportMode(value: FormDataEntryValue | null): value is TripSuggestionTransportMode {
   return typeof value === 'string' && tripSuggestionTransportValues.includes(value as TripSuggestionTransportMode);
+}
+
+function isBudgetMode(value: FormDataEntryValue | null): value is TripSuggestionBudgetMode {
+  return typeof value === 'string' && tripSuggestionBudgetValues.includes(value as TripSuggestionBudgetMode);
 }
 
 function isPlanCategory(value: string): value is PlanCategory {

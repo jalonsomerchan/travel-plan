@@ -22,6 +22,7 @@ type GenerateTripPlanSuggestionsInput = {
   trip: TripRecord;
   existingPlans: PlanRecord[];
   filters: TripPlanSuggestionFilters;
+  alreadySuggestedPlans?: AiPlanSuggestionsResponse['plans'];
 };
 
 export async function generateTripPlanSuggestions(input: GenerateTripPlanSuggestionsInput) {
@@ -97,23 +98,31 @@ function buildTripPlanSuggestionsSystemPrompt(locale: string, trip: TripRecord) 
 }
 
 function buildTripPlanSuggestionsUserPrompt(input: GenerateTripPlanSuggestionsInput) {
-  const { trip, filters, existingPlans } = input;
+  const { trip, filters, existingPlans, alreadySuggestedPlans = [] } = input;
   const existingPlansBlock = describeExistingPlans(existingPlans);
   const transportLabel = getTransportPromptLabel(filters.transportMode);
+  const budgetLabel = getBudgetPromptLabel(filters.budgetMode);
+  const alreadySuggestedBlock = describeAlreadySuggestedPlans(alreadySuggestedPlans);
 
   return buildJsonPrompt([
     `Trip: ${trip.name}.`,
     `Destination context: ${trip.location}.`,
     `Trip dates: ${trip.startDate} to ${trip.endDate}.`,
     `Base search area: ${filters.baseLocation}.`,
+    filters.baseLatitude !== undefined && filters.baseLongitude !== undefined
+      ? `Base coordinates: ${filters.baseLatitude.toFixed(5)}, ${filters.baseLongitude.toFixed(5)}.`
+      : '',
     `Search radius: ${Math.round(filters.radiusKm)} km.`,
-    `Preferred transport mode: ${transportLabel}.`,
+    transportLabel ? `Preferred transport mode: ${transportLabel}.` : 'Preferred transport mode: not specified.',
+    `Budget preference: ${budgetLabel}.`,
     `Desired plan types: ${filters.types.join(', ')}.`,
     `Requested date window: ${filters.startDate} to ${filters.endDate}.`,
     trip.accommodation?.name
       ? `Accommodation: ${trip.accommodation.name}${trip.accommodation.locationName ? ` | ${trip.accommodation.locationName}` : ''}.`
       : 'Accommodation: not specified.',
     'Avoid recommending obvious duplicates, identical place/time combinations, or plans that clash with the saved itinerary.',
+    alreadySuggestedBlock ? 'Candidates already shown in this session. Do not repeat them:' : '',
+    alreadySuggestedBlock || '',
     'Existing saved plans in this trip:',
     existingPlansBlock || '- none',
     `Return up to ${maxReturnedPlans} strong candidate plans. Prefer variety across the selected plan types.`,
@@ -140,15 +149,30 @@ function describeExistingPlans(existingPlans: PlanRecord[]) {
 
 function getTransportPromptLabel(mode: TripPlanSuggestionFilters['transportMode']) {
   const labels: Record<TripPlanSuggestionFilters['transportMode'], string> = {
-    car: 'car',
-    bus: 'bus',
-    train: 'train',
-    plane: 'plane',
-    'urban-bus': 'urban bus',
-    metro: 'metro',
+    '': '',
+    walk: 'walking',
+    bicycle: 'bicycle',
+    'public-transport': 'public transport',
   };
 
   return labels[mode];
+}
+
+function getBudgetPromptLabel(mode: TripPlanSuggestionFilters['budgetMode']) {
+  const labels: Record<TripPlanSuggestionFilters['budgetMode'], string> = {
+    free: 'free only',
+    paid: 'paid only',
+    both: 'free or paid',
+  };
+
+  return labels[mode];
+}
+
+function describeAlreadySuggestedPlans(plans: AiPlanSuggestionsResponse['plans']) {
+  return plans
+    .slice(0, maxExistingPlansInPrompt)
+    .map((plan) => `- ${plan.title} | type:${plan.type} | ${plan.latitude.toFixed(5)}, ${plan.longitude.toFixed(5)}`)
+    .join('\n');
 }
 
 function normalizeTripPlanSuggestionError(error: unknown) {
