@@ -1,0 +1,4 @@
+{
+  "trip.form.dateRangeError": "The end date cannot be earlier than the start date.",
+  "trip.dateRange.invalid": "Invalid date range"
+}
