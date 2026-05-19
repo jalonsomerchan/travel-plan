@@ -29,6 +29,16 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <div class="mb-6 flex flex-wrap gap-3">
+        <a
+          class="app-card-link"
+          data-plan-edit-visible-link
+          data-variant="secondary"
+          href={dashboardUrl}
+        >
+          {t('plan.goEdit')}
+        </a>
+      </div>
       <dl class="grid gap-4">
         <div>
           <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">

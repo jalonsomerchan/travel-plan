@@ -9,7 +9,13 @@ import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, syncTripNavigation, syncTripShell } from './shared';
+import {
+  ensureFirebaseReady,
+  formatTripDateRange,
+  getPageTranslator,
+  syncTripNavigation,
+  syncTripShell,
+} from './shared';
 import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {

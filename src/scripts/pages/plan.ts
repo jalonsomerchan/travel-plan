@@ -45,6 +45,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const mapSection = document.querySelector<HTMLElement>('[data-plan-map-section]');
   const mapTarget = document.querySelector<HTMLElement>('[data-plan-map]');
   const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
+  const visibleEditLink = document.querySelector<HTMLAnchorElement>('[data-plan-edit-visible-link]');
   const openOsmLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-osm]');
   const openGoogleLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-google]');
   const openDirectionsLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-directions]');
@@ -55,7 +56,9 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
   nearbyPoiRoot.dataset.tripId = tripId;
-  if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
+  const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
+  if (editLink) editLink.href = planEditUrl;
+  if (visibleEditLink) visibleEditLink.href = planEditUrl;
   const nearbyPoiExplorer = mountNearbyPoiExplorer(nearbyPoiRoot, { locale });
   observeSession((user) => {
     if (!user) {

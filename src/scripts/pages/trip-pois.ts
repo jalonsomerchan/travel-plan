@@ -12,6 +12,7 @@ import {
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
+  setBreadcrumbItem,
   syncTripNavigation,
 } from './shared';
 
@@ -49,6 +50,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
       setAppShellTitle(t('tripPois.titleWithTrip').replace('{trip}', trip.name));
       setAppShellDescription(trip.location);
       setAppShellMeta([formatDateRange(trip.startDate, trip.endDate, locale), trip.ownerEmail]);
+      setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
       explorerRoot.dataset.tripId = tripId;
 
       if (hasAccommodationLocation(trip.accommodation)) {
