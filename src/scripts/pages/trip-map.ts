@@ -7,17 +7,24 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import {
   getPlanCategoryColors,
   getPlanCategoryDotStyle,
 } from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripShell } from './shared';
+import { addMapTools } from '../maps/leaflet-map-tools';
+import {
+  ensureFirebaseReady,
+  getCategoryLabel,
+  getPageTranslator,
+  getPlanStatusLabel,
+  syncTripShell,
+} from './shared';
 
 const accommodationMarkerIcon = L.divIcon({
   className: 'trip-map-accommodation-marker',
@@ -126,9 +133,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     scrollWheelZoom: false,
   }).setView([40.4168, -3.7038], 5);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(map);
+  addMapTools(map, t);
 
   const markers = L.layerGroup().addTo(map);
 
