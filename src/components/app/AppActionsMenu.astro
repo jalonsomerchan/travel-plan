@@ -26,3 +26,24 @@ const { ariaLabel, label, items } = Astro.props;
     ))}
   </div>
 </details>
+
+<style is:global>
+  .section-shell:has(.app-actions-menu[open]) {
+    position: relative;
+    z-index: 40;
+    overflow: visible;
+  }
+
+  .app-shell-topbar {
+    position: relative;
+    z-index: 30;
+  }
+
+  .app-actions-menu[open] {
+    z-index: 50;
+  }
+
+  .app-actions-menu-panel {
+    z-index: 60;
+  }
+</style>
