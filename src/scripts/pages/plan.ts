@@ -46,7 +46,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         }
 
         view.innerHTML = `
-          <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 shadow-[var(--shadow-xs)]">
+          <div class="mt-8 border-t border-[var(--color-border)] pt-6">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <span class="eyebrow">${escapeHtml(t('plan.detailsEyebrow'))}</span>
@@ -76,7 +76,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
                   : ''
               }
             </dl>
-          </article>
+          </div>
         `;
 
         const mapTarget = view.querySelector<HTMLElement>('[data-plan-map]');
