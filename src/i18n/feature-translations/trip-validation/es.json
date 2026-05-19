@@ -1,0 +1,4 @@
+{
+  "trip.form.dateRangeError": "La fecha final no puede ser anterior a la fecha inicial.",
+  "trip.dateRange.invalid": "Rango de fechas inválido"
+}
