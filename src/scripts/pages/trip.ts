@@ -44,9 +44,11 @@ interface UserLocation {
   longitude: number;
 }
 
+type GeolocationErrorKey = 'geolocation.error.unsupported' | 'geolocation.error.unavailable';
+
 interface GeolocationState {
   isLoading: boolean;
-  error: boolean;
+  errorKey: GeolocationErrorKey | null;
   location: UserLocation | null;
 }
 
@@ -128,7 +130,7 @@ function renderPlans(
     return;
   }
   target.innerHTML = `
-    ${geolocation.error ? `<p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</p>` : ''}
+    ${geolocation.errorKey ? `<p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t(geolocation.errorKey))}</p>` : ''}
     ${plans.map((plan) => {
       const description = plan.description?.trim();
       const categoryLabel = getCategoryLabel(locale, plan.category);
@@ -202,7 +204,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
-  const geolocation: GeolocationState = { isLoading: false, error: false, location: null };
+  const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
   const filters: PlanFilters = { search: '', category: 'all', status: 'all' };
   if (!tripId) {
     setAppShellTitle(t('trip.missingId'));
@@ -246,15 +248,15 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
-      updateGeolocation({ error: true, isLoading: false });
+      updateGeolocation({ errorKey: 'geolocation.error.unsupported', isLoading: false });
       return;
     }
 
-    updateGeolocation({ error: false, isLoading: true });
+    updateGeolocation({ errorKey: null, isLoading: true });
     navigator.geolocation.getCurrentPosition(
       (position) => {
         updateGeolocation({
-          error: false,
+          errorKey: null,
           isLoading: false,
           location: {
             latitude: position.coords.latitude,
@@ -262,7 +264,12 @@ export function mountTripPage({ locale }: { locale: Locale }) {
           },
         });
       },
-      () => updateGeolocation({ error: true, isLoading: false, location: null }),
+      () =>
+        updateGeolocation({
+          errorKey: 'geolocation.error.unavailable',
+          isLoading: false,
+          location: null,
+        }),
       { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 },
     );
   };

@@ -253,6 +253,21 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(sessionSource, /await syncUserProfile\(credential\.user\)/);
   });
 
+  it('uses geolocation-specific errors instead of auth errors for current location', () => {
+    const tripPageScript = readText('src/scripts/pages/trip.ts');
+    const i18nHelper = readText('src/i18n/ui.ts');
+    const esMessages = readJson('src/i18n/feature-translations/geolocation/es.json');
+    const enMessages = readJson('src/i18n/feature-translations/geolocation/en.json');
+
+    assert.match(tripPageScript, /geolocation\.error\.unsupported/);
+    assert.match(tripPageScript, /geolocation\.error\.unavailable/);
+    assert.doesNotMatch(tripPageScript, /geolocation[\s\S]{0,400}auth\.error/);
+    assert.match(i18nHelper, /feature-translations\/geolocation\/es\.json/);
+    assert.equal(typeof esMessages['geolocation.error.unsupported'], 'string');
+    assert.equal(typeof esMessages['geolocation.error.unavailable'], 'string');
+    assert.deepEqual(Object.keys(enMessages).sort(), Object.keys(esMessages).sort());
+  });
+
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');
     const ciWorkflow = readText('.github/workflows/ci.yml');
