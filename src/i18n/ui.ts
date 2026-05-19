@@ -2,12 +2,22 @@ import { defaultLocale, locales, type Locale } from '../config/site';
 import { joinPathSegments, stripBasePath, withBasePath } from '../utils/paths';
 import en from './translations/en.json';
 import es from './translations/es.json';
+import mapEn from './feature-translations/map/en.json';
+import mapEs from './feature-translations/map/es.json';
 
-export type TranslationKey = keyof typeof es;
+export type TranslationKey = keyof typeof es | keyof typeof mapEs;
 
-const translations: Record<Locale, typeof es> = {
-  es,
-  en,
+type TranslationDictionary = Record<string, string>;
+
+const translations: Record<Locale, TranslationDictionary> = {
+  es: {
+    ...es,
+    ...mapEs,
+  },
+  en: {
+    ...en,
+    ...mapEn,
+  },
 };
 
 export function isLocale(locale: string | undefined): locale is Locale {
@@ -27,11 +37,7 @@ export function getLocaleFromUrl(pathname: string): Locale {
 
 export function useTranslations(locale: Locale) {
   return function t(key: TranslationKey | string): string {
-    return (
-      translations[locale]?.[key as TranslationKey] ??
-      translations[defaultLocale][key as TranslationKey] ??
-      key
-    );
+    return translations[locale]?.[key] ?? translations[defaultLocale][key] ?? key;
   };
 }
 
