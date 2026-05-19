@@ -219,7 +219,7 @@ export async function inviteUserToTrip(
   const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
   const existingInvite = await getDoc(inviteRef);
 
-  if (existingInvite.exists() && mapInviteRecord(existingInvite).status === 'pending') {
+  if (existingInvite.exists() && existingInvite.data().status === 'pending') {
     throw new InviteUserToTripError('duplicate-invite');
   }
 
