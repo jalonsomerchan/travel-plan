@@ -6,7 +6,7 @@ import {
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
-import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import { formatPlanMoment } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import {
   getPlanCategoryColors,
@@ -20,6 +20,7 @@ import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
 import {
   ensureFirebaseReady,
+  formatTripDateRange,
   getCategoryLabel,
   getPageTranslator,
   getPlanStatusLabel,
@@ -191,7 +192,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
       currentTrip = trip;
       if (tripName) {
         tripName.textContent = trip
-          ? `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`
+          ? `${trip.name} · ${formatTripDateRange(locale, trip)}`
           : t('trip.notFound');
       }
       if (trip) {
