@@ -1,0 +1,4 @@
+{
+  "geolocation.error.unsupported": "Your browser cannot get your current location.",
+  "geolocation.error.unavailable": "We could not get your current location. Check permissions or try again."
+}
