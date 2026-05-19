@@ -240,4 +240,22 @@ describe('project smoke checks', () => {
     assert.equal(existsSync(join(root, 'docs/firebase-guide.md')), true, 'docs/firebase-guide.md should exist');
     assert.equal(existsSync(join(root, 'public/CNAME')), true, 'public/CNAME should exist');
   });
+
+  it('keeps AppShell pages inside a single main card', () => {
+    const pageFiles = readdirSync(join(root, 'src/components/pages')).filter((file) => file.endsWith('.astro'));
+
+    pageFiles.forEach((file) => {
+      const source = readText(`src/components/pages/${file}`);
+
+      if (!source.includes('<AppShell')) {
+        return;
+      }
+
+      assert.doesNotMatch(
+        source,
+        /<\/AppShell>\s*<Container[\s\S]*section-shell/,
+        `${file} should keep the main page content inside AppShell instead of creating a second large card`
+      );
+    });
+  });
 });

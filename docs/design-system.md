@@ -80,6 +80,12 @@ Esto implica:
 - Si hay varias zonas funcionales, resolverlas dentro de esa misma card con divisores, grids internas o bloques secundarios, no con cards hermanas separadas.
 - Mantener excepciones solo cuando exista una razón funcional clara y esté pedida de forma explícita.
 
+Aplicación directa en este proyecto:
+
+- Si una página usa `AppShell`, ese `AppShell` cuenta como la card principal.
+- El contenido específico de la vista debe entrar en `slot="body"` del propio `AppShell`.
+- No colocar otra `section-shell` grande debajo del `AppShell` salvo excepción funcional muy justificada.
+
 ```css
 :root {
   color-scheme: light;

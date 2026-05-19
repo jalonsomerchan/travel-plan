@@ -285,18 +285,13 @@ export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord
 export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCount: number, completedCount: number) {
   const t = getPageTranslator(locale);
 
-  setAppShellTitle(t('tripChecklist.title'));
-  setAppShellDescription(t('tripChecklist.description'));
-  setAppShellMeta([
-    trip.name,
-    t('tripChecklist.pendingSummary').replace('{count}', String(pendingCount)),
-    t('tripChecklist.completedSummary').replace('{count}', String(completedCount)),
-  ]);
+  setAppShellTitle(t('tripChecklist.titleWithTrip').replace('{trip}', trip.name));
+  setAppShellDescription('');
+  setAppShellMeta([]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
   setBreadcrumbItem(
     'trip-checklist',
     t('tripChecklist.breadcrumb'),
     getAppUrl(locale, 'trip-checklist', { trip: trip.id }),
   );
-  revealAppShell();
 }

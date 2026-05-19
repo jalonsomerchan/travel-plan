@@ -4,7 +4,6 @@ import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 import { tripMemberRoles } from '../../lib/app/models';
@@ -34,39 +33,37 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <Button id="trip-members-back-link" href={dashboardUrl} variant="ghost">{t('trip.backToDashboard')}</Button>
       </div>
     </AppToolbar>
-  </AppShell>
-  <Container class="pb-12">
-    <section class="section-shell px-6 py-6 md:px-8">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div class="min-w-0">
-      <h2 class="text-2xl font-black" data-trip-context>{t('trip.membersTitle')}</h2>
-      <form class="mt-6 grid gap-4 md:grid-cols-[1fr_auto_auto]" id="invite-form">
-        <div>
-          <label class="field-label" for="invite-email">{t('trip.invite.email')}</label>
-          <input class="field-input" id="invite-email" name="email" type="email" required />
-        </div>
-        <div>
-          <label class="field-label" for="invite-role">{t('trip.invite.role')}</label>
-          <select class="field-select" id="invite-role" name="role">
-            {tripMemberRoles.map((role) => (
-              <option value={role}>{t(`role.${role}`)}</option>
-            ))}
-          </select>
-        </div>
-        <div class="flex items-end">
-          <Button class="w-full md:w-auto" type="submit">{t('trip.invite.action')}</Button>
-        </div>
-      </form>
-      <p class="mt-4 text-sm text-[var(--color-text-soft)]" id="invite-message">{t('trip.invite.helper')}</p>
+          <h2 class="text-2xl font-black" data-trip-context>{t('trip.membersTitle')}</h2>
+          <form class="mt-6 grid gap-4 md:grid-cols-[1fr_auto_auto]" id="invite-form">
+            <div>
+              <label class="field-label" for="invite-email">{t('trip.invite.email')}</label>
+              <input class="field-input" id="invite-email" name="email" type="email" required />
+            </div>
+            <div>
+              <label class="field-label" for="invite-role">{t('trip.invite.role')}</label>
+              <select class="field-select" id="invite-role" name="role">
+                {tripMemberRoles.map((role) => (
+                  <option value={role}>{t(`role.${role}`)}</option>
+                ))}
+              </select>
+            </div>
+            <div class="flex items-end">
+              <Button class="w-full md:w-auto" type="submit">{t('trip.invite.action')}</Button>
+            </div>
+          </form>
+          <p class="mt-4 text-sm text-[var(--color-text-soft)]" id="invite-message">{t('trip.invite.helper')}</p>
         </div>
         <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
-      <div class="grid gap-4" data-member-list>
-        <LoadingState label={t('common.loading')} />
-      </div>
+          <div class="grid gap-4" data-member-list>
+            <LoadingState label={t('common.loading')} />
+          </div>
         </div>
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
   <script>
     import { mountTripMembersPage } from '../../scripts/pages/trip-members';
 

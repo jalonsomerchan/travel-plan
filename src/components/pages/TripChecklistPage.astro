@@ -5,7 +5,6 @@ import AppShell from '../app/AppShell.astro';
 import ChecklistItemFormFields from '../app/ChecklistItemFormFields.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -20,9 +19,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('tripChecklist.metaTitle')} description={t('tripChecklist.metaDescription')} locale={locale}>
   <AppShell
-    eyebrow={t('tripChecklist.eyebrow')}
     title={t('tripChecklist.title')}
-    description={t('tripChecklist.description')}
     loading
     loadingLabel={t('common.loading')}
     breadcrumbs={[
@@ -40,11 +37,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         </Button>
       </div>
     </div>
-  </AppShell>
-  <Container class="pb-12">
-    <section class="section-shell mx-auto max-w-4xl px-6 py-6 md:px-8">
-      <h2 class="text-2xl font-black" data-trip-context>{t('tripChecklist.sectionTitle')}</h2>
-      <div class="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
         <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>
       </div>
@@ -62,8 +56,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <LoadingState label={t('common.loading')} />
         </div>
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
   <script>
     import { mountTripChecklistPage } from '../../scripts/pages/trip-checklist';
 

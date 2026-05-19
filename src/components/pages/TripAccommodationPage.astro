@@ -5,7 +5,6 @@ import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import AccommodationFormFields from '../app/AccommodationFormFields.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -44,10 +43,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         ]}
       />
     </div>
-  </AppShell>
-
-  <Container class="pb-12">
-    <section class="section-shell px-6 py-6 md:px-8">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div data-accommodation-view>
         <LoadingState label={t('common.loading')} />
       </div>
@@ -61,8 +57,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         </div>
         </form>
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
 
   <script>
     import { mountTripAccommodationPage } from '../../scripts/pages/trip-accommodation';

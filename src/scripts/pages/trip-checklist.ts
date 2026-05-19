@@ -1,6 +1,5 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
-import { formatDateRange } from '../../lib/app/format';
 import type { ChecklistItemRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import {
@@ -99,13 +98,14 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const form = document.querySelector<HTMLFormElement>('#trip-checklist-form');
   const message = document.querySelector<HTMLElement>('#trip-checklist-message');
-  const context = document.querySelector<HTMLElement>('[data-trip-context]');
   const list = document.querySelector<HTMLElement>('[data-checklist-list]');
   const backLink = document.querySelector<HTMLAnchorElement>('#trip-checklist-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
+  let tripLoaded = false;
+  let itemsLoaded = false;
 
   if (!tripId || !form || !list) {
     return;
@@ -127,6 +127,10 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
         getPendingChecklistCount(currentItems),
         currentItems.length - getPendingChecklistCount(currentItems),
       );
+
+      if (tripLoaded && itemsLoaded) {
+        revealAppShell();
+      }
     }
   };
 
@@ -138,12 +142,9 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
 
     subscribeTrip(tripId, (trip) => {
       currentTrip = trip;
+      tripLoaded = true;
 
       if (trip) {
-        if (context) {
-          context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-        }
-
         syncShell();
       } else {
         setAppShellTitle(t('trip.notFound'));
@@ -155,6 +156,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
 
     subscribeTripChecklistItems(tripId, (items) => {
       currentItems = items;
+      itemsLoaded = true;
       renderChecklistItems(locale, items);
       syncShell();
     });
