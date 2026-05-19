@@ -1,7 +1,7 @@
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
-import { getPlanInputFromForm } from '../../lib/app/plan-location';
+import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
@@ -36,6 +36,13 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const locationValidationKey = getPlanLocationValidationKey(form);
+
+    if (locationValidationKey) {
+      setMessage(message, t(locationValidationKey), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
     try {
       await createPlan(tripId, getPlanInputFromForm(form));
