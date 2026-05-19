@@ -110,10 +110,10 @@ describe('project smoke checks', () => {
 
     assert.equal(existsSync(join(root, googleButtonPath)), true, `${googleButtonPath} should exist`);
     assert.match(googleButton, /viewBox=\"0 0 24 24\"/);
-    assert.match(googleButton, /type=\"submit\"/);
     assert.doesNotMatch(googleButton, /fonts\.googleapis|gstatic|flaticon/);
     assert.match(landingPage, /GoogleSignInButton/);
     assert.match(landingPage, /google-sign-in-form/);
+    assert.match(landingPage, /type=\"submit\"/);
   });
 
   it('keeps Astro i18n enabled and aligned with site config', () => {
