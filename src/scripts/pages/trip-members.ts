@@ -5,7 +5,12 @@ import { formatDateRange } from '../../lib/app/format';
 import type { TripMemberRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
-import { inviteUserToTrip, subscribeTrip, subscribeTripMembers } from '../../lib/firebase/trips';
+import {
+  InviteUserToTripError,
+  inviteUserToTrip,
+  subscribeTrip,
+  subscribeTripMembers,
+} from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator, getRoleLabel, syncTripShell } from './shared';
 
 function renderMembers(locale: Locale, members: TripMemberRecord[]) {
@@ -17,6 +22,16 @@ function renderMembers(locale: Locale, members: TripMemberRecord[]) {
     return;
   }
   target.innerHTML = members.map((member) => `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4"><div class="flex items-center justify-between gap-3"><div><p class="font-semibold text-[var(--color-text)]">${escapeHtml(member.email)}</p><p class="mt-1 text-sm text-[var(--color-text-soft)]">${escapeHtml(getRoleLabel(locale, member.role))}</p></div><span class="status-pill" data-tone="primary">${escapeHtml(getRoleLabel(locale, member.role))}</span></div></article>`).join('');
+}
+
+function getInviteErrorMessage(locale: Locale, error: unknown) {
+  const t = getPageTranslator(locale);
+
+  if (error instanceof InviteUserToTripError) {
+    return t(`trip.invite.${error.code}`);
+  }
+
+  return t('trip.invite.error');
 }
 
 export function mountTripMembersPage({ locale }: { locale: Locale }) {
@@ -57,7 +72,7 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
       form.reset();
       setMessage(message, t('trip.invite.sent'), 'success');
     } catch (error) {
-      setMessage(message, error instanceof Error ? error.message : t('trip.invite.error'), 'danger');
+      setMessage(message, getInviteErrorMessage(locale, error), 'danger');
     } finally {
       setButtonBusy(button, false, t('trip.invite.action'), t('trip.invite.sending'));
     }
