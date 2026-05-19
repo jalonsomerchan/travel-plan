@@ -26,12 +26,20 @@ async function syncUserProfile(user: User) {
   );
 }
 
+async function trySyncUserProfile(user: User) {
+  try {
+    await syncUserProfile(user);
+  } catch (error) {
+    console.warn('syncUserProfile', error);
+  }
+}
+
 export function observeSession(callback: (user: User | null) => void) {
   const auth = getFirebaseAuth();
 
   return onAuthStateChanged(auth, async (user) => {
     if (user) {
-      await syncUserProfile(user);
+      await trySyncUserProfile(user);
     }
 
     callback(user);
@@ -46,7 +54,7 @@ export async function signInWithGoogle() {
   });
   const credential = await signInWithPopup(auth, provider);
 
-  await syncUserProfile(credential.user);
+  await trySyncUserProfile(credential.user);
 
   return credential.user;
 }
