@@ -6,14 +6,17 @@ service cloud.firestore {
     }
 
     function tripVisibleFromResource() {
-      return signedIn() &&
-        resource.data.memberIds is list &&
-        request.auth.uid in resource.data.memberIds;
+      return signedIn() && request.auth.uid in resource.data.memberIds;
+    }
+
+    function tripVisibleFromTripData(tripData) {
+      return signedIn() && request.auth.uid in tripData.memberIds;
     }
 
     function tripVisibleFromParent(tripId) {
-      return signedIn() &&
-        request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.memberIds;
+      return tripVisibleFromTripData(
+        get(/databases/$(database)/documents/trips/$(tripId)).data
+      );
     }
 
     match /users/{userId} {
@@ -22,7 +25,9 @@ service cloud.firestore {
 
     match /trips/{tripId} {
       allow read: if tripVisibleFromResource();
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        tripVisibleFromTripData(request.resource.data);
       allow update: if tripVisibleFromResource();
 
       match /members/{memberId} {

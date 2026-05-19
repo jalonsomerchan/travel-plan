@@ -91,14 +91,17 @@ service cloud.firestore {
     }
 
     function tripVisibleFromResource() {
-      return signedIn() &&
-        resource.data.memberIds is list &&
-        request.auth.uid in resource.data.memberIds;
+      return signedIn() && request.auth.uid in resource.data.memberIds;
+    }
+
+    function tripVisibleFromTripData(tripData) {
+      return signedIn() && request.auth.uid in tripData.memberIds;
     }
 
     function tripVisibleFromParent(tripId) {
-      return signedIn() &&
-        request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.memberIds;
+      return tripVisibleFromTripData(
+        get(/databases/$(database)/documents/trips/$(tripId)).data
+      );
     }
 
     function inviteRecipient(tripId) {
@@ -115,7 +118,9 @@ service cloud.firestore {
 
     match /trips/{tripId} {
       allow read: if tripVisibleFromResource();
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        tripVisibleFromTripData(request.resource.data);
       allow update: if tripVisibleFromResource() || inviteRecipient(tripId);
 
       match /members/{memberId} {
@@ -157,6 +162,12 @@ service cloud.firestore {
   }
 }
 ```
+
+Regla práctica:
+
+- Para esta app, la fuente principal de acceso a un viaje es `memberIds`.
+- El owner debe estar siempre incluido también en `memberIds`.
+- Si la query del dashboard lista `trips` por `memberIds`, las reglas de lectura de `trips` deben depender solo de ese campo del propio documento.
 
 ## Flujo de invitaciones
 
