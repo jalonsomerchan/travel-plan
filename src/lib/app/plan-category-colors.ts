@@ -64,11 +64,20 @@ export function getPlanCategoryColors(category: PlanCategory | string | undefine
 export function getPlanCategoryDotStyle(category: PlanCategory | string | undefined) {
   const colors = getPlanCategoryColors(category);
 
-  return `background:${colors.fill};border-color:${colors.border};`;
+  return [
+    'display:inline-flex',
+    'width:.75rem',
+    'height:.75rem',
+    'flex-shrink:0',
+    'border-radius:999px',
+    'border:2px solid',
+    `background:${colors.fill}`,
+    `border-color:${colors.border}`,
+  ].join(';');
 }
 
 export function getPlanCategoryCardStyle(category: PlanCategory | string | undefined) {
   const colors = getPlanCategoryColors(category);
 
-  return `border-left-color:${colors.border};background:${colors.soft};`;
+  return `border-left:4px solid ${colors.border};background:${colors.soft};`;
 }
