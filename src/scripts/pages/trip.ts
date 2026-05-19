@@ -1,6 +1,5 @@
 import type { Locale } from '../../config/site';
 import {
-  getAccommodationLocationLabel,
   getDistanceBetweenCoordinates,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
@@ -10,7 +9,7 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
-import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
+import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
@@ -34,6 +33,17 @@ interface PlanFilters {
   search: string;
   category: string;
   status: string;
+}
+
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
+interface GeolocationState {
+  isLoading: boolean;
+  error: boolean;
+  location: UserLocation | null;
 }
 
 function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
@@ -69,7 +79,59 @@ function getAccommodationDistanceLabel(locale: Locale, trip: TripRecord | null, 
   return `${t('accommodation.distanceLabel')}: ${formatDistance(distanceKm, locale)}`;
 }
 
-function renderPlans(locale: Locale, tripId: string, trip: TripRecord | null, plans: PlanRecord[]) {
+function getCurrentLocationDistanceLabel(
+  locale: Locale,
+  userLocation: UserLocation | null,
+  plan: PlanRecord,
+) {
+  if (!userLocation || !hasPlanLocation(plan)) {
+    return '';
+  }
+
+  const distanceKm = getDistanceBetweenCoordinates(
+    userLocation.latitude,
+    userLocation.longitude,
+    plan.locationLat,
+    plan.locationLng,
+  );
+
+  return formatDistance(distanceKm, locale);
+}
+
+function renderGeolocationControl(locale: Locale, plans: PlanRecord[], geolocation: GeolocationState) {
+  const t = getPageTranslator(locale);
+
+  if (!plans.some(hasPlanLocation)) {
+    return '';
+  }
+
+  const status = geolocation.isLoading
+    ? `<span class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('common.loading'))}</span>`
+    : geolocation.error
+      ? `<span class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</span>`
+      : '';
+
+  return `
+    <div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.helper'))}</p>
+        <button class="app-card-link" data-variant="secondary" type="button" data-current-location-action ${geolocation.isLoading ? 'disabled' : ''}>
+          ${escapeHtml(t('plan.location.getDirections'))}
+        </button>
+      </div>
+      ${status ? `<p class="mt-2">${status}</p>` : ''}
+    </div>
+  `;
+}
+
+function renderPlans(
+  locale: Locale,
+  tripId: string,
+  trip: TripRecord | null,
+  plans: PlanRecord[],
+  geolocation: GeolocationState,
+  requestCurrentLocation: () => void,
+) {
   const target = document.querySelector<HTMLElement>('[data-plan-list]');
   const t = getPageTranslator(locale);
   if (!target) return;
@@ -77,21 +139,34 @@ function renderPlans(locale: Locale, tripId: string, trip: TripRecord | null, pl
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('trip.plansEmpty'))}</article>`;
     return;
   }
-  target.innerHTML = plans.map((plan) => `
-    <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
-        </div>
-        <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
-      </div>
-      <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</p>
-      <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
-      ${hasPlanLocation(plan) ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.selected'))}: ${escapeHtml(getPlanLocationLabel(plan))}</p>` : ''}
-      ${getAccommodationDistanceLabel(locale, trip, plan) ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">${escapeHtml(getAccommodationDistanceLabel(locale, trip, plan))}</p>` : ''}
-    </a>
-  `).join('');
+  target.innerHTML = `
+    ${renderGeolocationControl(locale, plans, geolocation)}
+    ${plans.map((plan) => {
+      const description = plan.description?.trim();
+      const accommodationDistance = getAccommodationDistanceLabel(locale, trip, plan);
+      const currentLocationDistance = getCurrentLocationDistanceLabel(locale, geolocation.location, plan);
+
+      return `
+        <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
+            </div>
+            <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+          </div>
+          ${description ? `<p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(description)}</p>` : ''}
+          <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
+          ${currentLocationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">📍 ${escapeHtml(currentLocationDistance)}</p>` : ''}
+          ${accommodationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">${escapeHtml(accommodationDistance)}</p>` : ''}
+        </a>
+      `;
+    }).join('')}
+  `;
+
+  target
+    .querySelector<HTMLButtonElement>('[data-current-location-action]')
+    ?.addEventListener('click', requestCurrentLocation);
 }
 
 export function mountTripPage({ locale }: { locale: Locale }) {
@@ -110,6 +185,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
+  const geolocation: GeolocationState = { isLoading: false, error: false, location: null };
   const filters: PlanFilters = { search: '', category: 'all', status: 'all' };
   if (!tripId) {
     setAppShellTitle(t('trip.missingId'));
@@ -138,7 +214,42 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   }
 
   const syncPlans = () => {
-    renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters));
+    renderPlans(
+      locale,
+      tripId,
+      currentTrip,
+      filterPlans(allPlans, filters),
+      geolocation,
+      requestCurrentLocation,
+    );
+  };
+
+  const updateGeolocation = (nextState: Partial<GeolocationState>) => {
+    Object.assign(geolocation, nextState);
+    syncPlans();
+  };
+
+  const requestCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      updateGeolocation({ error: true, isLoading: false });
+      return;
+    }
+
+    updateGeolocation({ error: false, isLoading: true });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        updateGeolocation({
+          error: false,
+          isLoading: false,
+          location: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+        });
+      },
+      () => updateGeolocation({ error: true, isLoading: false, location: null }),
+      { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 },
+    );
   };
 
   searchInput?.addEventListener('input', () => {
