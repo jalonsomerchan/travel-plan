@@ -49,8 +49,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
           <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 shadow-[var(--shadow-xs)]">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 class="text-2xl font-black">${escapeHtml(plan.name)}</h2>
-                <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.name)} · ${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
+                <span class="eyebrow">${escapeHtml(t('plan.detailsEyebrow'))}</span>
+                <h2 class="mt-2 text-2xl font-black">${escapeHtml(t('plan.detailsTitle'))}</h2>
               </div>
               <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
             </div>
