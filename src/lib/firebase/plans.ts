@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
+import { normalizePlanLinks } from '../app/plan-links';
 import type { PlanInput, PlanRecord } from '../app/models';
 import { getFirebaseDb } from './config';
 
@@ -27,6 +28,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
     date: data.date ? String(data.date) : undefined,
     time: data.time ? String(data.time) : undefined,
     status: (data.status as PlanRecord['status']) ?? 'pending',
+    links: normalizePlanLinks(data.links),
   };
 }
 
