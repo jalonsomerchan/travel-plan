@@ -24,7 +24,7 @@ import {
 const accommodationMarkerIcon = L.divIcon({
   className: 'plan-map-accommodation-marker',
   html: `
-    <span aria-hidden="true" style="align-items:center;background:#0f766e;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;height:38px;justify-content:center;width:38px;">
+    <span aria-hidden="true" style="align-items:center;background:#0f766e;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42/.28);color:#ffffff;display:flex;height:38px;justify-content:center;width:38px;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M3 11.4 12 4l9 7.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M5.5 10.5V20h4.25v-5.5h4.5V20h4.25v-9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -109,8 +109,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
                         <div class="h-[30rem] w-full" data-plan-map aria-label="${escapeHtml(t('map.canvasTitle'))}"></div>
                       </div>
                       <div class="mt-4 flex flex-wrap gap-3">
-                        <a class="app-card-link" data-variant="secondary" href="${escapeHtml(getGoogleMapsPlaceUrl(getPlanLocationLabel(plan)))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.openMap'))}</a>
-                        <a class="app-card-link" data-variant="primary" href="${escapeHtml(getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.getDirections'))}</a>
+                        <a class="app-card-link" data-variant="secondary" href="${escapeHtml(getGoogleMapsPlaceUrl(getPlanLocationLabel(plan)))}" rel="noopener noreferrer" target="_blank">${escapeHtml(t('plan.location.openMap'))}</a>
+                        <a class="app-card-link" data-variant="primary" href="${escapeHtml(getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng))}" rel="noopener noreferrer" target="_blank">${escapeHtml(t('plan.location.getDirections'))}</a>
                       </div>
                     </div>
                   `
