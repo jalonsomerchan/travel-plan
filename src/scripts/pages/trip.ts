@@ -1,6 +1,5 @@
 import type { Locale } from '../../config/site';
 import {
-  getAccommodationLocationLabel,
   getDistanceBetweenCoordinates,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
