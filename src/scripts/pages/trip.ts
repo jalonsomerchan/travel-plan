@@ -58,7 +58,7 @@ function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
     const matchesCategory = filters.category === 'all' || plan.category === filters.category;
     const matchesStatus = filters.status === 'all' || plan.status === filters.status;
 
-    return matchesQuery && matchesCategory && matchesStatus;
+    return matchesQuery && matchesStatus && matchesCategory;
   });
 }
 
@@ -98,30 +98,14 @@ function getCurrentLocationDistanceLabel(
   return formatDistance(distanceKm, locale);
 }
 
-function renderGeolocationControl(locale: Locale, plans: PlanRecord[], geolocation: GeolocationState) {
-  const t = getPageTranslator(locale);
+function syncGeolocationAction(plans: PlanRecord[], geolocation: GeolocationState) {
+  const button = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
 
-  if (!plans.some(hasPlanLocation)) {
-    return '';
-  }
+  if (!button) return;
 
-  const status = geolocation.isLoading
-    ? `<span class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('common.loading'))}</span>`
-    : geolocation.error
-      ? `<span class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</span>`
-      : '';
-
-  return `
-    <div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.helper'))}</p>
-        <button class="app-card-link" data-variant="secondary" type="button" data-current-location-action ${geolocation.isLoading ? 'disabled' : ''}>
-          ${escapeHtml(t('plan.location.getDirections'))}
-        </button>
-      </div>
-      ${status ? `<p class="mt-2">${status}</p>` : ''}
-    </div>
-  `;
+  button.hidden = !plans.some(hasPlanLocation);
+  button.disabled = geolocation.isLoading;
+  button.setAttribute('aria-busy', geolocation.isLoading ? 'true' : 'false');
 }
 
 function renderPlans(
@@ -130,17 +114,17 @@ function renderPlans(
   trip: TripRecord | null,
   plans: PlanRecord[],
   geolocation: GeolocationState,
-  requestCurrentLocation: () => void,
 ) {
   const target = document.querySelector<HTMLElement>('[data-plan-list]');
   const t = getPageTranslator(locale);
+  syncGeolocationAction(plans, geolocation);
   if (!target) return;
   if (plans.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('trip.plansEmpty'))}</article>`;
     return;
   }
   target.innerHTML = `
-    ${renderGeolocationControl(locale, plans, geolocation)}
+    ${geolocation.error ? `<p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</p>` : ''}
     ${plans.map((plan) => {
       const description = plan.description?.trim();
       const accommodationDistance = getAccommodationDistanceLabel(locale, trip, plan);
@@ -163,10 +147,6 @@ function renderPlans(
       `;
     }).join('')}
   `;
-
-  target
-    .querySelector<HTMLButtonElement>('[data-current-location-action]')
-    ?.addEventListener('click', requestCurrentLocation);
 }
 
 export function mountTripPage({ locale }: { locale: Locale }) {
@@ -179,6 +159,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
+  const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
   const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
@@ -214,14 +195,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   }
 
   const syncPlans = () => {
-    renderPlans(
-      locale,
-      tripId,
-      currentTrip,
-      filterPlans(allPlans, filters),
-      geolocation,
-      requestCurrentLocation,
-    );
+    renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters), geolocation);
   };
 
   const updateGeolocation = (nextState: Partial<GeolocationState>) => {
@@ -252,6 +226,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     );
   };
 
+  currentLocationButton?.addEventListener('click', requestCurrentLocation);
   searchInput?.addEventListener('input', () => {
     filters.search = searchInput.value;
     syncPlans();
