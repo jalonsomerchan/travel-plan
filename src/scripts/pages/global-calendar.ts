@@ -4,9 +4,11 @@ import { getCalendarGrid, getMonthCursor, getMonthKey, getMonthLabel } from '../
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getAppUrl } from '../../lib/app/routes';
+import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
+import type { User } from 'firebase/auth';
 import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getWeekdayLabels } from './shared';
 
 function renderTripsPermissionError(locale: Locale) {
@@ -18,6 +20,17 @@ function renderTripsPermissionError(locale: Locale) {
   }
 
   eventsTarget.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('firebase.permissionDenied'))}</article>`;
+}
+
+function logTripsPermissionError(user: User | null) {
+  const config = getFirebasePublicConfig();
+
+  console.error('subscribeUserTrips.globalCalendar.debug', {
+    projectId: config.projectId,
+    authDomain: config.authDomain,
+    uid: user?.uid ?? null,
+    email: user?.email ?? null,
+  });
 }
 
 function renderWeekdays(locale: Locale, targetSelector: string) {
@@ -189,6 +202,7 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
         stopPlans = () => stopCallbacks.forEach((stop) => stop());
       },
       () => {
+        logTripsPermissionError(user);
         trips = [];
         stopPlans();
         plansByTrip = {};

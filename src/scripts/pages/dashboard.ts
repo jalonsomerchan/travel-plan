@@ -3,8 +3,10 @@ import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
+import type { User } from 'firebase/auth';
 import {
   bindSignOut,
   ensureFirebaseReady,
@@ -71,6 +73,17 @@ function renderTripsError(locale: Locale) {
   target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('firebase.permissionDenied'))}</article>`;
 }
 
+function logTripsPermissionError(user: User | null) {
+  const config = getFirebasePublicConfig();
+
+  console.error('subscribeUserTrips.debug', {
+    projectId: config.projectId,
+    authDomain: config.authDomain,
+    uid: user?.uid ?? null,
+    email: user?.email ?? null,
+  });
+}
+
 export function mountDashboardPage({ locale }: { locale: Locale }) {
   const signOutButton = document.querySelector<HTMLElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
@@ -92,6 +105,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
         renderTrips(locale, trips);
       },
       () => {
+        logTripsPermissionError(user);
         renderStats(locale, []);
         renderTripsError(locale);
       },

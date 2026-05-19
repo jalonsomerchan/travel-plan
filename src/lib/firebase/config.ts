@@ -29,6 +29,10 @@ function getFirebaseApp() {
   return getApps().length ? getApp() : initializeApp(firebaseConfig);
 }
 
+export function getFirebasePublicConfig() {
+  return { ...firebaseConfig };
+}
+
 export function getFirebaseAuth() {
   return getAuth(getFirebaseApp());
 }
