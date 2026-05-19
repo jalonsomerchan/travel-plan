@@ -5,12 +5,12 @@ import {
   getAccommodationLocationLabel,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
-import { escapeHtml } from '../../lib/app/dom';
+import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
 import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
-import { subscribePlan } from '../../lib/firebase/plans';
+import { deletePlan, subscribePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
@@ -18,6 +18,7 @@ import { mountNearbyPoiExplorer } from './nearby-poi-explorer';
 import {
   ensureFirebaseReady,
   getPageTranslator,
+  redirectTo,
   syncTripNavigation,
   syncPlanShell,
 } from './shared';
@@ -46,6 +47,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const mapTarget = document.querySelector<HTMLElement>('[data-plan-map]');
   const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
   const visibleEditLink = document.querySelector<HTMLAnchorElement>('[data-plan-edit-visible-link]');
+  const deleteButton = document.querySelector<HTMLButtonElement>('[data-plan-delete-button]');
+  const deleteMessage = document.querySelector<HTMLElement>('[data-plan-delete-message]');
   const openOsmLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-osm]');
   const openGoogleLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-google]');
   const openDirectionsLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-directions]');
@@ -59,6 +62,23 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   if (editLink) editLink.href = planEditUrl;
   if (visibleEditLink) visibleEditLink.href = planEditUrl;
+  deleteButton?.addEventListener('click', async () => {
+    const confirmed = window.confirm(t('plan.deleteConfirm'));
+
+    if (!confirmed) {
+      return;
+    }
+
+    setButtonBusy(deleteButton, true, t('plan.delete'), t('common.saving'));
+
+    try {
+      await deletePlan(tripId, planId);
+      redirectTo(locale, 'trip', { trip: tripId });
+    } catch (error) {
+      setMessage(deleteMessage, error instanceof Error ? error.message : t('plan.deleteError'), 'danger');
+      setButtonBusy(deleteButton, false, t('plan.delete'), t('common.saving'));
+    }
+  });
   const nearbyPoiExplorer = mountNearbyPoiExplorer(nearbyPoiRoot, { locale });
   observeSession((user) => {
     if (!user) {

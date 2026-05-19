@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   deleteField,
   doc,
   onSnapshot,
@@ -101,4 +102,10 @@ export async function updatePlan(tripId: string, planId: string, input: PlanInpu
     ...getPlanUpdateData(input),
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deletePlan(tripId: string, planId: string) {
+  const db = getFirebaseDb();
+
+  await deleteDoc(doc(db, 'trips', tripId, 'plans', planId));
 }

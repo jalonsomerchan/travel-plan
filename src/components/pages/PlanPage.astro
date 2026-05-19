@@ -38,7 +38,11 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         >
           {t('plan.goEdit')}
         </a>
+        <button class="app-card-link" data-plan-delete-button data-variant="danger" type="button">
+          {t('plan.delete')}
+        </button>
       </div>
+      <p class="mb-6 text-sm text-[var(--color-text-soft)]" data-plan-delete-message>{t('plan.deleteHelper')}</p>
       <dl class="grid gap-4">
         <div>
           <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">
