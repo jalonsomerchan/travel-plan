@@ -30,7 +30,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       <h2 class="text-2xl font-black" data-plan-create-context>{t('trip.plansTitle')}</h2>
       <form class="mx-auto mt-6 max-w-3xl space-y-4" id="plan-create-form">
         <PlanFormFields locale={locale} prefix="plan-create" />
-        <p class="text-sm text-[var(--color-text-soft)]" id="plan-create-message">{t('trip.plansHelper')}</p>
+        <p class="text-sm text-[var(--color-text-soft)]" id="plan-create-message" role="status" aria-live="polite">{t('trip.plansHelper')}</p>
         <div class="flex flex-wrap gap-3">
           <Button type="submit">{t('trip.plansAction')}</Button>
         </div>

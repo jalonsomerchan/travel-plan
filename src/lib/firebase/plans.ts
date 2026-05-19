@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   onSnapshot,
   serverTimestamp,
@@ -9,8 +10,22 @@ import {
 import type { PlanInput, PlanRecord } from '../app/models';
 import { getFirebaseDb } from './config';
 
-function getPlanWriteData(input: PlanInput) {
+const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time'] as const;
+
+function getPlanCreateData(input: PlanInput) {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
+}
+
+function getPlanUpdateData(input: PlanInput) {
+  const data: Record<string, unknown> = { ...input };
+
+  optionalPlanFields.forEach((field) => {
+    if (input[field] === undefined) {
+      data[field] = deleteField();
+    }
+  });
+
+  return data;
 }
 
 function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknown> }): PlanRecord {
@@ -71,7 +86,7 @@ export function subscribePlan(
 export async function createPlan(tripId: string, input: PlanInput) {
   const db = getFirebaseDb();
   const planRef = await addDoc(collection(db, 'trips', tripId, 'plans'), {
-    ...getPlanWriteData(input),
+    ...getPlanCreateData(input),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -83,7 +98,7 @@ export async function updatePlan(tripId: string, planId: string, input: PlanInpu
   const db = getFirebaseDb();
 
   await updateDoc(doc(db, 'trips', tripId, 'plans', planId), {
-    ...getPlanWriteData(input),
+    ...getPlanUpdateData(input),
     updatedAt: serverTimestamp(),
   });
 }
