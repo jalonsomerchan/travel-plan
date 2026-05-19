@@ -471,6 +471,20 @@ main {
   min-height: 21rem;
 }
 
+[data-location-picker] {
+  isolation: isolate;
+}
+
+[data-location-search-results] {
+  position: relative;
+  z-index: 40;
+}
+
+[data-location-map] {
+  position: relative;
+  z-index: 1;
+}
+
 .leaflet-container {
   font: inherit;
   background: var(--color-surface-soft);

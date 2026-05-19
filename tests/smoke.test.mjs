@@ -238,6 +238,17 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(tripPageScript, /rel = mapUrl \? 'noreferrer' : ''/);
   });
 
+  it('keeps Firebase profile sync from blocking authenticated sessions', () => {
+    const sessionSource = readText('src/lib/firebase/session.ts');
+
+    assert.match(sessionSource, /async function trySyncUserProfile/);
+    assert.match(sessionSource, /catch \(error\)/);
+    assert.match(sessionSource, /console\.warn\('syncUserProfile', error\)/);
+    assert.match(sessionSource, /await trySyncUserProfile\(user\)/);
+    assert.match(sessionSource, /callback\(user\)/);
+    assert.doesNotMatch(sessionSource, /await syncUserProfile\(credential\.user\)/);
+  });
+
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');
     const ciWorkflow = readText('.github/workflows/ci.yml');
