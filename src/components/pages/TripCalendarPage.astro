@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
+import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -45,7 +46,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <h2 class="mt-3 text-3xl font-black">{t('calendar.timelineTitle')}</h2>
         </div>
       </div>
-      <div class="mt-6 grid gap-4" data-trip-calendar-groups></div>
+      <div class="mt-6 grid gap-4" data-trip-calendar-groups>
+        <LoadingState label={t('common.loading')} />
+      </div>
     </section>
 
     <aside class="section-shell px-6 py-6">
@@ -53,7 +56,9 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <span class="eyebrow">{t('calendar.unscheduledEyebrow')}</span>
         <h2 class="mt-4 text-2xl font-black">{t('calendar.unscheduledTitle')}</h2>
       </div>
-      <div class="mt-6 grid gap-4" data-calendar-events></div>
+      <div class="mt-6 grid gap-4" data-calendar-events>
+        <LoadingState label={t('common.loading')} />
+      </div>
     </aside>
   </Container>
 
