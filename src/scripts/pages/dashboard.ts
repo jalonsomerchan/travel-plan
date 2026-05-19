@@ -25,7 +25,14 @@ function renderStats(locale: Locale, trips: TripRecord[]) {
     { label: t('dashboard.stat.upcoming'), value: upcoming },
     { label: t('dashboard.stat.visited'), value: visited },
   ]
-    .map((item) => `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-3 text-center"><p class="text-2xl font-black text-[var(--color-text)]">${item.value}</p><p class="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(item.label)}</p></article>`)
+    .map(
+      (item) => `
+        <article class="min-w-0 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-3 text-center sm:px-4">
+          <p class="text-xl font-black leading-none text-[var(--color-text)] sm:text-2xl">${item.value}</p>
+          <p class="mt-1 truncate text-[0.68rem] font-semibold uppercase leading-tight tracking-[0.08em] text-[var(--color-text-soft)] sm:tracking-[0.14em]">${escapeHtml(item.label)}</p>
+        </article>
+      `,
+    )
     .join('');
 }
 
