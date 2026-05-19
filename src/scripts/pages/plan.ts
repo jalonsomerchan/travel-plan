@@ -54,6 +54,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
+  nearbyPoiRoot.dataset.tripId = tripId;
   if (editLink) editLink.href = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   const nearbyPoiExplorer = mountNearbyPoiExplorer(nearbyPoiRoot, { locale });
   observeSession((user) => {

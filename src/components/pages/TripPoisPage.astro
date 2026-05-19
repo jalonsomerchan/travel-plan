@@ -18,7 +18,6 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('tripPois.metaTitle')} description={t('tripPois.metaDescription')} locale={locale}>
   <AppShell
-    eyebrow={t('tripPois.eyebrow')}
     title={t('tripPois.title')}
     description={t('tripPois.description')}
     loading
@@ -32,14 +31,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
-      <div data-trip-pois-context>
-        <LoadingState label={t('common.loading')} />
-      </div>
       <NearbyPoiExplorer
         locale={locale}
         title={t('tripPois.explorerTitle')}
         description={t('tripPois.explorerDescription')}
         emptyActionLabel={t('tripPois.configureAccommodation')}
+        tripId=""
         showMap
       />
     </div>

@@ -18,7 +18,6 @@ import {
 export function mountTripPoisPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const explorerRoot = document.querySelector<HTMLElement>('[data-nearby-poi]');
-  const context = document.querySelector<HTMLElement>('[data-trip-pois-context]');
   const t = getPageTranslator(locale);
 
   if (!tripId || !explorerRoot) {
@@ -50,10 +49,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
       setAppShellTitle(t('tripPois.titleWithTrip').replace('{trip}', trip.name));
       setAppShellDescription(trip.location);
       setAppShellMeta([formatDateRange(trip.startDate, trip.endDate, locale), trip.ownerEmail]);
-
-      if (context) {
-        context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-      }
+      explorerRoot.dataset.tripId = tripId;
 
       if (hasAccommodationLocation(trip.accommodation)) {
         explorer.setSource({

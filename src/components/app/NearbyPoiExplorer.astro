@@ -8,10 +8,11 @@ interface Props {
   title: string;
   description: string;
   emptyActionLabel: string;
+  tripId?: string;
   showMap?: boolean;
 }
 
-const { locale, title, description, emptyActionLabel, showMap = false } = Astro.props;
+const { locale, title, description, emptyActionLabel, tripId = '', showMap = false } = Astro.props;
 const t = useTranslations(locale);
 const radiusOptions = [250, 500, 1000, 2000, 5000];
 const categories = getNearbyPoiCategories();
@@ -22,12 +23,12 @@ const defaultCategories = new Set(['food', 'culture', 'parks']);
   class="mt-8 border-t border-[var(--color-border)] pt-8"
   data-nearby-poi
   data-show-map={showMap ? 'true' : 'false'}
+  data-trip-id={tripId}
   data-empty-action-label={emptyActionLabel}
 >
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div class="min-w-0">
-      <span class="eyebrow">{t('poi.eyebrow')}</span>
-      <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{title}</h2>
+      <h2 class="text-2xl font-black text-[var(--color-text)]">{title}</h2>
       <p class="mt-3 max-w-3xl text-sm text-[var(--color-text-soft)]">{description}</p>
     </div>
     <span class="status-pill" data-nearby-poi-count data-tone="warning">0</span>
@@ -69,6 +70,20 @@ const defaultCategories = new Set(['food', 'culture', 'parks']);
           ))}
         </div>
       </fieldset>
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] disabled:translate-y-0 disabled:opacity-70"
+          data-nearby-poi-submit
+          type="submit"
+        >
+          <span
+            aria-hidden="true"
+            class="hidden size-4 animate-spin rounded-full border-2 border-[var(--color-primary-contrast)] border-t-transparent"
+            data-nearby-poi-submit-spinner
+          ></span>
+          <span data-nearby-poi-submit-label>{t('poi.search')}</span>
+        </button>
+      </div>
     </form>
     <p class="mt-4 text-xs text-[var(--color-text-soft)]">{t('poi.attribution')}</p>
   </div>

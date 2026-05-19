@@ -2,8 +2,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
 import {
+  createPlan,
+} from '../../lib/firebase/plans';
+import {
   getGoogleMapsPlaceUrlFromCoordinates,
-  getOpenStreetMapPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
 import {
   type NearbyPoiCategoryId,
@@ -13,10 +15,11 @@ import {
   getNearbyPoiDefaultCategoryIds,
   searchNearbyPois,
 } from '../../lib/app/poi';
-import { escapeHtml } from '../../lib/app/dom';
+import { escapeHtml, setButtonBusy } from '../../lib/app/dom';
 import { formatDistance } from '../../lib/app/format';
 import { useTranslations } from '../../i18n/ui';
 import { addMapLayerSelector } from '../maps/layers';
+import type { PlanInput, PlanCategory } from '../../lib/app/models';
 
 interface ExplorerSourceContext {
   latitude?: number;
@@ -33,15 +36,7 @@ interface ExplorerState {
   categoryIds: NearbyPoiCategoryId[];
   results: NearbyPoiResult[];
   truncated: boolean;
-}
-
-function debounce<T extends (...args: never[]) => void>(callback: T, delayMs: number) {
-  let timeoutId = 0;
-
-  return (...args: Parameters<T>) => {
-    window.clearTimeout(timeoutId);
-    timeoutId = window.setTimeout(() => callback(...args), delayMs);
-  };
+  loading: boolean;
 }
 
 function getErrorMessage(error: unknown, t: ReturnType<typeof useTranslations>) {
@@ -84,6 +79,10 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
   const categoryInputs = Array.from(
     root.querySelectorAll<HTMLInputElement>('[data-nearby-poi-category]'),
   );
+  const form = root.querySelector<HTMLFormElement>('[data-nearby-poi-controls]');
+  const submitButton = root.querySelector<HTMLButtonElement>('[data-nearby-poi-submit]');
+  const submitSpinner = root.querySelector<HTMLElement>('[data-nearby-poi-submit-spinner]');
+  const submitLabel = root.querySelector<HTMLElement>('[data-nearby-poi-submit-label]');
   const emptyState = root.querySelector<HTMLElement>('[data-nearby-poi-empty-state]');
   const emptyTitle = root.querySelector<HTMLElement>('[data-nearby-poi-empty-title]');
   const emptyDescription = root.querySelector<HTMLElement>('[data-nearby-poi-empty-description]');
@@ -100,10 +99,12 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
     categoryIds: getNearbyPoiDefaultCategoryIds(),
     results: [],
     truncated: false,
+    loading: false,
   };
   let map: L.Map | null = null;
   let markers: L.LayerGroup | null = null;
   let currentAbortController: AbortController | null = null;
+  const tripId = root.dataset.tripId ?? '';
 
   const categoryLookup = new Map(getNearbyPoiCategories().map((category) => [category.id, category]));
 
@@ -127,6 +128,20 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
 
     status.textContent = message;
     status.dataset.tone = tone;
+  };
+
+  const syncSubmitUi = () => {
+    if (submitSpinner) {
+      submitSpinner.classList.toggle('hidden', !state.loading);
+    }
+
+    if (submitLabel) {
+      submitLabel.textContent = state.loading ? t('poi.searching') : t('poi.search');
+    }
+
+    if (submitButton) {
+      submitButton.disabled = state.loading;
+    }
   };
 
   const setCount = (value: number, tone: 'warning' | 'primary' = 'warning') => {
@@ -207,16 +222,12 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
             </div>
             <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(poi.coordinatesLabel)}</p>
             <div class="mt-5 flex flex-wrap gap-3">
-              ${
-                showMap
-                  ? `<button class="app-card-link" data-variant="secondary" data-nearby-poi-focus="${escapeHtml(
-                      poi.id,
-                    )}" type="button">${escapeHtml(t('poi.focusOnMap'))}</button>`
-                  : ''
-              }
-              <a class="app-card-link" data-variant="secondary" href="${escapeHtml(
-                getOpenStreetMapPlaceUrlFromCoordinates(poi.latitude, poi.longitude),
-              )}" rel="noopener noreferrer" target="_blank">${escapeHtml(t('poi.openStreetMap'))}</a>
+              <button
+                class="app-card-link"
+                data-nearby-poi-add-plan="${escapeHtml(poi.id)}"
+                data-variant="secondary"
+                type="button"
+              >${escapeHtml(t('poi.addPlan'))}</button>
               <a class="app-card-link" data-variant="secondary" href="${escapeHtml(
                 getGoogleMapsPlaceUrlFromCoordinates(poi.latitude, poi.longitude),
               )}" rel="noopener noreferrer" target="_blank">${escapeHtml(t('poi.openGoogleMaps'))}</a>
@@ -269,6 +280,8 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
 
     currentAbortController?.abort();
     currentAbortController = new AbortController();
+    state.loading = true;
+    syncSubmitUi();
     setStatus(t('poi.loading'));
 
     try {
@@ -303,49 +316,70 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
           </article>
         `;
       }
+    } finally {
+      state.loading = false;
+      syncSubmitUi();
     }
   };
 
-  const debouncedLoadResults = debounce(loadResults, 250);
-
-  categoryInputs.forEach((input) => {
-    input.addEventListener('change', () => {
-      state.categoryIds = categoryInputs
-        .filter((checkbox) => checkbox.checked)
-        .map((checkbox) => checkbox.value as NearbyPoiCategoryId);
-      void debouncedLoadResults();
-    });
-  });
-
-  radiusSelect?.addEventListener('change', () => {
-    state.radiusMeters = Number(radiusSelect.value);
-    void debouncedLoadResults();
-  });
-
   list?.addEventListener('click', (event) => {
-    const focusButton = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-nearby-poi-focus]');
+    const target = event.target as HTMLElement | null;
+    const addPlanButton = target?.closest<HTMLButtonElement>('[data-nearby-poi-add-plan]');
 
-    if (!focusButton || !map) {
-      return;
-    }
+    if (addPlanButton) {
+      const poi = state.results.find((entry) => entry.id === addPlanButton.dataset.nearbyPoiAddPlan);
 
-    const poi = state.results.find((entry) => entry.id === focusButton.dataset.nearbyPoiFocus);
-
-    if (!poi) {
-      return;
-    }
-
-    map.setView([poi.latitude, poi.longitude], Math.max(map.getZoom(), 16));
-    markers?.eachLayer((layer) => {
-      if (layer instanceof L.CircleMarker) {
-        const latLng = layer.getLatLng();
-
-        if (latLng.lat === poi.latitude && latLng.lng === poi.longitude) {
-          layer.openPopup();
-        }
+      if (!poi || !tripId) {
+        return;
       }
-    });
+
+      const categoryMap: Record<NearbyPoiCategoryId, PlanCategory> = {
+        food: 'food',
+        culture: 'museum',
+        parks: 'visit',
+        transport: 'transport',
+        shops: 'shop',
+        toilets: 'bathroom',
+        water: 'other',
+        leisure: 'other',
+      };
+      const input: PlanInput = {
+        name: poi.name || t('poi.plan.defaultName'),
+        description: poi.coordinatesLabel,
+        category: categoryMap[poi.categoryId] ?? 'other',
+        locationName: poi.name,
+        locationLat: poi.latitude,
+        locationLng: poi.longitude,
+        status: 'pending',
+      };
+
+      setButtonBusy(addPlanButton, true, t('poi.addPlan'), t('poi.addingPlan'));
+      void createPlan(tripId, input)
+        .then(() => {
+          setStatus(t('poi.addPlanSuccess'), 'success');
+        })
+        .catch((error) => {
+          setStatus(error instanceof Error ? error.message : t('poi.addPlanError'), 'danger');
+        })
+        .finally(() => {
+          setButtonBusy(addPlanButton, false, t('poi.addPlan'), t('poi.addingPlan'));
+        });
+      return;
+    }
+
+    if (!showMap || !map) return;
   });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    state.categoryIds = categoryInputs
+      .filter((checkbox) => checkbox.checked)
+      .map((checkbox) => checkbox.value as NearbyPoiCategoryId);
+    state.radiusMeters = Number(radiusSelect?.value ?? state.radiusMeters);
+    void loadResults();
+  });
+
+  syncSubmitUi();
 
   return {
     setSource(nextSource: ExplorerSourceContext) {
@@ -357,7 +391,13 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       }
 
       ensureMap();
-      void loadResults();
+      state.results = [];
+      state.truncated = false;
+      if (list) {
+        list.innerHTML = '';
+      }
+      setCount(0, 'warning');
+      setStatus(t('poi.idle'));
     },
   };
 }

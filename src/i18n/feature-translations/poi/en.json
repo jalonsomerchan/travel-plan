@@ -1,8 +1,9 @@
 {
   "trip.goNearbyPlaces": "Nearby places",
-  "poi.eyebrow": "OpenStreetMap + Overpass",
   "poi.radius.label": "Search radius",
   "poi.radius.option": "{distance}",
+  "poi.search": "Search",
+  "poi.searching": "Searching...",
   "poi.categories.label": "Categories",
   "poi.category.food": "Restaurants and cafes",
   "poi.category.culture": "Museums and culture",
@@ -13,6 +14,7 @@
   "poi.category.water": "Water fountains",
   "poi.category.leisure": "Leisure and other spots",
   "poi.attribution": "OpenStreetMap data queried through Overpass API. Keep radiuses and filters small to respect the public service.",
+  "poi.idle": "Choose a radius and categories, then press Search.",
   "poi.loading": "Looking for nearby places...",
   "poi.empty": "No nearby places were found for that radius and category combination.",
   "poi.tooMany": "The result limit was reached. Reduce the radius or keep fewer categories active.",
@@ -20,9 +22,11 @@
   "poi.error.generic": "Nearby places could not be loaded right now.",
   "poi.error.timeout": "The request took too long. Try a smaller radius or fewer categories.",
   "poi.error.rateLimited": "Overpass is temporarily rate-limiting requests. Wait a moment and try again.",
-  "poi.openStreetMap": "Open in OpenStreetMap",
   "poi.openGoogleMaps": "Open in Google Maps",
-  "poi.focusOnMap": "Show on map",
+  "poi.addPlan": "Add plan",
+  "poi.addingPlan": "Adding...",
+  "poi.addPlanSuccess": "A new plan was created from this place.",
+  "poi.addPlanError": "This place could not be converted into a plan.",
   "poi.map.label": "Nearby places map",
   "poi.plan.title": "Nearby places of interest",
   "poi.plan.description": "Search restaurants, culture, transport and other useful spots around the current plan location.",
@@ -31,7 +35,6 @@
   "poi.plan.addLocationAction": "Add plan location",
   "tripPois.metaTitle": "Trip nearby places",
   "tripPois.metaDescription": "Search places of interest around the trip accommodation using Overpass API and OpenStreetMap.",
-  "tripPois.eyebrow": "Local exploration",
   "tripPois.title": "Nearby places",
   "tripPois.titleWithTrip": "Places near {trip}",
   "tripPois.description": "Explore useful spots around the accommodation to quickly find food, culture, transport and services.",
@@ -40,5 +43,6 @@
   "tripPois.explorerDescription": "Results are calculated around the current trip accommodation and synced with the map.",
   "tripPois.noAccommodationTitle": "This trip does not have accommodation coordinates yet",
   "tripPois.noAccommodationDescription": "Configure accommodation with a valid location to search nearby places from this view.",
-  "tripPois.configureAccommodation": "Configure accommodation"
+  "tripPois.configureAccommodation": "Configure accommodation",
+  "poi.plan.defaultName": "Nearby place"
 }
