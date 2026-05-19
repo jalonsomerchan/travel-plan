@@ -4,20 +4,27 @@ import type { MapTranslate } from './layers';
 
 export function addCurrentLocationControl(map: L.Map, t: MapTranslate) {
   let marker: L.Marker | null = null;
-  const control = new L.Control({ position: 'topleft' });
+  const control = new L.Control({ position: 'topright' });
 
   control.onAdd = () => {
-    const container = L.DomUtil.create('div', 'map-tool-card map-location-control');
+    const container = L.DomUtil.create('div', 'map-icon-control map-location-control');
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.disableScrollPropagation(container);
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'map-tool-button';
-    button.textContent = t('map.location.button');
+    button.className = 'map-icon-button';
+    button.title = t('map.location.button');
+    button.setAttribute('aria-label', t('map.location.button'));
+    button.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 3v3.2M12 17.8V21M3 12h3.2M17.8 12H21M6.7 6.7l2.2 2.2M15.1 15.1l2.2 2.2M17.3 6.7l-2.2 2.2M8.9 15.1l-2.2 2.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      </svg>
+    `;
 
     const status = document.createElement('p');
-    status.className = 'map-tool-status';
+    status.className = 'map-tool-status sr-only';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
 

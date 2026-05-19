@@ -12,9 +12,18 @@ export interface MapLayerConfig {
   subdomains?: string | string[];
 }
 
-export const defaultMapLayerId = 'osm';
+export const defaultMapLayerId = 'voyager';
 
 export const mapLayers: MapLayerConfig[] = [
+  {
+    id: 'voyager',
+    labelKey: 'map.layers.voyager',
+    urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    theme: 'mixed',
+    maxZoom: 20,
+    subdomains: 'abcd',
+  },
   {
     id: 'osm',
     labelKey: 'map.layers.osm',

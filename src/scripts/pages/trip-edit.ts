@@ -80,7 +80,8 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
         accommodation: getAccommodationInputFromForm(form),
       });
-      setMessage(message, t('trip.form.saved'), 'success');
+      window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
+      return;
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('trip.form.error'), 'danger');
     } finally {

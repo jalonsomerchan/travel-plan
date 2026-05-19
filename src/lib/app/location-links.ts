@@ -26,3 +26,12 @@ export function getGoogleMapsDirectionsUrl(latitude: number, longitude: number) 
   url.searchParams.set('destination', `${latitude},${longitude}`);
   return url.toString();
 }
+
+export function getGoogleMapsDisplayMapUrl(latitude: number, longitude: number, zoom = 15) {
+  const url = new URL('https://www.google.com/maps/@');
+  url.searchParams.set('api', '1');
+  url.searchParams.set('map_action', 'map');
+  url.searchParams.set('center', `${latitude},${longitude}`);
+  url.searchParams.set('zoom', String(Math.max(1, Math.min(21, Math.round(zoom)))));
+  return url.toString();
+}

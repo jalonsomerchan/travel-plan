@@ -18,7 +18,9 @@ import {
 import { escapeHtml, setButtonBusy } from '../../lib/app/dom';
 import { formatDistance } from '../../lib/app/format';
 import { useTranslations } from '../../i18n/ui';
+import { addOpenInGoogleMapsControl } from '../maps/google';
 import { addMapLayerSelector } from '../maps/layers';
+import { addCurrentLocationControl } from '../maps/location';
 import type { PlanInput, PlanCategory } from '../../lib/app/models';
 
 interface ExplorerSourceContext {
@@ -129,6 +131,8 @@ export function mountNearbyPoiExplorer(root: HTMLElement, { locale }: { locale: 
       scrollWheelZoom: false,
     }).setView([40.4168, -3.7038], 13);
     addMapLayerSelector(map, t);
+    addCurrentLocationControl(map, t);
+    addOpenInGoogleMapsControl(map, t);
     markers = L.layerGroup().addTo(map);
   };
 

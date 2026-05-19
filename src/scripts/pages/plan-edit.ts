@@ -69,7 +69,8 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     setButtonBusy(button, true, t('plan.form.save'), t('common.saving'));
     try {
       await updatePlan(tripId, planId, getPlanInputFromForm(form));
-      setMessage(message, t('plan.form.saved'), 'success');
+      window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
+      return;
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('plan.form.error'), 'danger');
     } finally {
