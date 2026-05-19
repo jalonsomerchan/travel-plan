@@ -1,10 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GoogleSignInButton from '../app/GoogleSignInButton.astro';
-import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { siteConfig, type Locale } from '../../config/site';
-import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+import { useTranslations } from '../../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -12,14 +11,11 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const dashboardUrl = getLocalizedPath('/app/', locale);
-const globalCalendarUrl = getLocalizedPath('/app/calendar/all/', locale);
-const features = [
-  t('home.feature.sharedTrips'),
-  t('home.feature.flexiblePlans'),
-  t('home.feature.collaboration'),
-  t('home.feature.calendars'),
-];
+const homeTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to TravelPlan';
+const homeDescription = locale === 'es'
+  ? 'Tu app para planificar viajes con tus amigos'
+  : 'Your app for planning trips with friends';
+const signInLabel = locale === 'es' ? 'Inicia sesión' : 'Sign in';
 const highlights = [
   {
     title: t('home.highlight.organizedTitle'),
@@ -37,62 +33,24 @@ const highlights = [
 ---
 
 <BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
-  <Container class="py-8 md:py-14">
-    <section class="grid gap-8 lg:grid-cols-[1.2fr_0.9fr]">
-      <article class="section-shell overflow-hidden px-6 py-8 md:px-10 md:py-10">
-        <span class="eyebrow">{t('home.eyebrow')}</span>
-        <h1 class="mt-6 max-w-3xl text-4xl font-black tracking-tight text-[var(--color-text)] md:text-6xl">
-          {t('home.title')}
-        </h1>
-        <p class="prose-copy mt-6 max-w-2xl text-lg">
-          {t('home.description')}
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <GoogleSignInButton class="w-full sm:w-auto" form="google-sign-in-form" type="submit">
-            {t('auth.signIn')}
-          </GoogleSignInButton>
-          <Button href={globalCalendarUrl} variant="secondary">{t('home.secondaryCta')}</Button>
-        </div>
-        <ul class="mt-8 grid gap-3 sm:grid-cols-2">
-          {features.map((feature) => (
-            <li class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text-muted)]">
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </article>
-
-      <aside class="section-shell px-6 py-8 md:px-8 md:py-8">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              {t('auth.eyebrow')}
-            </p>
-            <h2 class="mt-2 text-2xl font-black tracking-tight">{t('auth.title')}</h2>
-          </div>
-          <span class="status-pill" data-tone="primary">{t('home.authBadge')}</span>
-        </div>
-        <p class="prose-copy mt-3">{t('auth.description')}</p>
-        <form id="google-sign-in-form" class="mt-6 space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
-          <div>
-            <h3 class="text-lg font-bold">{t('auth.signInTitle')}</h3>
-            <p class="mt-1 text-sm text-[var(--color-text-soft)]">{t('auth.signInDescription')}</p>
-          </div>
-          <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-4 text-sm text-[var(--color-text-muted)]">
-            {t('auth.helper')}
-          </div>
-          <p class="text-sm text-[var(--color-text-soft)]" id="google-sign-in-message">{t('auth.providerHint')}</p>
-          <GoogleSignInButton class="w-full" type="submit">{t('auth.signIn')}</GoogleSignInButton>
-        </form>
-        <div class="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-text-soft)]" data-firebase-state>
-          {t('firebase.configPending')}
-        </div>
-      </aside>
+  <Container class="py-10 md:py-16">
+    <section class="section-shell px-6 py-10 text-center md:px-10 md:py-14">
+      <h1 class="mx-auto max-w-4xl text-4xl font-black tracking-tight text-[var(--color-text)] md:text-6xl">
+        {homeTitle}
+      </h1>
+      <p class="prose-copy mx-auto mt-5 max-w-2xl text-lg md:text-xl">
+        {homeDescription}
+      </p>
+      <form id="google-sign-in-form" class="mt-8 flex justify-center">
+        <GoogleSignInButton type="submit">{signInLabel}</GoogleSignInButton>
+      </form>
+      <p class="sr-only" id="google-sign-in-message">{t('auth.providerHint')}</p>
+      <div class="sr-only" data-firebase-state>{t('firebase.configPending')}</div>
     </section>
 
     <section class="mt-8 grid gap-4 md:grid-cols-3">
       {highlights.map((item) => (
-        <article class="section-shell px-5 py-5">
+        <article class="section-shell px-5 py-6">
           <h2 class="text-lg font-bold">{item.title}</h2>
           <p class="prose-copy mt-3 text-sm">{item.description}</p>
         </article>
