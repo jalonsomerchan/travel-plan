@@ -16,7 +16,7 @@ export const mapLayers: MapLayerConfig[] = [
   {
     id: 'osm',
     labelKey: 'map.layers.osm',
-    urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap contributors',
     theme: 'mixed',
     maxZoom: 19,
