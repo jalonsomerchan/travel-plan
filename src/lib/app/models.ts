@@ -70,6 +70,11 @@ export interface TripInviteRecord {
   status: 'pending' | 'accepted';
 }
 
+export interface PlanLinkRecord {
+  label: string;
+  url: string;
+}
+
 export interface PlanRecord {
   id: string;
   name: string;
@@ -81,6 +86,7 @@ export interface PlanRecord {
   date?: string;
   time?: string;
   status: PlanStatus;
+  links: PlanLinkRecord[];
 }
 
 export interface PlanInput {
@@ -93,6 +99,7 @@ export interface PlanInput {
   date?: string;
   time?: string;
   status: PlanStatus;
+  links?: PlanLinkRecord[];
 }
 
 export interface ChecklistItemRecord {
