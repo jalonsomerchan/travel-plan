@@ -33,5 +33,6 @@ const { eyebrow, title, description, breadcrumbs = [] } = Astro.props;
         <slot />
       </div>
     </div>
+    <slot name="body" />
   </section>
 </Container>
