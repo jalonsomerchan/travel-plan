@@ -8,6 +8,10 @@ import {
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import {
+  getPlanCategoryColors,
+  getPlanCategoryDotStyle,
+} from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
