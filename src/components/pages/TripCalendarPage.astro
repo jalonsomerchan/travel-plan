@@ -4,7 +4,6 @@ import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -36,33 +35,34 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <Button id="calendar-back-trip-link" variant="ghost" href={dashboardUrl}>{t('calendar.backToTrip')}</Button>
       </div>
     </AppToolbar>
-  </AppShell>
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="min-w-0">
+          <div>
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-calendar-trip-name aria-live="polite">
+                <span class="sr-only">{t('common.loading')}</span>
+              </p>
+              <h2 class="mt-3 text-3xl font-black">{t('calendar.timelineTitle')}</h2>
+            </div>
+          </div>
+          <div class="mt-6 grid gap-4" data-trip-calendar-groups>
+            <LoadingState label={t('common.loading')} />
+          </div>
+        </div>
 
-  <Container class="grid gap-8 pb-12 lg:grid-cols-[1.2fr_0.8fr]">
-    <section class="section-shell px-6 py-6">
-      <div>
-        <div>
-          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-calendar-trip-name aria-live="polite">
-            <span class="sr-only">{t('common.loading')}</span>
-          </p>
-          <h2 class="mt-3 text-3xl font-black">{t('calendar.timelineTitle')}</h2>
+        <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+          <div>
+            <span class="eyebrow">{t('calendar.unscheduledEyebrow')}</span>
+            <h2 class="mt-4 text-2xl font-black">{t('calendar.unscheduledTitle')}</h2>
+          </div>
+          <div class="mt-6 grid gap-4" data-calendar-events>
+            <LoadingState label={t('common.loading')} />
+          </div>
         </div>
       </div>
-      <div class="mt-6 grid gap-4" data-trip-calendar-groups>
-        <LoadingState label={t('common.loading')} />
-      </div>
-    </section>
-
-    <aside class="section-shell px-6 py-6">
-      <div>
-        <span class="eyebrow">{t('calendar.unscheduledEyebrow')}</span>
-        <h2 class="mt-4 text-2xl font-black">{t('calendar.unscheduledTitle')}</h2>
-      </div>
-      <div class="mt-6 grid gap-4" data-calendar-events>
-        <LoadingState label={t('common.loading')} />
-      </div>
-    </aside>
-  </Container>
+    </div>
+  </AppShell>
 
   <script>
     import { mountTripCalendarPage } from '../../scripts/pages/trip-calendar';

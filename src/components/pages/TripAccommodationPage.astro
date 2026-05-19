@@ -5,7 +5,6 @@ import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import AccommodationFormFields from '../app/AccommodationFormFields.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -44,26 +43,22 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         ]}
       />
     </div>
-  </AppShell>
-
-  <Container class="grid gap-8 pb-12">
-    <section class="section-shell px-6 py-6">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div data-accommodation-view>
         <LoadingState label={t('common.loading')} />
       </div>
-    </section>
-
-    <section class="section-shell mx-auto w-full max-w-3xl px-6 py-6">
-      <h2 class="text-2xl font-black" data-accommodation-context>{t('accommodation.detailsTitle')}</h2>
-      <form class="mt-6 space-y-4" id="accommodation-form">
+      <div class="mt-8 border-t border-[var(--color-border)] pt-8">
+        <h2 class="text-2xl font-black" data-accommodation-context>{t('accommodation.detailsTitle')}</h2>
+        <form class="mt-6 space-y-4 max-w-3xl" id="accommodation-form">
         <AccommodationFormFields locale={locale} prefix="trip-accommodation" />
         <p class="text-sm text-[var(--color-text-soft)]" id="accommodation-form-message">{t('accommodation.form.helper')}</p>
         <div class="flex flex-wrap gap-3">
           <Button type="submit">{t('accommodation.form.save')}</Button>
         </div>
-      </form>
-    </section>
-  </Container>
+        </form>
+      </div>
+    </div>
+  </AppShell>
 
   <script>
     import { mountTripAccommodationPage } from '../../scripts/pages/trip-accommodation';

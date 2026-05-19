@@ -69,6 +69,23 @@ Evitar:
 
 Todas las webs deben partir de variables CSS globales. Los nombres pueden adaptarse al framework, pero la idea debe mantenerse.
 
+### 3.1 Regla de card única por página
+
+Salvo que se indique expresamente lo contrario, cada página interna o herramienta debe construirse dentro de una sola card principal.
+
+Esto implica:
+
+- Un único contenedor visual principal por página.
+- Evitar apilar varias cards grandes una debajo de otra para una misma vista.
+- Si hay varias zonas funcionales, resolverlas dentro de esa misma card con divisores, grids internas o bloques secundarios, no con cards hermanas separadas.
+- Mantener excepciones solo cuando exista una razón funcional clara y esté pedida de forma explícita.
+
+Aplicación directa en este proyecto:
+
+- Si una página usa `AppShell`, ese `AppShell` cuenta como la card principal.
+- El contenido específico de la vista debe entrar en `slot="body"` del propio `AppShell`.
+- No colocar otra `section-shell` grande debajo del `AppShell` salvo excepción funcional muy justificada.
+
 ```css
 :root {
   color-scheme: light;

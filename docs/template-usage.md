@@ -131,6 +131,37 @@ Resumen rápido:
 - JavaScript de cliente solo cuando sea necesario.
 - Variables CSS globales para colores y tokens.
 
+### Regla práctica para páginas internas con `AppShell`
+
+Si una vista usa `AppShell`, la zona funcional principal debe vivir dentro del mismo `AppShell`, normalmente en `slot="body"`.
+
+Reglas obligatorias:
+
+- No abrir una segunda `section-shell` grande debajo del `AppShell` por comodidad.
+- No envolver el contenido principal en otra card hermana si puede ir dentro del mismo shell.
+- Si hay varias zonas, separarlas con bordes, grids internas o bloques secundarios dentro del `AppShell`.
+- Solo se permiten varias cards grandes si existe una razón funcional clara y está pedida explícitamente.
+
+Patrón correcto:
+
+```astro
+<AppShell ...>
+  <AppToolbar>...</AppToolbar>
+  <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+    <!-- contenido principal de la página -->
+  </div>
+</AppShell>
+```
+
+Patrón a evitar:
+
+```astro
+<AppShell ... />
+<Container class="pb-12">
+  <section class="section-shell">...</section>
+</Container>
+```
+
 ## Reglas de SEO
 
 Toda página indexable debe tener:

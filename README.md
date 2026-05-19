@@ -12,6 +12,7 @@ Incluye:
 - Calendario global de todos los viajes.
 - Vista de mapa por viaje con Leaflet.
 - Localización de planes con búsqueda sobre OpenStreetMap.
+- Wizard de sugerencias de planes con IA autenticada dentro de cada viaje.
 - i18n con `es` y `en`.
 - Diseño responsive con light mode y dark mode.
 - Compatibilidad con dominio raíz, subrutas y GitHub Pages.
@@ -43,7 +44,7 @@ Para desarrollo local, configura `.env` a partir de `.env.example`:
 ```env
 ASTRO_SITE=https://travelplan.alon.one
 ASTRO_BASE=/
-PUBLIC_REPOSITORY_URL=https://github.com/jorgealonso/travel-plan
+PUBLIC_REPOSITORY_URL=https://github.com/jalonsomerchan/travel-plan
 PUBLIC_FIREBASE_API_KEY=...
 PUBLIC_FIREBASE_AUTH_DOMAIN=...
 PUBLIC_FIREBASE_PROJECT_ID=...
@@ -102,6 +103,7 @@ src/
 - `/app/plan/?trip=ID&plan=ID`: detalle de plan.
 - `/app/calendar/?trip=ID`: calendario del viaje.
 - `/app/map/?trip=ID`: mapa del viaje.
+- `/app/trip-plan-suggestions/?trip=ID`: wizard IA para proponer planes del viaje.
 - `/app/calendar/all/`: calendario global.
 
 Se usan parámetros de búsqueda para mantener compatibilidad total con GitHub Pages, ya que el hosting es estático y no hay SSR.
@@ -115,6 +117,10 @@ Consulta [docs/firebase-guide.md](docs/firebase-guide.md) para:
 - reglas sugeridas de Firestore,
 - índices esperados,
 - despliegue en GitHub Pages con `travelplan.alon.one`.
+
+## IA autenticada
+
+Consulta [docs/ai-authenticated-client.md](docs/ai-authenticated-client.md) para el patrón obligatorio de integración con el cliente IA autenticado, validación JSON estricta y manejo de errores.
 
 ## Traducciones e idiomas
 

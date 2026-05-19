@@ -9,7 +9,7 @@ En local puedes usar `.env`. Para GitHub Pages, configura estas claves como `Rep
 ```env
 ASTRO_SITE=https://travelplan.alon.one
 ASTRO_BASE=/
-PUBLIC_REPOSITORY_URL=https://github.com/jorgealonso/travel-plan
+PUBLIC_REPOSITORY_URL=https://github.com/jalonsomerchan/travel-plan
 PUBLIC_FIREBASE_API_KEY=...
 PUBLIC_FIREBASE_AUTH_DOMAIN=...
 PUBLIC_FIREBASE_PROJECT_ID=...
@@ -45,11 +45,34 @@ ASTRO_BASE=/travel-plan
 
 ## Colecciones usadas
 
-- `users/{uid}`: perfil básico del usuario autenticado.
+- `users/{uid}`: perfil básico del usuario autenticado. Solo puede leerlo o escribirlo el propio usuario.
 - `trips/{tripId}`: viaje principal con fechas, estado, dueño y `memberIds`.
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
+- `trips/{tripId}/checklistItems/{itemId}`: checklist pequeña de preparación asociada al viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
+- `tripInvites/{tripId_emailLower}`: invitaciones pendientes por correo. El cliente no consulta `users` para saber si ese correo tiene cuenta; al aceptar, se asigna el `userId` del usuario autenticado.
+
+## Estructura recomendada para checklist de viaje
+
+La checklist de preparación debe mantenerse separada de los planes del itinerario.
+
+Documento por ítem en `trips/{tripId}/checklistItems/{itemId}`:
+
+```json
+{
+  "title": "Revisar pasaportes",
+  "status": "pending"
+}
+```
+
+Campos esperados:
+
+- `title`: texto corto visible en la UI.
+- `status`: `pending` o `completed`.
+- `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
+
+Mantener esta estructura pequeña evita mezclar lógica de preparación con la de `plans`, que ya tiene fechas, ubicaciones y categorías propias.
 
 ## Reglas sugeridas de Firestore
 
@@ -61,11 +84,25 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function signedEmail() {
+      return signedIn() && request.auth.token.email != null
+        ? lower(request.auth.token.email)
+        : '';
+    }
+
     function tripMember(tripId) {
       return signedIn() && (
         get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid ||
         exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
       );
+    }
+
+    function inviteRecipient(tripId) {
+      return signedIn() && exists(
+        /databases/$(database)/documents/tripInvites/$(tripId + '_' + signedEmail())
+      ) && get(
+        /databases/$(database)/documents/tripInvites/$(tripId + '_' + signedEmail())
+      ).data.status == 'pending';
     }
 
     match /users/{userId} {
@@ -75,14 +112,25 @@ service cloud.firestore {
     match /trips/{tripId} {
       allow read: if tripMember(tripId);
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if tripMember(tripId);
+      allow update: if tripMember(tripId) || inviteRecipient(tripId);
 
       match /members/{memberId} {
+        allow read: if tripMember(tripId);
+        allow create: if tripMember(tripId) || (
+          inviteRecipient(tripId) &&
+          memberId == request.auth.uid &&
+          request.resource.data.userId == request.auth.uid &&
+          lower(request.resource.data.email) == signedEmail()
+        );
+        allow update, delete: if tripMember(tripId);
+      }
+
+      match /plans/{planId} {
         allow read: if tripMember(tripId);
         allow write: if tripMember(tripId);
       }
 
-      match /plans/{planId} {
+      match /checklistItems/{checklistItemId} {
         allow read: if tripMember(tripId);
         allow write: if tripMember(tripId);
       }
@@ -91,17 +139,29 @@ service cloud.firestore {
     match /tripInvites/{inviteId} {
       allow read: if signedIn() && (
         resource.data.ownerId == request.auth.uid ||
-        lower(request.auth.token.email) == resource.data.emailLower
+        signedEmail() == resource.data.emailLower
       );
-      allow create: if signedIn();
+      allow create: if signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.emailLower is string &&
+        request.resource.data.status == 'pending';
       allow update: if signedIn() && (
         resource.data.ownerId == request.auth.uid ||
-        lower(request.auth.token.email) == resource.data.emailLower
+        signedEmail() == resource.data.emailLower
       );
     }
   }
 }
 ```
+
+## Flujo de invitaciones
+
+1. La persona editora introduce un correo y un rol.
+2. La app crea o reemplaza `tripInvites/{tripId_emailLower}` con `emailLower`, rol y metadatos del viaje, sin consultar `users` por correo.
+3. El usuario invitado ve sus invitaciones pendientes filtrando por su propio email autenticado.
+4. Al aceptar, la app crea `trips/{tripId}/members/{uid}`, añade el `uid` a `memberIds` y marca la invitación como aceptada.
+
+Este diseño evita filtrar desde cliente si un correo tiene cuenta y evita el error `Missing or insufficient permissions` provocado por intentar leer perfiles ajenos en `users`.
 
 ## Índices sugeridos
 

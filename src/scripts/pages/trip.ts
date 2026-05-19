@@ -9,9 +9,11 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
+import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
@@ -127,6 +129,7 @@ function renderPlans(
     ${geolocation.error ? `<p class="text-sm text-[var(--color-text-soft)]">${escapeHtml(t('auth.error'))}</p>` : ''}
     ${plans.map((plan) => {
       const description = plan.description?.trim();
+      const categoryLabel = getCategoryLabel(locale, plan.category);
       const accommodationDistance = getAccommodationDistanceLabel(locale, trip, plan);
       const currentLocationDistance = getCurrentLocationDistanceLabel(locale, geolocation.location, plan);
 
@@ -134,8 +137,11 @@ function renderPlans(
         <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
-              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
+              <div class="flex items-center gap-2">
+                <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+              </div>
+              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)}</p>
             </div>
             <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
           </div>
@@ -149,15 +155,42 @@ function renderPlans(
   `;
 }
 
+function renderChecklistNotice(locale: Locale, tripId: string, items: ChecklistItemRecord[]) {
+  const target = document.querySelector<HTMLAnchorElement>('[data-trip-checklist-notice]');
+  const t = getPageTranslator(locale);
+
+  if (!target) {
+    return;
+  }
+
+  const pendingCount = items.filter((item) => item.status === 'pending').length;
+
+  if (pendingCount === 0) {
+    target.hidden = true;
+    target.textContent = '';
+    return;
+  }
+
+  target.hidden = false;
+  target.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
+  target.textContent =
+    pendingCount === 1
+      ? t('tripChecklist.pendingNotice.one')
+      : t('tripChecklist.pendingNotice.other').replace('{count}', String(pendingCount));
+}
+
 export function mountTripPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const calendarLink = document.querySelector<HTMLAnchorElement>('#trip-calendar-link');
   const mapLink = document.querySelector<HTMLAnchorElement>('#trip-map-link');
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
+  const checklistLink = document.querySelector<HTMLAnchorElement>('#trip-checklist-link');
   const accommodationLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-link');
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
+  const aiLink = document.querySelector<HTMLAnchorElement>('#trip-ai-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
+  const aiInlineLink = document.querySelector<HTMLAnchorElement>('#trip-ai-inline-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
   const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
@@ -178,10 +211,13 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (calendarLink) calendarLink.href = getAppUrl(locale, 'calendar', { trip: tripId });
   if (mapLink) mapLink.href = getAppUrl(locale, 'map', { trip: tripId });
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });
+  if (checklistLink) checklistLink.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
   if (accommodationLink) accommodationLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
   if (accommodationMapsLink) accommodationMapsLink.hidden = true;
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
+  if (aiLink) aiLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (aiInlineLink) aiInlineLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanInlineLink) createPlanInlineLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
   if (categorySelect) {
     categorySelect.innerHTML += getCategoryOptions(locale)
@@ -275,6 +311,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     subscribeTripPlans(tripId, (plans) => {
       allPlans = plans;
       syncPlans();
+    });
+    subscribeTripChecklistItems(tripId, (items) => {
+      renderChecklistNotice(locale, tripId, items);
     });
   });
 }

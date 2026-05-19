@@ -30,6 +30,11 @@ service cloud.firestore {
         allow read: if tripMember(tripId);
         allow write: if tripMember(tripId);
       }
+
+      match /checklistItems/{checklistItemId} {
+        allow read: if tripMember(tripId);
+        allow write: if tripMember(tripId);
+      }
     }
 
     match /tripInvites/{inviteId} {

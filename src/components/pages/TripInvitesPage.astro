@@ -4,7 +4,6 @@ import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -25,14 +24,12 @@ const t = useTranslations(locale);
         <Button href={getLocalizedPath('/app/', locale)} variant="ghost">{t('trip.backToDashboard')}</Button>
       </div>
     </AppToolbar>
-  </AppShell>
-  <Container class="pb-12">
-    <section class="section-shell px-6 py-6">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="grid gap-4" data-invite-list>
         <LoadingState label={t('common.loading')} />
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
   <script>
     import { mountTripInvitesPage } from '../../scripts/pages/trip-invites';
 

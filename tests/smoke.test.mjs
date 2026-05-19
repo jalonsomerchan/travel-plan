@@ -50,8 +50,12 @@ describe('project smoke checks', () => {
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
       'src/pages/app/map/index.astro',
+      'src/pages/app/trip-plan-suggestions/index.astro',
+      'src/pages/app/trip-checklist/index.astro',
       'src/pages/app/trip-accommodation/index.astro',
       'src/pages/[locale]/app/map/index.astro',
+      'src/pages/[locale]/app/trip-plan-suggestions/index.astro',
+      'src/pages/[locale]/app/trip-checklist/index.astro',
       'src/pages/[locale]/app/trip-accommodation/index.astro',
       'src/layouts/BaseLayout.astro',
       'src/config/site.ts',
@@ -101,6 +105,18 @@ describe('project smoke checks', () => {
     assert.match(loadingState, /aria-busy=\"true\"/);
     assert.match(loadingState, /sr-only/);
     assert.match(loadingState, /animate-spin/);
+  });
+
+  it('keeps the authenticated AI client modules available', () => {
+    [
+      'src/lib/ai/authenticated-api-client.ts',
+      'src/lib/ai/errors.ts',
+      'src/lib/ai/json.ts',
+      'src/lib/ai/trip-plan-suggestions.ts',
+      'src/lib/app/trip-plan-suggestions.ts',
+    ].forEach((path) => {
+      assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
+    });
   });
 
   it('keeps the Google sign-in button reusable and local', () => {
@@ -202,6 +218,18 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(landingPage, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
 
+  it('keeps repository links pointing at the current repository by default', () => {
+    const sources = [
+      readText('src/config/site.ts'),
+      readText('.env.example'),
+      readText('README.md'),
+      readText('docs/firebase-guide.md'),
+    ].join('\n');
+
+    assert.match(sources, /https:\/\/github\.com\/jalonsomerchan\/travel-plan/);
+    assert.doesNotMatch(sources, /https:\/\/github\.com\/jorgealonso\/travel-plan/);
+  });
+
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');
     const ciWorkflow = readText('.github/workflows/ci.yml');
@@ -220,7 +248,26 @@ describe('project smoke checks', () => {
     assert.match(readme, /\S/, 'README.md should not be empty');
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
+    assert.equal(existsSync(join(root, 'docs/ai-authenticated-client.md')), true, 'docs/ai-authenticated-client.md should exist');
     assert.equal(existsSync(join(root, 'docs/firebase-guide.md')), true, 'docs/firebase-guide.md should exist');
     assert.equal(existsSync(join(root, 'public/CNAME')), true, 'public/CNAME should exist');
+  });
+
+  it('keeps AppShell pages inside a single main card', () => {
+    const pageFiles = readdirSync(join(root, 'src/components/pages')).filter((file) => file.endsWith('.astro'));
+
+    pageFiles.forEach((file) => {
+      const source = readText(`src/components/pages/${file}`);
+
+      if (!source.includes('<AppShell')) {
+        return;
+      }
+
+      assert.doesNotMatch(
+        source,
+        /<\/AppShell>\s*<Container[\s\S]*section-shell/,
+        `${file} should keep the main page content inside AppShell instead of creating a second large card`
+      );
+    });
   });
 });

@@ -2,6 +2,7 @@ import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
@@ -40,20 +41,25 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
             </div>
             <div class="mt-5 grid gap-3">
               ${groupedPlans[date]
-                .map(
-                  (plan) => `
+                .map((plan) => {
+                  const categoryLabel = getCategoryLabel(locale, plan.category);
+
+                  return `
                     <a class="app-card-shell p-4" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <h4 class="text-lg font-bold text-[var(--color-text)]">${escapeHtml(plan.name)}</h4>
+                          <div class="flex items-center gap-2">
+                            <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                            <h4 class="text-lg font-bold text-[var(--color-text)]">${escapeHtml(plan.name)}</h4>
+                          </div>
                           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(plan.time ?? t('calendar.noTime'))}</p>
                         </div>
                         <span class="status-pill" data-tone="primary">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
                       </div>
-                      <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
+                      <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(categoryLabel)}</p>
                     </a>
-                  `,
-                )
+                  `;
+                })
                 .join('')}
             </div>
           </article>
@@ -63,18 +69,23 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
 
   eventsTarget.innerHTML = unscheduledPlans.length
     ? unscheduledPlans
-        .map(
-          (plan) => `
+        .map((plan) => {
+          const categoryLabel = getCategoryLabel(locale, plan.category);
+
+          return `
             <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
               <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(t('calendar.unscheduled'))}</p>
-              <h3 class="mt-2 text-lg font-bold">${escapeHtml(plan.name)}</h3>
-              <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
+              <div class="mt-2 flex items-center gap-2">
+                <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+              </div>
+              <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
               <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
                 ${escapeHtml(t('trip.openPlan'))}
               </a>
             </article>
-          `,
-        )
+          `;
+        })
         .join('')
     : `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('calendar.noUnscheduled'))}</article>`;
 }

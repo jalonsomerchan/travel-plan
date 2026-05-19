@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import TripFormFields from '../app/TripFormFields.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -26,18 +25,16 @@ const homeUrl = getLocalizedPath('/', locale);
         <Button href={getLocalizedPath('/app/', locale)} variant="ghost">{t('common.cancel')}</Button>
       </div>
     </AppToolbar>
-  </AppShell>
-  <Container class="pb-12">
-    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
-      <form class="space-y-4" id="trip-create-form">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <form class="mx-auto max-w-3xl space-y-4" id="trip-create-form">
         <TripFormFields locale={locale} prefix="trip-create" />
         <p class="text-sm text-[var(--color-text-soft)]" id="trip-create-message">{t('dashboard.createHint')}</p>
         <div class="flex flex-wrap gap-3">
           <Button type="submit">{t('dashboard.createAction')}</Button>
         </div>
       </form>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
   <script>
     import { mountTripCreatePage } from '../../scripts/pages/trip-create';
 
