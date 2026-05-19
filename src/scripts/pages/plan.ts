@@ -13,8 +13,6 @@ import {
   ensureFirebaseReady,
   getCategoryLabel,
   getPageTranslator,
-  getPlanStatusLabel,
-  getPlanStatusTone,
   syncPlanShell,
 } from './shared';
 
@@ -47,14 +45,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
         view.innerHTML = `
           <div class="mt-8 border-t border-[var(--color-border)] pt-6">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <span class="eyebrow">${escapeHtml(t('plan.detailsEyebrow'))}</span>
-                <h2 class="mt-2 text-2xl font-black">${escapeHtml(t('plan.detailsTitle'))}</h2>
-              </div>
-              <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
-            </div>
-            <dl class="mt-6 grid gap-4 md:grid-cols-2">
+            <dl class="grid gap-4 md:grid-cols-2">
               <div><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.category'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</dd></div>
               <div><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.date'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</dd></div>
               <div class="md:col-span-2"><dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.form.description'))}</dt><dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</dd></div>
@@ -62,10 +53,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
                 hasPlanLocation(plan)
                   ? `
                     <div class="md:col-span-2">
-                      <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.selected'))}</dt>
-                      <dd class="mt-1 text-base text-[var(--color-text)]">${escapeHtml(getPlanLocationLabel(plan))}</dd>
                       <div class="mt-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)]">
-                        <div class="h-64 w-full" data-plan-map></div>
+                        <div class="h-[26rem] w-full" data-plan-map></div>
                       </div>
                       <div class="mt-4 flex flex-wrap gap-3">
                         <a class="app-card-link" data-variant="secondary" href="${escapeHtml(getGoogleMapsPlaceUrl(getPlanLocationLabel(plan)))}" rel="noreferrer" target="_blank">${escapeHtml(t('plan.location.openMap'))}</a>
