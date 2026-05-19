@@ -15,11 +15,9 @@ const t = useTranslations(locale);
   class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
   data-plan-links-fieldset
 >
-  <div class="flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <legend class="text-sm font-bold text-[var(--color-text)]">{t('plan.links.title')}</legend>
-      <p class="mt-1 text-sm text-[var(--color-text-soft)]">{t('plan.links.description')}</p>
-    </div>
+  <legend class="text-sm font-bold text-[var(--color-text)]">{t('plan.links.title')}</legend>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <p class="text-sm text-[var(--color-text-soft)]">{t('plan.links.description')}</p>
     <button class="app-card-link" data-plan-link-add type="button">{t('plan.links.add')}</button>
   </div>
   <div class="mt-4 space-y-3" data-plan-links-list></div>
