@@ -190,11 +190,16 @@ export function setAppShellMeta(items: string[]) {
     .join('');
 }
 
-export function setBreadcrumbLabel(key: string, label: string) {
+export function setBreadcrumbItem(key: string, label: string, href?: string) {
   const target = document.querySelector<HTMLElement>(`[data-breadcrumb-key="${key}"]`);
 
   if (target) {
     target.textContent = label;
+    if (target instanceof HTMLAnchorElement && href) {
+      target.href = href;
+      target.removeAttribute('aria-disabled');
+      target.removeAttribute('tabindex');
+    }
   }
 }
 
@@ -206,7 +211,7 @@ export function syncTripShell(locale: Locale, trip: TripRecord) {
     getTripStatusLabel(locale, trip.status),
     trip.ownerEmail,
   ]);
-  setBreadcrumbLabel('trip', trip.name);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
 }
 
 export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {
@@ -218,6 +223,6 @@ export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord
     getPlanStatusLabel(locale, plan.status),
     hasPlanLocation(plan) ? getPlanLocationLabel(plan) : '',
   ]);
-  setBreadcrumbLabel('trip', trip.name);
-  setBreadcrumbLabel('plan', plan.name);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem('plan', plan.name, getAppUrl(locale, 'plan', { trip: trip.id, plan: plan.id }));
 }

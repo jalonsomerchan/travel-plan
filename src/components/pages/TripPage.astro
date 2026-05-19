@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppActionsMenu from '../app/AppActionsMenu.astro';
 import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
@@ -30,22 +31,60 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <AppToolbar>
       <div slot="secondary">
         <Button href={dashboardUrl} variant="ghost">{t('trip.backToDashboard')}</Button>
-        <Button id="trip-edit-link" variant="ghost" href={dashboardUrl}>{t('trip.goEdit')}</Button>
-        <Button id="trip-members-link" variant="ghost" href={dashboardUrl}>{t('trip.goMembers')}</Button>
-        <Button id="trip-calendar-link" variant="ghost" href={dashboardUrl}>{t('trip.openCalendar')}</Button>
-        <Button id="trip-map-link" variant="ghost" href={dashboardUrl}>{t('trip.openMap')}</Button>
       </div>
       <div slot="primary">
-        <Button id="trip-create-plan-link" href={dashboardUrl}>{t('trip.goCreatePlan')}</Button>
+        <AppActionsMenu
+          label={t('trip.actionsMenu')}
+          items={[
+            { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
+            { href: dashboardUrl, id: 'trip-members-link', label: t('trip.goMembers') },
+            { href: dashboardUrl, id: 'trip-calendar-link', label: t('trip.openCalendar') },
+            { href: dashboardUrl, id: 'trip-map-link', label: t('trip.openMap') },
+            { href: dashboardUrl, id: 'trip-edit-link', label: t('trip.goEdit') },
+          ]}
+        />
       </div>
     </AppToolbar>
   </AppShell>
 
   <Container class="grid gap-8 pb-12">
     <section class="section-shell px-6 py-6">
-      <div>
-        <span class="eyebrow">{t('trip.plansEyebrow')}</span>
-        <h2 class="mt-4 text-2xl font-black">{t('trip.plansTitle')}</h2>
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <span class="eyebrow">{t('trip.plansEyebrow')}</span>
+          <h2 class="mt-4 text-2xl font-black">{t('trip.plansTitle')}</h2>
+        </div>
+        <form class="grid gap-3 sm:grid-cols-3" data-plan-filters>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.search')}</span>
+            <input
+              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              data-plan-filter-search
+              name="search"
+              type="search"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.category')}</span>
+            <select
+              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              data-plan-filter-category
+              name="category"
+            >
+              <option value="all">{t('trip.filters.allCategories')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.status')}</span>
+            <select
+              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              data-plan-filter-status
+              name="status"
+            >
+              <option value="all">{t('trip.filters.allStatuses')}</option>
+            </select>
+          </label>
+        </form>
       </div>
       <div class="mt-6 grid gap-4" data-plan-list>
         <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">

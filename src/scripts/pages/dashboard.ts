@@ -38,7 +38,7 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
   }
   target.innerHTML = trips
     .map((trip) => `
-      <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)]">
+      <a class="app-card-shell" href="${getAppUrl(locale, 'trip', { trip: trip.id })}">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 class="text-xl font-bold text-[var(--color-text)]">${escapeHtml(trip.name)}</h3>
@@ -47,11 +47,7 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
           <span class="status-pill" data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
         </div>
         <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
-        <div class="mt-5 flex flex-wrap gap-3">
-          <a class="inline-flex rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-contrast)]" href="${getAppUrl(locale, 'trip', { trip: trip.id })}">${escapeHtml(t('dashboard.openTrip'))}</a>
-          <a class="inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-text)]" href="${getAppUrl(locale, 'trip-edit', { trip: trip.id })}">${escapeHtml(t('trip.goEdit'))}</a>
-        </div>
-      </article>
+      </a>
     `)
     .join('');
 }

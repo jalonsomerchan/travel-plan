@@ -37,9 +37,9 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
     event.preventDefault();
     setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
     try {
-      const planId = await createPlan(tripId, getPlanInputFromForm(form));
+      await createPlan(tripId, getPlanInputFromForm(form));
       setMessage(message, t('trip.plansCreated'), 'success');
-      window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
+      window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('trip.plansError'), 'danger');
     } finally {

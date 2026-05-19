@@ -10,14 +10,38 @@ import { subscribeTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
   getCategoryLabel,
+  getCategoryOptions,
   getPageTranslator,
   getPlanStatusLabel,
+  getPlanStatusOptions,
   getPlanStatusTone,
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
   syncTripShell,
 } from './shared';
+
+interface PlanFilters {
+  search: string;
+  category: string;
+  status: string;
+}
+
+function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
+  const query = filters.search.trim().toLowerCase();
+
+  return plans.filter((plan) => {
+    const matchesQuery =
+      !query ||
+      [plan.name, plan.description, plan.locationName]
+        .filter(Boolean)
+        .some((value) => value?.toLowerCase().includes(query));
+    const matchesCategory = filters.category === 'all' || plan.category === filters.category;
+    const matchesStatus = filters.status === 'all' || plan.status === filters.status;
+
+    return matchesQuery && matchesCategory && matchesStatus;
+  });
+}
 
 function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-plan-list]');
@@ -28,7 +52,7 @@ function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
     return;
   }
   target.innerHTML = plans.map((plan) => `
-    <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)]">
+    <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
@@ -39,11 +63,7 @@ function renderPlans(locale: Locale, tripId: string, plans: PlanRecord[]) {
       <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.description || t('plan.descriptionEmpty'))}</p>
       <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
       ${hasPlanLocation(plan) ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.location.selected'))}: ${escapeHtml(getPlanLocationLabel(plan))}</p>` : ''}
-      <div class="app-inline-actions">
-        <a class="app-card-link" data-variant="primary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">${escapeHtml(t('trip.openPlan'))}</a>
-        <a class="app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id })}">${escapeHtml(t('plan.goEdit'))}</a>
-      </div>
-    </article>
+    </a>
   `).join('');
 }
 
@@ -54,7 +74,12 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
+  const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
+  const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
+  const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
   const t = getPageTranslator(locale);
+  let allPlans: PlanRecord[] = [];
+  const filters: PlanFilters = { search: '', category: 'all', status: 'all' };
   if (!tripId) {
     setAppShellTitle(t('trip.missingId'));
     setAppShellDescription('');
@@ -67,6 +92,33 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (categorySelect) {
+    categorySelect.innerHTML += getCategoryOptions(locale)
+      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+      .join('');
+  }
+  if (statusSelect) {
+    statusSelect.innerHTML += getPlanStatusOptions(locale)
+      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+      .join('');
+  }
+
+  const syncPlans = () => {
+    renderPlans(locale, tripId, filterPlans(allPlans, filters));
+  };
+
+  searchInput?.addEventListener('input', () => {
+    filters.search = searchInput.value;
+    syncPlans();
+  });
+  categorySelect?.addEventListener('change', () => {
+    filters.category = categorySelect.value;
+    syncPlans();
+  });
+  statusSelect?.addEventListener('change', () => {
+    filters.status = statusSelect.value;
+    syncPlans();
+  });
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -81,6 +133,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         setAppShellMeta([]);
       }
     });
-    subscribeTripPlans(tripId, (plans) => renderPlans(locale, tripId, plans));
+    subscribeTripPlans(tripId, (plans) => {
+      allPlans = plans;
+      syncPlans();
+    });
   });
 }

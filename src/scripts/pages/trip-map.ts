@@ -33,15 +33,12 @@ function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
   target.innerHTML = locatedPlans
     .map(
       (plan) => `
-        <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)]">
+        <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
           <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getPlanLocationLabel(plan))}</p>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
-          <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
-            ${escapeHtml(t('trip.openPlan'))}
-          </a>
-        </article>
+        </a>
       `,
     )
     .join('');

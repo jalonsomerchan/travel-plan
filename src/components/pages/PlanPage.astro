@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppActionsMenu from '../app/AppActionsMenu.astro';
 import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
 import Button from '../Button.astro';
@@ -30,7 +31,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <Button id="plan-back-trip-link" variant="ghost" href={dashboardUrl}>{t('plan.backToTrip')}</Button>
       </div>
       <div slot="primary">
-        <Button id="plan-edit-link" href={dashboardUrl}>{t('plan.goEdit')}</Button>
+        <AppActionsMenu
+          label={t('plan.actionsMenu')}
+          items={[
+            { href: dashboardUrl, id: 'plan-edit-link', label: t('plan.goEdit') },
+          ]}
+        />
       </div>
     </AppToolbar>
   </AppShell>

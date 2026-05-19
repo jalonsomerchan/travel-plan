@@ -1,0 +1,27 @@
+---
+interface ActionItem {
+  href: string;
+  id?: string;
+  label: string;
+}
+
+interface Props {
+  label: string;
+  items: ActionItem[];
+}
+
+const { label, items } = Astro.props;
+---
+
+<details class="app-actions-menu">
+  <summary class="app-actions-menu-trigger">
+    {label}
+  </summary>
+  <div class="app-actions-menu-panel">
+    {items.map((item) => (
+      <a class="app-actions-menu-link" href={item.href} id={item.id}>
+        {item.label}
+      </a>
+    ))}
+  </div>
+</details>

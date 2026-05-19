@@ -17,10 +17,12 @@ const { items } = Astro.props;
     {items.map((item, index) => (
       <>
         <li>
-          {item.href && index < items.length - 1 ? (
+          {(item.href || (item.key && index < items.length - 1)) && index < items.length - 1 ? (
             <a
               class="inline-flex items-center rounded-full px-2.5 py-1.5 transition hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
-              href={item.href}
+              href={item.href ?? '#'}
+              aria-disabled={item.href ? undefined : 'true'}
+              tabindex={item.href ? undefined : -1}
               data-breadcrumb-key={item.key}
             >
               {item.label}

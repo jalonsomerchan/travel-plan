@@ -1,96 +1,82 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
-import { getCalendarGrid, getMonthCursor, getMonthKey, getMonthLabel } from '../../lib/app/format';
+import { formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, getWeekdayLabels, syncTripShell } from './shared';
+import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripShell } from './shared';
 
-function renderWeekdays(locale: Locale, targetSelector: string) {
-  const target = document.querySelector<HTMLElement>(targetSelector);
-
-  if (!target) {
-    return;
-  }
-
-  target.innerHTML = getWeekdayLabels(locale)
-    .map((day) => `<span>${escapeHtml(day)}</span>`)
-    .join('');
-}
-
-function renderCalendarGrid(locale: Locale, monthKey: string, plans: PlanRecord[]) {
-  const [year, month] = monthKey.split('-').map(Number);
-  const gridTarget = document.querySelector<HTMLElement>('[data-trip-calendar-grid]');
-  const monthLabel = document.querySelector<HTMLElement>('[data-month-label]');
+function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
+  const t = getPageTranslator(locale);
+  const groupsTarget = document.querySelector<HTMLElement>('[data-trip-calendar-groups]');
   const eventsTarget = document.querySelector<HTMLElement>('[data-calendar-events]');
 
-  if (!gridTarget || !monthLabel || !eventsTarget) {
+  if (!groupsTarget || !eventsTarget) {
     return;
   }
 
-  monthLabel.textContent = getMonthLabel(locale, year, month - 1);
-
-  const planMap = plans.reduce<Record<string, PlanRecord[]>>((accumulator, plan) => {
-    if (!plan.date || !plan.date.startsWith(monthKey)) {
-      return accumulator;
-    }
-
-    accumulator[plan.date] ??= [];
-    accumulator[plan.date].push(plan);
+  const datedPlans = plans.filter((plan) => plan.date);
+  const unscheduledPlans = plans.filter((plan) => !plan.date);
+  const groupedPlans = datedPlans.reduce<Record<string, PlanRecord[]>>((accumulator, plan) => {
+    const key = plan.date ?? '';
+    accumulator[key] ??= [];
+    accumulator[key].push(plan);
     return accumulator;
   }, {});
-  const { firstWeekday, grid } = getCalendarGrid(year, month - 1);
-  const leading = Array.from({ length: firstWeekday }, () => '<div class="min-h-[7.5rem] rounded-[var(--radius-md)] border border-transparent"></div>').join('');
+  const orderedDates = Object.keys(groupedPlans).sort();
 
-  gridTarget.innerHTML =
-    leading +
-    grid
-      .map((day) => {
-        const plansForDay = planMap[day.key] ?? [];
-
-        return `
-          <article class="min-h-[7.5rem] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-3">
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-black text-[var(--color-text)]">${day.day}</p>
-              <span class="text-xs text-[var(--color-text-soft)]">${plansForDay.length}</span>
+  groupsTarget.innerHTML = orderedDates.length
+    ? orderedDates
+        .map((date) => `
+          <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)]">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(date)}</p>
+                <h3 class="mt-2 text-xl font-black text-[var(--color-text)]">${escapeHtml(formatFriendlyDate(date, locale))}</h3>
+              </div>
+              <span class="status-pill" data-tone="primary">${groupedPlans[date].length}</span>
             </div>
-            <div class="mt-3 grid gap-2">
-              ${plansForDay
-                .slice(0, 3)
+            <div class="mt-5 grid gap-3">
+              ${groupedPlans[date]
                 .map(
                   (plan) => `
-                    <a class="rounded-[var(--radius-sm)] bg-[var(--color-surface-soft)] px-2 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)]" href="${getAppUrl(locale, 'plan', { trip: new URL(window.location.href).searchParams.get('trip') ?? '', plan: plan.id })}">
-                      ${escapeHtml(plan.time ?? '--:--')} · ${escapeHtml(plan.name)}
+                    <a class="app-card-shell p-4" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+                      <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h4 class="text-lg font-bold text-[var(--color-text)]">${escapeHtml(plan.name)}</h4>
+                          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(plan.time ?? t('calendar.noTime'))}</p>
+                        </div>
+                        <span class="status-pill" data-tone="primary">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+                      </div>
+                      <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
                     </a>
                   `,
                 )
                 .join('')}
             </div>
           </article>
-        `;
-      })
-      .join('');
+        `)
+        .join('')
+    : `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('calendar.empty'))}</article>`;
 
-  const datedPlans = plans.filter((plan) => plan.date?.startsWith(monthKey));
-  const unscheduledPlans = plans.filter((plan) => !plan.date);
-
-  eventsTarget.innerHTML =
-    datedPlans
-      .map(
-        (plan) => `
-          <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
-            <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(plan.date ?? '')} ${escapeHtml(plan.time ?? '')}</p>
-            <h3 class="mt-2 text-lg font-bold">${escapeHtml(plan.name)}</h3>
-            <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
-          </article>
-        `,
-      )
-      .join('') +
-    (unscheduledPlans.length
-      ? `<article class="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(getPageTranslator(locale)('calendar.unscheduledCount'))}: ${unscheduledPlans.length}</article>`
-      : '');
+  eventsTarget.innerHTML = unscheduledPlans.length
+    ? unscheduledPlans
+        .map(
+          (plan) => `
+            <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
+              <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(t('calendar.unscheduled'))}</p>
+              <h3 class="mt-2 text-lg font-bold">${escapeHtml(plan.name)}</h3>
+              <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
+              <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+                ${escapeHtml(t('trip.openPlan'))}
+              </a>
+            </article>
+          `,
+        )
+        .join('')
+    : `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('calendar.noUnscheduled'))}</article>`;
 }
 
 export function mountTripCalendarPage({ locale }: { locale: Locale }) {
@@ -98,11 +84,7 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
   const tripId = params.get('trip') ?? '';
   const tripName = document.querySelector<HTMLElement>('[data-calendar-trip-name]');
-  const prevButton = document.querySelector<HTMLButtonElement>('#calendar-prev-month');
-  const nextButton = document.querySelector<HTMLButtonElement>('#calendar-next-month');
   const backLink = document.querySelector<HTMLAnchorElement>('#calendar-back-trip-link');
-  let activeMonth = params.get('month') ?? getMonthKey(new Date().getFullYear(), new Date().getMonth());
-  let plans: PlanRecord[] = [];
 
   if (!tripId) {
     if (tripName) {
@@ -119,22 +101,6 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   }
 
-  renderWeekdays(locale, '[data-calendar-weekdays]');
-
-  const syncMonth = (delta: number) => {
-    const cursor = getMonthCursor(activeMonth);
-    const nextDate = new Date(cursor.year, cursor.month + delta, 1);
-    activeMonth = getMonthKey(nextDate.getFullYear(), nextDate.getMonth());
-    const url = new URL(window.location.href);
-    url.searchParams.set('trip', tripId);
-    url.searchParams.set('month', activeMonth);
-    window.history.replaceState({}, '', url.toString());
-    renderCalendarGrid(locale, activeMonth, plans);
-  };
-
-  prevButton?.addEventListener('click', () => syncMonth(-1));
-  nextButton?.addEventListener('click', () => syncMonth(1));
-
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -150,9 +116,8 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
       }
     });
 
-    subscribeTripPlans(tripId, (items) => {
-      plans = items;
-      renderCalendarGrid(locale, activeMonth, plans);
+    subscribeTripPlans(tripId, (plans) => {
+      renderTimeline(locale, tripId, plans);
     });
   });
 }
