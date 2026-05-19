@@ -29,6 +29,8 @@
   "poi.plan.noLocationTitle": "Este plan todavía no tiene coordenadas",
   "poi.plan.noLocationDescription": "Añade una localización válida al plan para poder buscar lugares cercanos con OpenStreetMap.",
   "poi.plan.addLocationAction": "Añadir localización al plan",
+  "plan.location.selectionRequired": "Selecciona un resultado del buscador o marca el punto en el mapa para guardar sus coordenadas.",
+  "plan.location.invalidCoordinates": "La localización seleccionada no tiene coordenadas válidas. Vuelve a buscarla o marca el punto en el mapa.",
   "tripPois.metaTitle": "Lugares cercanos del viaje",
   "tripPois.metaDescription": "Busca lugares de interés cerca del alojamiento del viaje usando Overpass API y OpenStreetMap.",
   "tripPois.eyebrow": "Exploración local",
