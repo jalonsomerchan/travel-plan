@@ -103,6 +103,19 @@ describe('project smoke checks', () => {
     assert.match(loadingState, /animate-spin/);
   });
 
+  it('keeps the Google sign-in button reusable and local', () => {
+    const googleButtonPath = 'src/components/app/GoogleSignInButton.astro';
+    const googleButton = readText(googleButtonPath);
+    const landingPage = readText('src/components/pages/LandingPage.astro');
+
+    assert.equal(existsSync(join(root, googleButtonPath)), true, `${googleButtonPath} should exist`);
+    assert.match(googleButton, /viewBox=\"0 0 24 24\"/);
+    assert.doesNotMatch(googleButton, /fonts\.googleapis|gstatic|flaticon/);
+    assert.match(landingPage, /GoogleSignInButton/);
+    assert.match(landingPage, /google-sign-in-form/);
+    assert.match(landingPage, /type=\"submit\"/);
+  });
+
   it('keeps Astro i18n enabled and aligned with site config', () => {
     const astroConfig = readText('astro.config.mjs');
     const readme = readText('README.md');
@@ -184,7 +197,8 @@ describe('project smoke checks', () => {
     assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
     assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
     assert.match(header, /t\('nav\.main'\)/);
-    assert.match(landingPage, /siteConfig\.repositoryUrl/);
+    assert.match(landingPage, /t\('home\.title'\)/);
+    assert.match(landingPage, /t\('auth\.signIn'\)/);
     assert.doesNotMatch(landingPage, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
 
