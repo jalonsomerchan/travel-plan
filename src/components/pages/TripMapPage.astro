@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
 import AppToolbar from '../app/AppToolbar.astro';
+import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
 import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
@@ -40,8 +41,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <section class="section-shell overflow-hidden px-6 py-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-map-trip-name>
-            {t('common.loading')}
+          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-map-trip-name aria-live="polite">
+            <span class="sr-only">{t('common.loading')}</span>
           </p>
           <h2 class="mt-3 text-3xl font-black">{t('map.canvasTitle')}</h2>
         </div>
@@ -58,9 +59,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <h2 class="mt-4 text-2xl font-black">{t('map.listTitle')}</h2>
       </div>
       <div class="mt-6 grid gap-4" data-map-plan-list>
-        <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
-          {t('common.loading')}
-        </article>
+        <LoadingState label={t('common.loading')} />
       </div>
     </aside>
   </Container>

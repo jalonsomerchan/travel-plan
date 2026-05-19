@@ -1,0 +1,22 @@
+---
+interface Props {
+  label: string;
+  class?: string;
+}
+
+const { label, class: className = '' } = Astro.props;
+---
+
+<article
+  aria-busy="true"
+  aria-live="polite"
+  aria-label={label}
+  class={`flex min-h-28 items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center ${className}`}
+  role="status"
+>
+  <span
+    aria-hidden="true"
+    class="size-9 animate-spin rounded-full border-4 border-[var(--color-border-strong)] border-t-[var(--color-primary)]"
+  ></span>
+  <span class="sr-only">{label}</span>
+</article>
