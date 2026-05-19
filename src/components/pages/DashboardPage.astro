@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppActionsMenu from '../app/AppActionsMenu.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
+import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -13,7 +14,9 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardUrl = getLocalizedPath('/app/', locale);
+const tripCreateUrl = getLocalizedPath('/app/trip-create/', locale);
 const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to TravelPlan';
+const addTripLabel = locale === 'es' ? 'Añadir viaje' : 'Add trip';
 ---
 
 <BaseLayout title={t('dashboard.metaTitle')} description={t('dashboard.metaDescription')} locale={locale}>
@@ -22,6 +25,7 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
     title={dashboardTitle}
     loading
     loadingLabel={t('common.loading')}
+    compactTop
     breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb') }]}
   >
     <div slot="topbar" class="app-shell-topbar-row">
@@ -31,10 +35,13 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
         label="..."
         items={[
           { href: dashboardUrl, id: 'dashboard-invites-link', label: t('dashboard.goInvites') },
-          { href: dashboardUrl, id: 'dashboard-create-trip-link', label: t('dashboard.goCreateTrip') },
+          { href: tripCreateUrl, id: 'dashboard-create-trip-link', label: t('dashboard.goCreateTrip') },
           { href: dashboardUrl, id: 'sign-out-button', label: t('auth.signOut') },
         ]}
       />
+    </div>
+    <div class="mt-5 flex flex-wrap justify-start gap-3 md:mt-0 md:justify-end">
+      <Button href={tripCreateUrl} id="dashboard-create-trip-hero-link">{addTripLabel}</Button>
     </div>
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
