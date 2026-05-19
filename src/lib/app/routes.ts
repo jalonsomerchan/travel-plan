@@ -8,6 +8,7 @@ export type AppView =
   | 'trip-create'
   | 'trip-edit'
   | 'trip-checklist'
+  | 'trip-luggage'
   | 'trip-accommodation'
   | 'trip-pois'
   | 'trip-members'
@@ -26,6 +27,7 @@ const appPaths: Record<AppView, string> = {
   'trip-create': 'app/trip-create',
   'trip-edit': 'app/trip-edit',
   'trip-checklist': 'app/trip-checklist',
+  'trip-luggage': 'app/trip-luggage',
   'trip-accommodation': 'app/trip-accommodation',
   'trip-pois': 'app/trip-pois',
   'trip-members': 'app/trip-members',

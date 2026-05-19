@@ -54,6 +54,7 @@ Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nom
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
 - `trips/{tripId}/checklistItems/{itemId}`: checklist pequeña de preparación asociada al viaje.
+- `trips/{tripId}/luggageItems/{itemId}`: lista privada de equipaje visible solo para la persona creadora del viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
 - `tripInvites/{tripId_emailLower}`: invitaciones pendientes por correo. El cliente no consulta `users` para saber si ese correo tiene cuenta; al aceptar, se asigna el `userId` del usuario autenticado.
 
@@ -77,6 +78,30 @@ Campos esperados:
 - `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
 
 Mantener esta estructura pequeña evita mezclar lógica de preparación con la de `plans`, que ya tiene fechas, ubicaciones y categorías propias.
+
+## Estructura recomendada para equipaje privado
+
+La lista de equipaje debe seguir la misma estructura que la checklist, pero en una colección separada y privada para la persona propietaria del viaje.
+
+Documento por ítem en `trips/{tripId}/luggageItems/{itemId}`:
+
+```json
+{
+  "title": "Pasaporte",
+  "status": "pending"
+}
+```
+
+Campos esperados:
+
+- `title`: texto corto visible en la UI.
+- `status`: `pending` o `completed`.
+- `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
+
+Regla práctica:
+
+- `luggageItems` no debe ser visible para miembros invitados.
+- Solo `ownerId` del viaje puede leer o escribir esa subcolección.
 
 ## Reglas sugeridas de Firestore
 
@@ -146,6 +171,11 @@ service cloud.firestore {
       match /checklistItems/{checklistItemId} {
         allow read: if tripVisibleFromParent(tripId);
         allow write: if tripVisibleFromParent(tripId);
+      }
+
+      match /luggageItems/{luggageItemId} {
+        allow read, write: if signedIn() &&
+          get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
       }
     }
 

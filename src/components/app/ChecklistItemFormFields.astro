@@ -5,20 +5,21 @@ import type { Locale } from '../../config/site';
 interface Props {
   locale: Locale;
   prefix: string;
+  translationPrefix?: 'tripChecklist' | 'tripLuggage';
 }
 
-const { locale, prefix } = Astro.props;
+const { locale, prefix, translationPrefix = 'tripChecklist' } = Astro.props;
 const t = useTranslations(locale);
 ---
 
 <div class="space-y-4">
   <div>
-    <label class="field-label" for={`${prefix}-title`}>{t('tripChecklist.form.title')}</label>
+    <label class="field-label" for={`${prefix}-title`}>{t(`${translationPrefix}.form.title`)}</label>
     <input
       class="field-input"
       id={`${prefix}-title`}
       name="title"
-      placeholder={t('tripChecklist.form.placeholder')}
+      placeholder={t(`${translationPrefix}.form.placeholder`)}
       required
     />
   </div>

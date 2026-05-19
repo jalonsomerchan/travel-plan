@@ -19,6 +19,11 @@ service cloud.firestore {
       );
     }
 
+    function tripOwnedByCurrentUser(tripId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
+    }
+
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
@@ -40,6 +45,10 @@ service cloud.firestore {
 
       match /checklistItems/{checklistItemId} {
         allow read, write: if tripVisibleFromParent(tripId);
+      }
+
+      match /luggageItems/{luggageItemId} {
+        allow read, write: if tripOwnedByCurrentUser(tripId);
       }
     }
 

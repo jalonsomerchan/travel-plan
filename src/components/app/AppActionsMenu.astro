@@ -1,6 +1,7 @@
 ---
 interface ActionItem {
   href: string;
+  hidden?: boolean;
   id?: string;
   label: string;
 }
@@ -20,7 +21,7 @@ const { ariaLabel, label, items } = Astro.props;
   </summary>
   <div class="app-actions-menu-panel">
     {items.map((item) => (
-      <a class="app-actions-menu-link" href={item.href} id={item.id}>
+      <a class="app-actions-menu-link" hidden={item.hidden} href={item.href} id={item.id}>
         {item.label}
       </a>
     ))}

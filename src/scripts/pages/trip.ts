@@ -28,6 +28,7 @@ import {
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
+  setNavigationLinkHidden,
   syncTripNavigation,
   syncTripShell,
 } from './shared';
@@ -186,6 +187,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const mapLink = document.querySelector<HTMLAnchorElement>('#trip-map-link');
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
   const checklistLink = document.querySelector<HTMLAnchorElement>('#trip-checklist-link');
+  const luggageLink = document.querySelector<HTMLAnchorElement>('#trip-luggage-link');
   const accommodationLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-link');
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
@@ -214,6 +216,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (mapLink) mapLink.href = getAppUrl(locale, 'map', { trip: tripId });
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });
   if (checklistLink) checklistLink.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
+  if (luggageLink) luggageLink.href = getAppUrl(locale, 'trip-luggage', { trip: tripId });
   if (accommodationLink) accommodationLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
   if (accommodationMapsLink) accommodationMapsLink.hidden = true;
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
@@ -286,6 +289,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
       if (trip) {
         currentTrip = trip;
         syncTripShell(locale, trip);
+        setNavigationLinkHidden('trip-luggage-link', trip.ownerId !== user.uid);
         if (accommodationMapsLink) {
           const hasLocation = hasAccommodationLocation(trip.accommodation);
           const mapUrl = hasLocation
@@ -305,6 +309,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         syncPlans();
       } else {
         currentTrip = null;
+        setNavigationLinkHidden('trip-luggage-link', true);
         setAppShellTitle(t('trip.notFound'));
         setAppShellDescription('');
         setAppShellMeta([]);

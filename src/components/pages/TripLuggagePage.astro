@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import ChecklistItemFormFields from '../app/ChecklistItemFormFields.astro';
+import LoadingState from '../app/LoadingState.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
+import Button from '../Button.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('tripLuggage.metaTitle')} description={t('tripLuggage.metaDescription')} locale={locale}>
+  <AppShell
+    title={t('tripLuggage.title')}
+    loading
+    loadingLabel={t('common.loading')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('tripLuggage.breadcrumb'), key: 'trip-luggage' },
+    ]}
+  >
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <article
+        class="rounded-[var(--radius-lg)] border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-5 text-sm text-[var(--color-danger)]"
+        data-trip-luggage-private-only
+        hidden
+      >
+        {t('tripLuggage.privateOnly')}
+      </article>
+      <div data-trip-luggage-private-content hidden>
+        <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
+          <span class="status-pill" data-tone="info">{t('tripLuggage.privateBadge')}</span>
+          <span class="status-pill" data-tone="warning" data-luggage-pending-count>0</span>
+          <span class="status-pill" data-tone="success" data-luggage-completed-count>0</span>
+        </div>
+        <p class="mt-4 text-sm text-[var(--color-text-soft)]">{t('tripLuggage.privateHelper')}</p>
+        <form class="mt-6 space-y-4" id="trip-luggage-form">
+          <ChecklistItemFormFields locale={locale} prefix="trip-luggage" translationPrefix="tripLuggage" />
+          <p class="text-sm text-[var(--color-text-soft)]" id="trip-luggage-message">
+            {t('tripLuggage.form.helper')}
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <Button type="submit">{t('tripLuggage.form.add')}</Button>
+          </div>
+        </form>
+        <div class="mt-8 border-t border-[var(--color-border)] pt-8">
+          <div class="grid gap-4" data-luggage-list>
+            <LoadingState label={t('common.loading')} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </AppShell>
+  <script>
+    import { mountTripLuggagePage } from '../../scripts/pages/trip-luggage';
+
+    mountTripLuggagePage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

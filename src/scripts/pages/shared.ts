@@ -246,6 +246,14 @@ function setNavigationLinkHref(id: string, href: string) {
   }
 }
 
+export function setNavigationLinkHidden(id: string, hidden: boolean) {
+  const link = document.querySelector<HTMLAnchorElement>(`#${id}`);
+
+  if (link) {
+    link.hidden = hidden;
+  }
+}
+
 export function syncTripNavigation(locale: Locale, tripId: string) {
   const tripUrl = getAppUrl(locale, 'trip', { trip: tripId });
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
@@ -256,6 +264,7 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
 
   setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
   setNavigationLinkHref('trip-checklist-link', getAppUrl(locale, 'trip-checklist', { trip: tripId }));
+  setNavigationLinkHref('trip-luggage-link', getAppUrl(locale, 'trip-luggage', { trip: tripId }));
   setNavigationLinkHref('trip-ai-link', getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId }));
   setNavigationLinkHref('trip-accommodation-link', getAppUrl(locale, 'trip-accommodation', { trip: tripId }));
   setNavigationLinkHref('trip-pois-link', getAppUrl(locale, 'trip-pois', { trip: tripId }));
@@ -329,5 +338,19 @@ export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCoun
     'trip-checklist',
     t('tripChecklist.breadcrumb'),
     getAppUrl(locale, 'trip-checklist', { trip: trip.id }),
+  );
+}
+
+export function syncLuggageShell(locale: Locale, trip: TripRecord) {
+  const t = getPageTranslator(locale);
+
+  setAppShellTitle(t('tripLuggage.titleWithTrip').replace('{trip}', trip.name));
+  setAppShellDescription(t('tripLuggage.privateHelper'));
+  setAppShellMeta([trip.name, t('tripLuggage.privateBadge')]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem(
+    'trip-luggage',
+    t('tripLuggage.breadcrumb'),
+    getAppUrl(locale, 'trip-luggage', { trip: trip.id }),
   );
 }
