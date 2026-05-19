@@ -1,6 +1,10 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
+import {
+  getAccommodationLocationLabel,
+  hasAccommodationLocation,
+} from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
@@ -85,6 +89,16 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
           })
             .bindPopup(escapeHtml(plan.name))
             .addTo(map);
+
+          if (hasAccommodationLocation(trip.accommodation)) {
+            const accommodationLabel = getAccommodationLocationLabel(trip.accommodation);
+
+            L.marker([trip.accommodation.locationLat, trip.accommodation.locationLng], {
+              title: accommodationLabel || trip.accommodation.name,
+            })
+              .bindPopup(escapeHtml(accommodationLabel || trip.accommodation.name))
+              .addTo(map);
+          }
         }
       });
     });
