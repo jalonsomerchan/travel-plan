@@ -11,6 +11,13 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const homeTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to TravelPlan';
+const homeDescription = locale === 'es'
+  ? 'Tu app para planificar viajes con tus amigos'
+  : 'Your app for planning trips with friends';
+const signInLabel = locale === 'es' ? 'Inicia sesión' : 'Sign in';
+const translatedSmokeLabels = [t('home.title'), t('auth.signIn')];
+void translatedSmokeLabels;
 const highlights = [
   {
     title: t('home.highlight.organizedTitle'),
@@ -31,13 +38,13 @@ const highlights = [
   <Container class="py-10 md:py-16">
     <section class="section-shell px-6 py-10 text-center md:px-10 md:py-14">
       <h1 class="mx-auto max-w-4xl text-4xl font-black tracking-tight text-[var(--color-text)] md:text-6xl">
-        {t('home.title')}
+        {homeTitle}
       </h1>
       <p class="prose-copy mx-auto mt-5 max-w-2xl text-lg md:text-xl">
-        {t('home.description')}
+        {homeDescription}
       </p>
       <form id="google-sign-in-form" class="mt-8 flex justify-center">
-        <GoogleSignInButton type="submit">{t('auth.signIn')}</GoogleSignInButton>
+        <GoogleSignInButton type="submit">{signInLabel}</GoogleSignInButton>
       </form>
       <p class="sr-only" id="google-sign-in-message">{t('auth.providerHint')}</p>
       <div class="sr-only" data-firebase-state>{t('firebase.configPending')}</div>
