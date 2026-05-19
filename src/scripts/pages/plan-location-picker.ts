@@ -39,6 +39,7 @@ function setInitialMessages(context: PickerContext) {
 
 function setResultsExpanded(context: PickerContext, expanded: boolean) {
   context.queryInput.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  context.results.hidden = !expanded;
 }
 
 function clearDebounce(context: PickerContext) {
