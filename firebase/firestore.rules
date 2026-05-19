@@ -5,21 +5,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function tripMember(tripId) {
-      return signedIn() && (
-        get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid ||
-        exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
-      );
+    function tripVisibleFromResource() {
+      return signedIn() &&
+        resource.data.memberIds is list &&
+        request.auth.uid in resource.data.memberIds;
     }
 
-    function tripListedForUser() {
-      return signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        (
-          resource.data.memberIds is list &&
-          request.auth.uid in resource.data.memberIds
-        )
-      );
+    function tripVisibleFromParent(tripId) {
+      return signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.memberIds;
     }
 
     match /users/{userId} {
@@ -27,24 +21,20 @@ service cloud.firestore {
     }
 
     match /trips/{tripId} {
-      allow get: if tripMember(tripId);
-      allow list: if tripListedForUser();
+      allow read: if tripVisibleFromResource();
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if tripMember(tripId);
+      allow update: if tripVisibleFromResource();
 
       match /members/{memberId} {
-        allow read: if tripMember(tripId);
-        allow write: if tripMember(tripId);
+        allow read, write: if tripVisibleFromParent(tripId);
       }
 
       match /plans/{planId} {
-        allow read: if tripMember(tripId);
-        allow write: if tripMember(tripId);
+        allow read, write: if tripVisibleFromParent(tripId);
       }
 
       match /checklistItems/{checklistItemId} {
-        allow read: if tripMember(tripId);
-        allow write: if tripMember(tripId);
+        allow read, write: if tripVisibleFromParent(tripId);
       }
     }
 

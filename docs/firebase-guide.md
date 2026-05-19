@@ -90,11 +90,13 @@ service cloud.firestore {
         : '';
     }
 
-    function tripMember(tripId) {
-      return signedIn() && (
-        get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid ||
-        exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
-      );
+    function tripOwnerFromResource() {
+      return signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    function tripOwnerFromParent(tripId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
     }
 
     function tripListedForUser() {
@@ -104,6 +106,13 @@ service cloud.firestore {
           resource.data.memberIds is list &&
           request.auth.uid in resource.data.memberIds
         )
+      );
+    }
+
+    function tripMemberFromParent(tripId) {
+      return signedIn() && (
+        get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid ||
+        exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
       );
     }
 
@@ -120,30 +129,33 @@ service cloud.firestore {
     }
 
     match /trips/{tripId} {
-      allow get: if tripMember(tripId);
+      allow get: if tripListedForUser();
       allow list: if tripListedForUser();
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if tripMember(tripId) || inviteRecipient(tripId);
+      allow update: if tripOwnerFromResource() || tripMemberFromParent(tripId) || inviteRecipient(tripId);
 
       match /members/{memberId} {
-        allow read: if tripMember(tripId);
-        allow create: if tripMember(tripId) || (
+        allow read: if signedIn() && (
+          memberId == request.auth.uid ||
+          tripOwnerFromParent(tripId)
+        );
+        allow create: if tripMemberFromParent(tripId) || (
           inviteRecipient(tripId) &&
           memberId == request.auth.uid &&
           request.resource.data.userId == request.auth.uid &&
           lower(request.resource.data.email) == signedEmail()
         );
-        allow update, delete: if tripMember(tripId);
+        allow update, delete: if tripMemberFromParent(tripId);
       }
 
       match /plans/{planId} {
-        allow read: if tripMember(tripId);
-        allow write: if tripMember(tripId);
+        allow read: if tripMemberFromParent(tripId);
+        allow write: if tripMemberFromParent(tripId);
       }
 
       match /checklistItems/{checklistItemId} {
-        allow read: if tripMember(tripId);
-        allow write: if tripMember(tripId);
+        allow read: if tripMemberFromParent(tripId);
+        allow write: if tripMemberFromParent(tripId);
       }
     }
 
