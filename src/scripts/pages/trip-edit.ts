@@ -4,13 +4,12 @@ import {
   getAccommodationLocationLabel,
 } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
-import { formatDateRange } from '../../lib/app/format';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
+import { ensureFirebaseReady, formatTripDateRange, getPageTranslator, syncTripShell } from './shared';
 import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {
@@ -33,7 +32,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
     subscribeTrip(tripId, (trip) => {
       if (!trip) return;
       syncTripShell(locale, trip);
-      if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      if (context) context.textContent = `${trip.name} · ${formatTripDateRange(locale, trip)}`;
       (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
       (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
       (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
