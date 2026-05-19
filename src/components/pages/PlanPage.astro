@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+import { planCategoryValues, planStatusValues } from '../../lib/app/models';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('plan.metaTitle')} description={t('plan.metaDescription')} locale={locale}>
+  <AppShell eyebrow={t('plan.eyebrow')} title={t('plan.title')} description={t('plan.description')}>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <Button id="plan-back-trip-link" variant="secondary" href={dashboardUrl}>{t('plan.backToTrip')}</Button>
+    </div>
+  </AppShell>
+
+  <Container class="pb-12">
+    <section class="section-shell mx-auto max-w-3xl px-6 py-6">
+      <div>
+        <span class="eyebrow">{t('plan.detailsEyebrow')}</span>
+        <h2 class="mt-4 text-2xl font-black" data-plan-context>{t('plan.detailsTitle')}</h2>
+      </div>
+      <form class="mt-6 space-y-4" id="plan-form">
+        <div>
+          <label class="field-label" for="plan-edit-name">{t('plan.form.name')}</label>
+          <input class="field-input" id="plan-edit-name" name="name" required />
+        </div>
+        <div>
+          <label class="field-label" for="plan-edit-description">{t('plan.form.description')}</label>
+          <textarea class="field-textarea" id="plan-edit-description" name="description"></textarea>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="field-label" for="plan-edit-category">{t('plan.form.category')}</label>
+            <select class="field-select" id="plan-edit-category" name="category">
+              {planCategoryValues.map((category) => (
+                <option value={category}>{t(`category.${category}`)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="plan-edit-status">{t('plan.form.status')}</label>
+            <select class="field-select" id="plan-edit-status" name="status">
+              {planStatusValues.map((status) => (
+                <option value={status}>{t(`status.plan.${status}`)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="field-label" for="plan-edit-date">{t('plan.form.date')}</label>
+            <input class="field-input" id="plan-edit-date" name="date" type="date" />
+          </div>
+          <div>
+            <label class="field-label" for="plan-edit-time">{t('plan.form.time')}</label>
+            <input class="field-input" id="plan-edit-time" name="time" type="time" />
+          </div>
+        </div>
+        <p class="text-sm text-[var(--color-text-soft)]" id="plan-form-message">{t('plan.form.helper')}</p>
+        <Button class="w-full" type="submit">{t('plan.form.save')}</Button>
+      </form>
+    </section>
+  </Container>
+
+  <script define:vars={{ locale }}>
+    import { mountPlanPage } from '../../scripts/pages/plan';
+
+    mountPlanPage({ locale });
+  </script>
+</BaseLayout>

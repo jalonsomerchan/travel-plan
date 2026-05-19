@@ -1,31 +1,23 @@
-# Astro Template
+# TravelPlan
 
-Plantilla base para crear proyectos con Astro sin repetir configuración inicial.
+Webapp estática con Astro para organizar viajes compartidos con autenticación de Google en Firebase y Cloud Firestore.
 
 Incluye:
 
-- Astro 6
-- Tailwind CSS 4
-- MDX
-- Sitemap
-- i18n nativo de Astro
-- Traducciones mediante JSON por idioma
-- Layout base
-- Componentes mínimos reutilizables
-- SEO técnico básico
-- Página 404
-- `robots.txt` dinámico
-- Manifest web dinámico
-- Imagen social por defecto
-- Tests smoke con `node:test`
-- CI en pull requests
-- Despliegue automático en GitHub Pages
-- Dependabot para npm y GitHub Actions
-- Documentación específica para agentes IA
+- Landing traducida con acceso mediante Google.
+- Dashboard de viajes.
+- Vista de detalle para cada viaje.
+- Vista de detalle para cada plan.
+- Calendario mensual por viaje.
+- Calendario global de todos los viajes.
+- i18n con `es` y `en`.
+- Diseño responsive con light mode y dark mode.
+- Compatibilidad con dominio raíz, subrutas y GitHub Pages.
+- Tests smoke con `node:test`.
 
 ## Requisitos
 
-Usa Node 22. El repositorio incluye `.nvmrc`.
+Usa Node 22.
 
 ```sh
 nvm use
@@ -36,226 +28,121 @@ npm ci
 
 | Comando | Acción |
 | --- | --- |
-| `npm run dev` | Arranca el servidor local de Astro |
-| `npm run build` | Genera la web estática en `dist/` |
-| `npm run preview` | Previsualiza el build localmente |
-| `npm test` | Ejecuta tests smoke básicos |
-| `npm run format` | Formatea CSS, JS, JSON, Markdown, TS y YAML |
-| `npm run format:check` | Comprueba formato |
-| `npm run clean` | Borra `dist` y `.astro` |
+| `npm run dev` | Arranca Astro en local |
+| `npm run build` | Genera `dist/` |
+| `npm run preview` | Previsualiza el build |
+| `npm test` | Ejecuta tests smoke |
+| `npm run clean` | Limpia `dist` y `.astro` |
 
-## Estructura recomendada
+## Variables de entorno
 
-```text
-/
-├── .github/
-│   ├── dependabot.yml
-│   └── workflows/
-│       ├── ci.yml
-│       └── pages.yml
-├── docs/
-│   ├── ai-checklist.md
-│   ├── design-system.md
-│   ├── github-pages.md
-│   ├── i18n-guide.md
-│   ├── template-usage.md
-│   └── testing-guide.md
-├── public/
-│   ├── favicon.svg
-│   ├── favicon.ico
-│   └── og-image.svg
-├── scripts/
-│   └── clean.mjs
-├── src/
-│   ├── components/
-│   │   ├── Button.astro
-│   │   ├── Container.astro
-│   │   ├── Footer.astro
-│   │   └── Header.astro
-│   ├── config/
-│   │   └── site.ts
-│   ├── i18n/
-│   │   ├── translations/
-│   │   │   ├── en.json
-│   │   │   └── es.json
-│   │   └── ui.ts
-│   ├── layouts/
-│   │   └── BaseLayout.astro
-│   ├── pages/
-│   │   ├── [locale]/
-│   │   │   └── index.astro
-│   │   ├── 404.astro
-│   │   ├── index.astro
-│   │   ├── manifest.webmanifest.ts
-│   │   └── robots.txt.ts
-│   └── styles/
-│       └── global.css
-└── tests/
-    └── smoke.test.mjs
+Para desarrollo local, configura `.env` a partir de `.env.example`:
+
+```env
+ASTRO_SITE=https://travelplan.alon.one
+ASTRO_BASE=/
+PUBLIC_REPOSITORY_URL=https://github.com/jorgealonso/travel-plan
+PUBLIC_FIREBASE_API_KEY=...
+PUBLIC_FIREBASE_AUTH_DOMAIN=...
+PUBLIC_FIREBASE_PROJECT_ID=...
+PUBLIC_FIREBASE_STORAGE_BUCKET=...
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+PUBLIC_FIREBASE_APP_ID=...
 ```
 
-## Documentación para agentes IA
+Para una preview en subruta:
 
-Antes de modificar el template, una IA debe leer:
+```env
+ASTRO_SITE=https://usuario.github.io
+ASTRO_BASE=/travel-plan
+```
 
-- `agents.md`: reglas principales del repositorio.
-- `docs/ai-checklist.md`: checklist rápida antes de cerrar tareas.
-- `docs/template-usage.md`: cómo usar y modificar la plantilla.
-- `docs/i18n-guide.md`: cómo añadir textos, traducciones e idiomas.
-- `docs/github-pages.md`: cómo evitar romper GitHub Pages y `base`.
-- `docs/testing-guide.md`: cómo mantener tests smoke.
-- `docs/design-system.md`: reglas visuales, SEO, accesibilidad y responsive.
+Para GitHub Pages, crea estas `Repository variables` en GitHub:
 
-## Crear un proyecto nuevo desde esta plantilla
+- `ASTRO_SITE`
+- `ASTRO_BASE`
+- `PUBLIC_REPOSITORY_URL`
+- `PUBLIC_FIREBASE_API_KEY`
+- `PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `PUBLIC_FIREBASE_PROJECT_ID`
+- `PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `PUBLIC_FIREBASE_APP_ID`
 
-1. Usa este repositorio como template o clónalo.
-2. Cambia `name` en `package.json`.
-3. Cambia los datos de `src/config/site.ts`.
-4. Cambia los textos en `src/i18n/translations/*.json`.
-5. Cambia `public/favicon.svg`, `public/favicon.ico` y `public/og-image.svg`.
-6. Revisa `src/pages/manifest.webmanifest.ts` si quieres cambiar color, iconos o modo de visualización.
-7. Revisa `.env.example` si necesitas sobrescribir `ASTRO_SITE` o `ASTRO_BASE`.
-8. Ejecuta `npm ci`, `npm test` y `npm run build`.
-9. Activa GitHub Pages en el repositorio usando GitHub Actions como fuente.
+Los workflows de CI y Pages ya leen esos valores desde `vars.*`.
+
+## Arquitectura
+
+Estructura principal:
+
+```text
+src/
+├── components/
+│   ├── app/
+│   └── pages/
+├── config/
+├── i18n/
+├── lib/
+│   ├── app/
+│   └── firebase/
+├── pages/
+│   ├── app/
+│   └── [locale]/app/
+├── scripts/pages/
+└── styles/
+```
+
+### Rutas principales
+
+- `/` y `/en/`: landing y acceso.
+- `/app/` y `/en/app/`: dashboard.
+- `/app/trip/?trip=ID`: detalle de viaje.
+- `/app/plan/?trip=ID&plan=ID`: detalle de plan.
+- `/app/calendar/?trip=ID`: calendario del viaje.
+- `/app/calendar/all/`: calendario global.
+
+Se usan parámetros de búsqueda para mantener compatibilidad total con GitHub Pages, ya que el hosting es estático y no hay SSR.
+
+## Firebase
+
+Consulta [docs/firebase-guide.md](docs/firebase-guide.md) para:
+
+- variables públicas,
+- colecciones,
+- reglas sugeridas de Firestore,
+- índices esperados,
+- despliegue en GitHub Pages con `travelplan.alon.one`.
 
 ## Traducciones e idiomas
 
-La plantilla usa el i18n nativo de Astro en `astro.config.mjs` y una capa sencilla de traducciones en JSON.
-
-Idioma por defecto:
-
-```txt
-/
-```
-
-Otros idiomas:
-
-```txt
-/en/
-/fr/
-...
-```
-
-### Añadir una nueva traducción
-
-Añade la clave en todos los JSON dentro de:
+Las traducciones viven en:
 
 ```txt
 src/i18n/translations/
 ```
 
-Ejemplo:
+Idiomas activos:
 
-```json
-{
-  "home.title": "Título traducido"
-}
-```
+- `/` para español.
+- `/en/` para inglés.
 
-Después úsala en cualquier componente o página:
+Mantén todas las claves alineadas entre JSON.
 
-```astro
----
-import { useTranslations } from '../i18n/ui';
-const t = useTranslations(locale);
----
+## Despliegue
 
-<h1>{t('home.title')}</h1>
-```
+La web está preparada para GitHub Pages con dominio personalizado.
 
-### Añadir un nuevo idioma
+- `public/CNAME` ya apunta a `travelplan.alon.one`.
+- Define `ASTRO_SITE=https://travelplan.alon.one` como Repository Variable.
+- Mantén `ASTRO_BASE=/` como Repository Variable en producción.
+- Define también todas las `PUBLIC_FIREBASE_*` como Repository Variables.
+- Ejecuta `npm test` y `npm run build` antes de publicar.
 
-Ejemplo para añadir francés:
+## Calidad
 
-1. Añade el idioma en `astro.config.mjs`:
-
-```js
-i18n: {
-  defaultLocale: 'es',
-  locales: ['es', 'en', 'fr'],
-  routing: {
-    prefixDefaultLocale: false,
-  },
-}
-```
-
-2. Añade el idioma en `src/config/site.ts`:
-
-```ts
-export const locales = ['es', 'en', 'fr'] as const;
-
-export const localeLabels = {
-  es: 'Español',
-  en: 'English',
-  fr: 'Français',
-};
-```
-
-3. Crea el fichero:
-
-```txt
-src/i18n/translations/fr.json
-```
-
-4. Importa y registra el JSON en `src/i18n/ui.ts`:
-
-```ts
-import fr from './translations/fr.json';
-
-const translations = {
-  es,
-  en,
-  fr,
-};
-```
-
-Con eso se generará `/fr/` usando `src/pages/[locale]/index.astro`.
-
-## GitHub Pages
-
-El despliegue está en `.github/workflows/pages.yml`.
-
-Por defecto, cuando corre en GitHub Actions, `astro.config.mjs` calcula automáticamente:
-
-- `site`: `https://OWNER.github.io`
-- `base`: `/NOMBRE_DEL_REPO`
-
-Puedes sobrescribirlo con variables de entorno:
-
-```env
-ASTRO_SITE=https://example.com
-ASTRO_BASE=/
-```
-
-Para un dominio propio normalmente usarías:
-
-```env
-ASTRO_SITE=https://example.com
-ASTRO_BASE=/
-```
-
-## CI
-
-`.github/workflows/ci.yml` ejecuta en pull requests:
+Antes de cerrar cambios:
 
 ```sh
-npm ci
 npm test
 npm run build
 ```
-
-Los tests son intencionadamente suaves: comprueban que la estructura mínima existe, que los scripts básicos están disponibles y que los workflows no desaparecen.
-
-## Configuración principal
-
-La configuración editable del sitio está en:
-
-```ts
-src/config/site.ts
-```
-
-Ahí puedes cambiar nombre, descripción, idiomas, autor y URL base del proyecto.
-
-## Notas
-
-Esta plantilla intenta ser útil sin ser pesada. Evita añadir dependencias de desarrollo obligatorias para que los proyectos derivados arranquen rápido y no fallen por configuración innecesaria.

@@ -9,11 +9,12 @@ export const localeLabels: Record<Locale, string> = {
 };
 
 export const siteConfig = {
-  name: 'Astro Template',
-  description: 'Plantilla base para crear proyectos con Astro.',
-  url: import.meta.env.ASTRO_SITE ?? 'https://jalonsomerchan.github.io',
+  name: 'TravelPlan',
+  description: 'Planifica viajes compartidos con calendarios, planes y colaboración en tiempo real.',
+  url: import.meta.env.ASTRO_SITE ?? 'https://travelplan.alon.one',
   base: import.meta.env.ASTRO_BASE ?? '/',
-  repositoryUrl: import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jalonsomerchan/astro-template',
+  repositoryUrl:
+    import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jorgealonso/travel-plan',
   author: 'Jorge Alonso',
   defaultLocale,
   locales,

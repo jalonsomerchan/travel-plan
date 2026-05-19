@@ -1,10 +1,16 @@
 export function joinPathSegments(...parts: string[]) {
+  const lastPart = parts.at(-1) ?? '';
+  const shouldHaveTrailingSlash = lastPart === '' || lastPart.endsWith('/');
   const cleanParts = parts
     .filter(Boolean)
     .map((part) => part.replace(/^\/+|\/+$/g, ''))
     .filter(Boolean);
 
-  return `/${cleanParts.join('/')}${cleanParts.length ? '/' : ''}`;
+  if (cleanParts.length === 0) {
+    return '/';
+  }
+
+  return `/${cleanParts.join('/')}${shouldHaveTrailingSlash ? '/' : ''}`;
 }
 
 export function getBasePath() {

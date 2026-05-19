@@ -26,8 +26,12 @@ export function getLocaleFromUrl(pathname: string): Locale {
 }
 
 export function useTranslations(locale: Locale) {
-  return function t(key: TranslationKey): string {
-    return translations[locale]?.[key] ?? translations[defaultLocale][key] ?? key;
+  return function t(key: TranslationKey | string): string {
+    return (
+      translations[locale]?.[key as TranslationKey] ??
+      translations[defaultLocale][key as TranslationKey] ??
+      key
+    );
   };
 }
 

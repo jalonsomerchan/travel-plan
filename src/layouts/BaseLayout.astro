@@ -26,6 +26,13 @@ const routePath = stripBasePath(Astro.url.pathname);
 const canonicalUrl = getAbsoluteUrl(withBasePath(routePath), siteConfig.url);
 const imageUrl = getAbsoluteUrl(withBasePath(image), siteConfig.url);
 const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
+const themeScript = `
+  (() => {
+    const storedTheme = localStorage.getItem('travelplan-theme');
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = storedTheme ?? systemTheme;
+  })();
+`;
 ---
 
 <!doctype html>
@@ -50,6 +57,7 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
+    <script is:inline set:html={themeScript}></script>
   </head>
   <body>
     <Header locale={locale} />

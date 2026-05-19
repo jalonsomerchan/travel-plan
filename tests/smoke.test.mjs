@@ -162,17 +162,15 @@ describe('project smoke checks', () => {
   it('keeps starter links and labels configurable or translated', () => {
     const siteConfig = readText('src/config/site.ts');
     const header = readText('src/components/Header.astro');
-    const home = readText('src/pages/index.astro');
-    const localizedHome = readText('src/pages/[locale]/index.astro');
+    const landingPage = readText('src/components/pages/LandingPage.astro');
     const envExample = readText('.env.example');
 
     assert.match(siteConfig, /repositoryUrl/);
     assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
+    assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
     assert.match(header, /t\('nav\.main'\)/);
-    assert.match(home, /siteConfig\.repositoryUrl/);
-    assert.match(localizedHome, /siteConfig\.repositoryUrl/);
-    assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
-    assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
+    assert.match(landingPage, /siteConfig\.repositoryUrl/);
+    assert.doesNotMatch(landingPage, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
 
   it('includes GitHub workflows for CI and Pages', () => {
@@ -193,5 +191,7 @@ describe('project smoke checks', () => {
     assert.match(readme, /\S/, 'README.md should not be empty');
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
+    assert.equal(existsSync(join(root, 'docs/firebase-guide.md')), true, 'docs/firebase-guide.md should exist');
+    assert.equal(existsSync(join(root, 'public/CNAME')), true, 'public/CNAME should exist');
   });
 });

@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import { siteConfig, type Locale } from '../../config/site';
+import { useTranslations } from '../../i18n/ui';
+import { tripStatusValues } from '../../lib/app/models';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={t('dashboard.metaTitle')} description={t('dashboard.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('dashboard.eyebrow')}
+    title={t('dashboard.title')}
+    description={t('dashboard.description')}
+  >
+    <div class="mt-8 flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">{siteConfig.name}</p>
+        <p class="mt-2 text-lg font-semibold text-[var(--color-text)]" data-account-summary>{t('dashboard.sessionLoading')}</p>
+      </div>
+      <Button id="sign-out-button" variant="secondary" type="button">{t('auth.signOut')}</Button>
+    </div>
+  </AppShell>
+
+  <Container class="grid gap-8 pb-12 md:grid-cols-[0.95fr_1.05fr]">
+    <section class="section-shell px-6 py-6">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <span class="eyebrow">{t('dashboard.createEyebrow')}</span>
+          <h2 class="mt-4 text-2xl font-black">{t('dashboard.createTitle')}</h2>
+        </div>
+      </div>
+      <form class="mt-6 space-y-4" id="trip-create-form">
+        <div>
+          <label class="field-label" for="trip-name">{t('trip.form.name')}</label>
+          <input class="field-input" id="trip-name" name="name" required />
+        </div>
+        <div>
+          <label class="field-label" for="trip-location">{t('trip.form.location')}</label>
+          <input class="field-input" id="trip-location" name="location" required />
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="field-label" for="trip-start-date">{t('trip.form.startDate')}</label>
+            <input class="field-input" id="trip-start-date" name="startDate" type="date" required />
+          </div>
+          <div>
+            <label class="field-label" for="trip-end-date">{t('trip.form.endDate')}</label>
+            <input class="field-input" id="trip-end-date" name="endDate" type="date" required />
+          </div>
+        </div>
+        <div>
+          <label class="field-label" for="trip-status">{t('trip.form.status')}</label>
+          <select class="field-select" id="trip-status" name="status">
+            {tripStatusValues.map((status) => (
+              <option value={status}>{t(`status.trip.${status}`)}</option>
+            ))}
+          </select>
+        </div>
+        <p class="text-sm text-[var(--color-text-soft)]" id="trip-create-message">{t('dashboard.createHint')}</p>
+        <Button class="w-full" type="submit">{t('dashboard.createAction')}</Button>
+      </form>
+    </section>
+
+    <section class="space-y-8">
+      <article class="section-shell px-6 py-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="eyebrow">{t('dashboard.listEyebrow')}</span>
+            <h2 class="mt-4 text-2xl font-black">{t('dashboard.listTitle')}</h2>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3" data-dashboard-stats></div>
+        </div>
+        <div class="mt-6 grid gap-4" data-trip-list>
+          <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
+            {t('common.loading')}
+          </article>
+        </div>
+      </article>
+
+      <article class="section-shell px-6 py-6">
+        <div>
+          <span class="eyebrow">{t('dashboard.invitesEyebrow')}</span>
+          <h2 class="mt-4 text-2xl font-black">{t('dashboard.invitesTitle')}</h2>
+        </div>
+        <div class="mt-6 grid gap-4" data-invite-list>
+          <article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">
+            {t('dashboard.invitesEmpty')}
+          </article>
+        </div>
+      </article>
+    </section>
+  </Container>
+
+  <script define:vars={{ locale }}>
+    import { mountDashboardPage } from '../../scripts/pages/dashboard';
+
+    mountDashboardPage({ locale });
+  </script>
+</BaseLayout>

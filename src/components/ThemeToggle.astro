@@ -1,0 +1,43 @@
+---
+import { useTranslations } from '../i18n/ui';
+import type { Locale } from '../config/site';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<button
+  type="button"
+  class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-soft)]"
+  data-theme-toggle
+  aria-label={t('theme.toggle')}
+  title={t('theme.toggle')}
+>
+  <span aria-hidden="true" data-theme-icon>◐</span>
+</button>
+
+<script>
+  const applyLabel = (button) => {
+    const icon = button?.querySelector('[data-theme-icon]');
+    const currentTheme = document.documentElement.dataset.theme ?? 'light';
+
+    if (icon) {
+      icon.textContent = currentTheme === 'dark' ? '☀' : '☾';
+    }
+  };
+
+  document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+    applyLabel(button);
+
+    button.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem('travelplan-theme', nextTheme);
+      applyLabel(button);
+    });
+  });
+</script>

@@ -12,7 +12,15 @@ const t = useTranslations(locale);
 ---
 
 <footer class="border-t border-[var(--color-border)]">
-  <Container class="py-6 text-sm text-[var(--color-muted)]">
+  <Container class="flex flex-col gap-3 py-8 text-sm text-[var(--color-text-soft)] md:flex-row md:items-center md:justify-between">
     <p>© {new Date().getFullYear()} {siteConfig.name}. {t('footer.createdWith')}</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <a class="transition hover:text-[var(--color-text)]" href={siteConfig.repositoryUrl}>
+        {t('footer.repository')}
+      </a>
+      <a class="transition hover:text-[var(--color-text)]" href="https://travelplan.alon.one">
+        travelplan.alon.one
+      </a>
+    </div>
   </Container>
 </footer>
