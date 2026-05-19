@@ -5,7 +5,6 @@ import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
 import Button from '../Button.astro';
-import Container from '../Container.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -20,7 +19,6 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('trip.metaTitle')} description={t('trip.metaDescription')} locale={locale}>
   <AppShell
-    eyebrow={t('trip.eyebrow')}
     title={t('trip.title')}
     description={t('trip.description')}
     loading
@@ -47,24 +45,32 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         ]}
       />
     </div>
-  </AppShell>
 
-  <Container class="grid gap-8 pb-12">
-    <section class="section-shell px-6 py-6">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <span class="eyebrow">{t('trip.plansEyebrow')}</span>
-          <h2 class="mt-4 text-2xl font-black">{t('trip.plansTitle')}</h2>
+        <h2 class="text-2xl font-black">{t('trip.plansTitle')}</h2>
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            aria-label={t('plan.location.getDirections')}
+            class="app-card-link min-w-11 px-0 text-xl leading-none"
+            data-current-location-action
+            data-variant="secondary"
+            hidden
+            title={t('plan.location.getDirections')}
+            type="button"
+          >
+            <span aria-hidden="true">📍</span>
+          </button>
+          <Button
+            aria-label={t('trip.goCreatePlan')}
+            class="min-w-11 px-0 text-2xl leading-none"
+            href={dashboardUrl}
+            id="trip-create-plan-inline-link"
+            title={t('trip.goCreatePlan')}
+          >
+            +
+          </Button>
         </div>
-        <Button
-          aria-label={t('trip.goCreatePlan')}
-          class="min-w-11 px-0 text-2xl leading-none"
-          href={dashboardUrl}
-          id="trip-create-plan-inline-link"
-          title={t('trip.goCreatePlan')}
-        >
-          +
-        </Button>
       </div>
       <div class="mt-5">
         <form class="grid gap-3 sm:grid-cols-3" data-plan-filters>
@@ -102,8 +108,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       <div class="mt-6 grid gap-4" data-plan-list>
         <LoadingState label={t('common.loading')} />
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
 
   <script>
     import { mountTripPage } from '../../scripts/pages/trip';
