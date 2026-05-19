@@ -218,6 +218,18 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(landingPage, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
 
+  it('keeps repository links pointing at the current repository by default', () => {
+    const sources = [
+      readText('src/config/site.ts'),
+      readText('.env.example'),
+      readText('README.md'),
+      readText('docs/firebase-guide.md'),
+    ].join('\n');
+
+    assert.match(sources, /https:\/\/github\.com\/jalonsomerchan\/travel-plan/);
+    assert.doesNotMatch(sources, /https:\/\/github\.com\/jorgealonso\/travel-plan/);
+  });
+
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');
     const ciWorkflow = readText('.github/workflows/ci.yml');
