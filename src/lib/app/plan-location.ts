@@ -1,5 +1,41 @@
 import type { PlanInput, PlanRecord } from './models';
 
+interface PlanLocationFormState {
+  query: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+  hasLatValue: boolean;
+  hasLngValue: boolean;
+}
+
+function toFiniteCoordinate(value: FormDataEntryValue | null) {
+  const rawValue = String(value ?? '').trim();
+
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const coordinate = Number(rawValue);
+
+  return Number.isFinite(coordinate) ? coordinate : undefined;
+}
+
+function getPlanLocationFormState(form: HTMLFormElement): PlanLocationFormState {
+  const data = new FormData(form);
+  const lat = toFiniteCoordinate(data.get('locationLat'));
+  const lng = toFiniteCoordinate(data.get('locationLng'));
+
+  return {
+    query: String(data.get('locationQuery') ?? '').trim(),
+    name: String(data.get('locationName') ?? '').trim(),
+    lat,
+    lng,
+    hasLatValue: String(data.get('locationLat') ?? '').trim() !== '',
+    hasLngValue: String(data.get('locationLng') ?? '').trim() !== '',
+  };
+}
+
 export function hasPlanLocation(plan: Pick<PlanRecord, 'locationLat' | 'locationLng'>) {
   return typeof plan.locationLat === 'number' && typeof plan.locationLng === 'number';
 }
@@ -16,18 +52,33 @@ export function getPlanLocationLabel(plan: Pick<PlanRecord, 'locationName' | 'lo
   return '';
 }
 
+export function getPlanLocationValidationKey(form: HTMLFormElement) {
+  const state = getPlanLocationFormState(form);
+  const hasCoordinates = typeof state.lat === 'number' && typeof state.lng === 'number';
+  const hasPartialOrInvalidCoordinates = state.hasLatValue || state.hasLngValue;
+
+  if ((state.query || state.name) && !hasCoordinates) {
+    return 'plan.location.selectionRequired';
+  }
+
+  if (hasPartialOrInvalidCoordinates && !hasCoordinates) {
+    return 'plan.location.invalidCoordinates';
+  }
+
+  return undefined;
+}
+
 export function getPlanInputFromForm(form: HTMLFormElement): PlanInput {
   const data = new FormData(form);
-  const locationLat = String(data.get('locationLat') ?? '');
-  const locationLng = String(data.get('locationLng') ?? '');
+  const location = getPlanLocationFormState(form);
 
   return {
     name: String(data.get('name') ?? ''),
     description: String(data.get('description') ?? ''),
     category: String(data.get('category') ?? 'visit') as PlanRecord['category'],
-    locationName: String(data.get('locationName') ?? '') || undefined,
-    locationLat: locationLat ? Number(locationLat) : undefined,
-    locationLng: locationLng ? Number(locationLng) : undefined,
+    locationName: location.name || undefined,
+    locationLat: location.lat,
+    locationLng: location.lng,
     date: String(data.get('date') ?? '') || undefined,
     time: String(data.get('time') ?? '') || undefined,
     status: String(data.get('status') ?? 'pending') as PlanRecord['status'],

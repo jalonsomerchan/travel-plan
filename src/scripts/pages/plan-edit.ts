@@ -2,7 +2,7 @@ import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
-import { getPlanInputFromForm } from '../../lib/app/plan-location';
+import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
@@ -66,6 +66,13 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const locationValidationKey = getPlanLocationValidationKey(form);
+
+    if (locationValidationKey) {
+      setMessage(message, t(locationValidationKey), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('plan.form.save'), t('common.saving'));
     try {
       await updatePlan(tripId, planId, getPlanInputFromForm(form));
