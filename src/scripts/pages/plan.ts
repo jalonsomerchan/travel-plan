@@ -7,6 +7,7 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
+import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribePlan } from '../../lib/firebase/plans';
@@ -34,6 +35,39 @@ const accommodationMarkerIcon = L.divIcon({
   iconSize: [38, 38],
   popupAnchor: [0, -38],
 });
+
+function renderPlanLinks(locale: Locale, planLinks: { label: string; url: string }[]) {
+  const t = getPageTranslator(locale);
+  const links = planLinks.filter((link) => isSafeExternalPlanUrl(link.url));
+
+  if (links.length === 0) {
+    return '';
+  }
+
+  return `
+    <section class="mt-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4" aria-labelledby="plan-links-title">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-[var(--color-text-soft)]" id="plan-links-title">${escapeHtml(t('plan.links.title'))}</h3>
+          <p class="mt-1 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.links.description'))}</p>
+        </div>
+      </div>
+      <ul class="mt-4 grid gap-2">
+        ${links
+          .map(
+            (link) => `
+              <li>
+                <a class="app-card-link" data-variant="secondary" href="${escapeHtml(link.url)}" rel="noopener noreferrer" target="_blank">
+                  ${escapeHtml(link.label || t('plan.links.open'))}
+                </a>
+              </li>
+            `,
+          )
+          .join('')}
+      </ul>
+    </section>
+  `;
+}
 
 export function mountPlanPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
@@ -83,6 +117,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
                   : ''
               }
             </dl>
+            ${renderPlanLinks(locale, plan.links)}
           </div>
         `;
 
