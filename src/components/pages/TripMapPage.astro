@@ -51,7 +51,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <span class="status-pill" data-tone="primary" data-map-count>0</span>
       </div>
       <div class="mt-6 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
-        <div class="trip-map-canvas" data-trip-map-canvas></div>
+        <div class="trip-map-canvas" data-trip-map-canvas aria-label={t('map.canvasTitle')}></div>
       </div>
     </section>
 
