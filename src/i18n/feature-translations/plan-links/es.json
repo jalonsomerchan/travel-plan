@@ -1,0 +1,13 @@
+{
+  "plan.links.title": "Enlaces asociados",
+  "plan.links.description": "Añade reservas, entradas, menús, webs oficiales o cualquier enlace útil para este plan.",
+  "plan.links.add": "Añadir enlace",
+  "plan.links.remove": "Eliminar enlace",
+  "plan.links.label": "Etiqueta del enlace",
+  "plan.links.url": "URL del enlace",
+  "plan.links.labelPlaceholder": "Ej. Reserva, entradas o web oficial",
+  "plan.links.urlPlaceholder": "https://ejemplo.com",
+  "plan.links.empty": "Este plan todavía no tiene enlaces asociados.",
+  "plan.links.open": "Abrir enlace",
+  "plan.links.invalidUrl": "Los enlaces deben usar una URL completa y segura que empiece por http:// o https://."
+}
