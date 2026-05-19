@@ -14,7 +14,7 @@ export const siteConfig = {
   url: import.meta.env.ASTRO_SITE ?? 'https://travelplan.alon.one',
   base: import.meta.env.ASTRO_BASE ?? '/',
   repositoryUrl:
-    import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jorgealonso/travel-plan',
+    import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jalonsomerchan/travel-plan',
   author: 'Jorge Alonso',
   defaultLocale,
   locales,
