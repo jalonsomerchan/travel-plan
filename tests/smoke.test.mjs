@@ -230,6 +230,14 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(sources, /https:\/\/github\.com\/jorgealonso\/travel-plan/);
   });
 
+  it('keeps new-tab external links protected with noopener', () => {
+    const tripPageScript = readText('src/scripts/pages/trip.ts');
+
+    assert.match(tripPageScript, /target = mapUrl \? '_blank' : ''/);
+    assert.match(tripPageScript, /rel = mapUrl \? 'noopener noreferrer' : ''/);
+    assert.doesNotMatch(tripPageScript, /rel = mapUrl \? 'noreferrer' : ''/);
+  });
+
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');
     const ciWorkflow = readText('.github/workflows/ci.yml');
