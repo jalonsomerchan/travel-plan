@@ -37,6 +37,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
         label="..."
         items={[
           { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
+          { href: dashboardUrl, id: 'trip-ai-link', label: t('trip.goAiSuggestions') },
           { href: dashboardUrl, id: 'trip-accommodation-link', label: t('trip.goAccommodation') },
           { href: dashboardUrl, id: 'trip-accommodation-maps-link', label: t('trip.openAccommodationMap') },
           { href: dashboardUrl, id: 'trip-members-link', label: t('trip.goMembers') },
@@ -62,6 +63,15 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           >
             <span aria-hidden="true">📍</span>
           </button>
+          <Button
+            aria-label={t('trip.goAiSuggestions')}
+            href={dashboardUrl}
+            id="trip-ai-inline-link"
+            title={t('trip.goAiSuggestions')}
+            variant="secondary"
+          >
+            {t('trip.goAiSuggestions')}
+          </Button>
           <Button
             aria-label={t('trip.goCreatePlan')}
             class="min-w-11 px-0 text-2xl leading-none"

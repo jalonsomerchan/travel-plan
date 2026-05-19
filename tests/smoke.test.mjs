@@ -50,8 +50,10 @@ describe('project smoke checks', () => {
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
       'src/pages/app/map/index.astro',
+      'src/pages/app/trip-plan-suggestions/index.astro',
       'src/pages/app/trip-accommodation/index.astro',
       'src/pages/[locale]/app/map/index.astro',
+      'src/pages/[locale]/app/trip-plan-suggestions/index.astro',
       'src/pages/[locale]/app/trip-accommodation/index.astro',
       'src/layouts/BaseLayout.astro',
       'src/config/site.ts',
@@ -101,6 +103,18 @@ describe('project smoke checks', () => {
     assert.match(loadingState, /aria-busy=\"true\"/);
     assert.match(loadingState, /sr-only/);
     assert.match(loadingState, /animate-spin/);
+  });
+
+  it('keeps the authenticated AI client modules available', () => {
+    [
+      'src/lib/ai/authenticated-api-client.ts',
+      'src/lib/ai/errors.ts',
+      'src/lib/ai/json.ts',
+      'src/lib/ai/trip-plan-suggestions.ts',
+      'src/lib/app/trip-plan-suggestions.ts',
+    ].forEach((path) => {
+      assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
+    });
   });
 
   it('keeps the Google sign-in button reusable and local', () => {
@@ -220,6 +234,7 @@ describe('project smoke checks', () => {
     assert.match(readme, /\S/, 'README.md should not be empty');
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
+    assert.equal(existsSync(join(root, 'docs/ai-authenticated-client.md')), true, 'docs/ai-authenticated-client.md should exist');
     assert.equal(existsSync(join(root, 'docs/firebase-guide.md')), true, 'docs/firebase-guide.md should exist');
     assert.equal(existsSync(join(root, 'public/CNAME')), true, 'public/CNAME should exist');
   });

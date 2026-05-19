@@ -1,0 +1,153 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import AppToolbar from '../app/AppToolbar.astro';
+import Button from '../Button.astro';
+import Container from '../Container.astro';
+import { planCategoryValues } from '../../lib/app/models';
+import { tripSuggestionTransportValues } from '../../lib/app/trip-plan-suggestions';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('tripAi.metaTitle')} description={t('tripAi.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('tripAi.eyebrow')}
+    title={t('tripAi.title')}
+    description={t('tripAi.description')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('tripAi.breadcrumb') },
+    ]}
+  >
+    <AppToolbar>
+      <div slot="secondary">
+        <Button id="trip-ai-back-link" href={dashboardUrl} variant="ghost">{t('common.cancel')}</Button>
+      </div>
+    </AppToolbar>
+  </AppShell>
+
+  <Container class="pb-12">
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <section class="section-shell px-6 py-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span class="eyebrow">{t('tripAi.form.eyebrow')}</span>
+            <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]" data-trip-ai-context>
+              {t('tripAi.form.title')}
+            </h2>
+          </div>
+          <span class="status-pill" data-tone="primary">{t('tripAi.form.badge')}</span>
+        </div>
+
+        <form class="mt-6 space-y-5" id="trip-ai-form">
+          <div>
+            <label class="field-label" for="trip-ai-base-location">{t('tripAi.form.baseLocation')}</label>
+            <input class="field-input" id="trip-ai-base-location" name="baseLocation" required />
+            <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAi.form.baseLocationHint')}</p>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="field-label" for="trip-ai-radius">{t('tripAi.form.radius')}</label>
+              <input
+                class="field-input"
+                id="trip-ai-radius"
+                max="300"
+                min="1"
+                name="radiusKm"
+                required
+                step="1"
+                type="number"
+                value="25"
+              />
+            </div>
+            <div>
+              <label class="field-label" for="trip-ai-transport">{t('tripAi.form.transport')}</label>
+              <select class="field-select" id="trip-ai-transport" name="transportMode">
+                {tripSuggestionTransportValues.map((transport) => (
+                  <option value={transport}>{t(`tripAi.transport.${transport}`)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <span class="field-label">{t('tripAi.form.types')}</span>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+              {planCategoryValues.map((category) => (
+                <label class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm text-[var(--color-text)]">
+                  <span class="flex items-start gap-3">
+                    <input checked name="types" type="checkbox" value={category} />
+                    <span>
+                      <strong class="font-semibold">{t(`category.${category}`)}</strong>
+                      <span class="mt-1 block text-[var(--color-text-soft)]">
+                        {t(`tripAi.typeHint.${category}`)}
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="field-label" for="trip-ai-start-date">{t('tripAi.form.startDate')}</label>
+              <input class="field-input" id="trip-ai-start-date" name="startDate" required type="date" />
+            </div>
+            <div>
+              <label class="field-label" for="trip-ai-end-date">{t('tripAi.form.endDate')}</label>
+              <input class="field-input" id="trip-ai-end-date" name="endDate" required type="date" />
+            </div>
+          </div>
+
+          <p class="text-sm text-[var(--color-text-soft)]" id="trip-ai-form-message">{t('tripAi.form.helper')}</p>
+          <div class="flex flex-wrap gap-3">
+            <Button type="submit">{t('tripAi.form.submit')}</Button>
+          </div>
+        </form>
+      </section>
+
+      <section class="section-shell px-6 py-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span class="eyebrow">{t('tripAi.results.eyebrow')}</span>
+            <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{t('tripAi.results.title')}</h2>
+          </div>
+          <span class="status-pill" data-results-count data-tone="warning">0</span>
+        </div>
+
+        <p class="mt-3 text-sm text-[var(--color-text-soft)]" data-trip-ai-results-message>
+          {t('tripAi.results.idle')}
+        </p>
+        <div class="mt-5" data-trip-ai-results-loading hidden>
+          <div class="flex min-h-32 items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center">
+            <span
+              aria-hidden="true"
+              class="size-9 animate-spin rounded-full border-4 border-[var(--color-border-strong)] border-t-[var(--color-primary)]"
+            ></span>
+            <span class="sr-only">{t('tripAi.results.loading')}</span>
+          </div>
+        </div>
+        <div class="mt-5 grid gap-4" data-trip-ai-results-list></div>
+      </section>
+    </div>
+  </Container>
+
+  <script>
+    import { mountTripPlanSuggestionsPage } from '../../scripts/pages/trip-plan-suggestions';
+
+    mountTripPlanSuggestionsPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

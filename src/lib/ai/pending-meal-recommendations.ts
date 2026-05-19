@@ -1,0 +1,183 @@
+import { normalizeDishName } from '../dishes/helpers.mjs';
+import { normalizeDay } from '../menu/normalizers.ts';
+import type { DailyMenu, Dish, MealSlot } from '../menu/types.ts';
+
+const maxPendingMeals = 21;
+const maxCatalogDishes = 48;
+const maxRecommendedDishes = 5;
+
+export type PendingMealSlot = {
+  dayKey: string;
+  meal: MealSlot;
+};
+
+export type PendingMealRecommendation = {
+  dayKey: string;
+  meal: MealSlot;
+  dishes: PendingMealRecommendedDish[];
+  reason: string;
+};
+
+export type PendingMealRecommendedDish = {
+  id: string;
+  name: string;
+  scope: Dish['scope'];
+  isGlobal: boolean;
+};
+
+export type PendingMealRecommendationResponse = {
+  recommendations: PendingMealRecommendation[];
+};
+
+export function getPendingMealSlots(
+  days: Record<string, Partial<DailyMenu> | undefined>,
+  dayKeys: string[],
+  enabledMeals: MealSlot[]
+) {
+  return dayKeys
+    .flatMap((dayKey) => {
+      const day = normalizeDay(days[dayKey]);
+      if (day.skipped) {
+        return [];
+      }
+
+      return enabledMeals.flatMap((meal) => {
+        const mealState = day.meals[meal];
+        const hasItems = mealState.items.some((item) => item.trim().length > 0);
+        if (mealState.skipped || hasItems) {
+          return [];
+        }
+
+        return [{ dayKey, meal } satisfies PendingMealSlot];
+      });
+    })
+    .slice(0, maxPendingMeals);
+}
+
+export function buildPendingMealPrompt(input: {
+  locale: string;
+  pendingMeals: PendingMealSlot[];
+  dishes: Dish[];
+  mealLabels: Record<MealSlot, string>;
+}) {
+  const visibleCatalog = getVisibleCatalogDishes(input.dishes);
+  const pendingMeals = input.pendingMeals
+    .slice(0, maxPendingMeals)
+    .map((slot) => `- ${slot.dayKey} | ${slot.meal} | ${input.mealLabels[slot.meal] ?? slot.meal}`)
+    .join('\n');
+  const catalog = visibleCatalog
+    .slice(0, maxCatalogDishes)
+    .map((dish) => {
+      const details = [
+        `scope:${dish.scope}`,
+        dish.favorite ? 'favorite' : '',
+        dish.quickTags?.length ? `tags:${dish.quickTags.join(',')}` : '',
+        typeof dish.timesUsed === 'number' ? `timesUsed:${dish.timesUsed}` : '',
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      return details ? `- ${dish.name} | ${details}` : `- ${dish.name}`;
+    })
+    .join('\n');
+
+  return [
+    `Locale: ${input.locale}.`,
+    'Task: suggest dishes only for pending meals in a weekly menu app.',
+    'Use only dish names from the provided catalog. Do not invent new dishes.',
+    'Every suggested dish must match a catalog item exactly, character by character.',
+    'The catalog includes global dishes shared by everyone and own dishes from the group or user.',
+    'Base the recommendations on the user tastes inferred from favorites, repeated use, familiar dishes and quick tags.',
+    'Prioritize dishes that feel healthy, balanced, varied, not too difficult to prepare and realistic for day-to-day planning.',
+    'Prefer a balanced mix of general and own dishes when it makes sense, while still leaning on favorites or familiar dishes when helpful.',
+    'Avoid suggesting the same dish twice for the same slot. Keep recommendations practical, varied and concise. Avoid private data.',
+    `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":["Dish"],"reason":"short string"}]}.`,
+    `Each recommendation must target one pending slot. Return up to ${maxRecommendedDishes} dishes per slot.`,
+    'Pending meals:',
+    pendingMeals,
+    'Visible dish catalog:',
+    catalog,
+  ].join('\n\n');
+}
+
+export function isPendingMealRecommendationResponse(value: unknown): value is PendingMealRecommendationResponse {
+  if (!value || typeof value !== 'object' || !Array.isArray((value as { recommendations?: unknown }).recommendations)) {
+    return false;
+  }
+
+  return (value as { recommendations: unknown[] }).recommendations.every((entry) => {
+    if (!entry || typeof entry !== 'object') {
+      return false;
+    }
+
+    const candidate = entry as Partial<PendingMealRecommendation>;
+    return (
+      typeof candidate.dayKey === 'string' &&
+      isMealSlot(candidate.meal) &&
+      Array.isArray(candidate.dishes) &&
+      candidate.dishes.every((dish) => typeof dish === 'string') &&
+      typeof candidate.reason === 'string'
+    );
+  });
+}
+
+export function assignPendingMealRecommendations(input: {
+  pendingMeals: PendingMealSlot[];
+  dishes: Dish[];
+  response: PendingMealRecommendationResponse;
+}) {
+  const pendingKeys = new Set(input.pendingMeals.map((slot) => getSlotKey(slot.dayKey, slot.meal)));
+  const catalogByName = new Map(
+    getVisibleCatalogDishes(input.dishes).map((dish) => [
+      normalizeDishName(dish.name),
+      {
+        id: dish.id,
+        name: dish.name,
+        scope: dish.scope,
+        isGlobal: dish.isGlobal,
+      } satisfies PendingMealRecommendedDish,
+    ] as const)
+  );
+  const seenSlots = new Set<string>();
+
+  return input.response.recommendations.flatMap((entry) => {
+    const slotKey = getSlotKey(entry.dayKey, entry.meal);
+    if (!pendingKeys.has(slotKey) || seenSlots.has(slotKey)) {
+      return [];
+    }
+
+    const dishes = [
+      ...new Map(
+        entry.dishes
+          .map((dish) => catalogByName.get(normalizeDishName(dish)))
+          .filter((dish): dish is PendingMealRecommendedDish => Boolean(dish))
+          .map((dish) => [dish.id, dish] as const)
+      ).values(),
+    ].slice(0, maxRecommendedDishes);
+    if (dishes.length === 0) {
+      return [];
+    }
+
+    seenSlots.add(slotKey);
+    return [
+      {
+        dayKey: entry.dayKey,
+        meal: entry.meal,
+        dishes,
+        reason: entry.reason.trim(),
+      } satisfies PendingMealRecommendation,
+    ];
+  });
+}
+
+function isMealSlot(value: unknown): value is MealSlot {
+  return value === 'breakfast' || value === 'lunch' || value === 'dinner';
+}
+
+function getSlotKey(dayKey: string, meal: MealSlot) {
+  return `${dayKey}::${meal}`;
+}
+
+function getVisibleCatalogDishes(dishes: Dish[]) {
+  return dishes.filter((dish) => !dish.archived && !dish.blocked);
+}

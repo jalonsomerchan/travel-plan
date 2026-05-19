@@ -157,7 +157,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const accommodationLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-link');
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
+  const aiLink = document.querySelector<HTMLAnchorElement>('#trip-ai-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
+  const aiInlineLink = document.querySelector<HTMLAnchorElement>('#trip-ai-inline-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
   const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
@@ -181,7 +183,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (accommodationLink) accommodationLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
   if (accommodationMapsLink) accommodationMapsLink.hidden = true;
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
+  if (aiLink) aiLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (aiInlineLink) aiInlineLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanInlineLink) createPlanInlineLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
   if (categorySelect) {
     categorySelect.innerHTML += getCategoryOptions(locale)
