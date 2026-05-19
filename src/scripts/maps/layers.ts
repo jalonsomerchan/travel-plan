@@ -10,11 +10,16 @@ export type MapTranslate = (key: string) => string;
 const mapLayerStorageKey = 'travelplan.map.layer';
 
 function createTileLayer(layer: MapLayerConfig) {
-  return L.tileLayer(layer.urlTemplate, {
+  const options: L.TileLayerOptions = {
     attribution: layer.attribution,
     maxZoom: layer.maxZoom,
-    subdomains: layer.subdomains,
-  });
+  };
+
+  if (layer.subdomains) {
+    options.subdomains = layer.subdomains;
+  }
+
+  return L.tileLayer(layer.urlTemplate, options);
 }
 
 function getStoredLayerId() {

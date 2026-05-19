@@ -30,6 +30,7 @@ export const mapLayers: MapLayerConfig[] = [
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     theme: 'light',
     maxZoom: 20,
+    subdomains: 'abcd',
   },
   {
     id: 'dark',
@@ -38,6 +39,7 @@ export const mapLayers: MapLayerConfig[] = [
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     theme: 'dark',
     maxZoom: 20,
+    subdomains: 'abcd',
   },
   {
     id: 'satellite',
