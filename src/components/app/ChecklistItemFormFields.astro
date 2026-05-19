@@ -1,0 +1,25 @@
+---
+import { useTranslations } from '../../i18n/ui';
+import type { Locale } from '../../config/site';
+
+interface Props {
+  locale: Locale;
+  prefix: string;
+}
+
+const { locale, prefix } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class="space-y-4">
+  <div>
+    <label class="field-label" for={`${prefix}-title`}>{t('tripChecklist.form.title')}</label>
+    <input
+      class="field-input"
+      id={`${prefix}-title`}
+      name="title"
+      placeholder={t('tripChecklist.form.placeholder')}
+      required
+    />
+  </div>
+</div>

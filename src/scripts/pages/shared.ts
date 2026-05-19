@@ -6,10 +6,12 @@ import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { withBasePath } from '../../utils/paths';
 import {
+  checklistItemStatusValues,
   planCategoryValues,
   planStatusValues,
   tripMemberRoles,
   tripStatusValues,
+  type ChecklistItemStatus,
   type PlanRecord,
   type PlanCategory,
   type PlanStatus,
@@ -86,6 +88,10 @@ export function getPlanStatusLabel(locale: Locale, status: PlanStatus) {
   return getPageTranslator(locale)(`status.plan.${status}`);
 }
 
+export function getChecklistStatusLabel(locale: Locale, status: ChecklistItemStatus) {
+  return getPageTranslator(locale)(`status.checklist.${status}`);
+}
+
 export function getCategoryLabel(locale: Locale, category: PlanCategory) {
   return getPageTranslator(locale)(`category.${category}`);
 }
@@ -116,6 +122,10 @@ export function getPlanStatusTone(status: PlanStatus) {
   }
 
   return 'primary';
+}
+
+export function getChecklistStatusTone(status: ChecklistItemStatus) {
+  return status === 'completed' ? 'success' : 'warning';
 }
 
 export function getWeekdayLabels(locale: Locale) {
@@ -150,6 +160,13 @@ export function getTripStatusOptions(locale: Locale) {
 
 export function getPlanStatusOptions(locale: Locale) {
   return planStatusValues.map((status) => ({ value: status, label: getPlanStatusLabel(locale, status) }));
+}
+
+export function getChecklistStatusOptions(locale: Locale) {
+  return checklistItemStatusValues.map((status) => ({
+    value: status,
+    label: getChecklistStatusLabel(locale, status),
+  }));
 }
 
 export function getCategoryOptions(locale: Locale) {
@@ -262,5 +279,24 @@ export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord
   ]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
   setBreadcrumbItem('plan', plan.name, getAppUrl(locale, 'plan', { trip: trip.id, plan: plan.id }));
+  revealAppShell();
+}
+
+export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCount: number, completedCount: number) {
+  const t = getPageTranslator(locale);
+
+  setAppShellTitle(t('tripChecklist.title'));
+  setAppShellDescription(t('tripChecklist.description'));
+  setAppShellMeta([
+    trip.name,
+    t('tripChecklist.pendingSummary').replace('{count}', String(pendingCount)),
+    t('tripChecklist.completedSummary').replace('{count}', String(completedCount)),
+  ]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem(
+    'trip-checklist',
+    t('tripChecklist.breadcrumb'),
+    getAppUrl(locale, 'trip-checklist', { trip: trip.id }),
+  );
   revealAppShell();
 }

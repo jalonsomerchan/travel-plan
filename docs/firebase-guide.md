@@ -49,7 +49,29 @@ ASTRO_BASE=/travel-plan
 - `trips/{tripId}`: viaje principal con fechas, estado, dueño y `memberIds`.
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
+- `trips/{tripId}/checklistItems/{itemId}`: checklist pequeña de preparación asociada al viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
+
+## Estructura recomendada para checklist de viaje
+
+La checklist de preparación debe mantenerse separada de los planes del itinerario.
+
+Documento por ítem en `trips/{tripId}/checklistItems/{itemId}`:
+
+```json
+{
+  "title": "Revisar pasaportes",
+  "status": "pending"
+}
+```
+
+Campos esperados:
+
+- `title`: texto corto visible en la UI.
+- `status`: `pending` o `completed`.
+- `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
+
+Mantener esta estructura pequeña evita mezclar lógica de preparación con la de `plans`, que ya tiene fechas, ubicaciones y categorías propias.
 
 ## Reglas sugeridas de Firestore
 
@@ -83,6 +105,11 @@ service cloud.firestore {
       }
 
       match /plans/{planId} {
+        allow read: if tripMember(tripId);
+        allow write: if tripMember(tripId);
+      }
+
+      match /checklistItems/{checklistItemId} {
         allow read: if tripMember(tripId);
         allow write: if tripMember(tripId);
       }

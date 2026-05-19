@@ -11,11 +11,13 @@ export const planCategoryValues = [
   'other',
 ] as const;
 export const planStatusValues = ['pending', 'visited', 'discarded'] as const;
+export const checklistItemStatusValues = ['pending', 'completed'] as const;
 
 export type TripStatus = (typeof tripStatusValues)[number];
 export type TripMemberRole = (typeof tripMemberRoles)[number];
 export type PlanCategory = (typeof planCategoryValues)[number];
 export type PlanStatus = (typeof planStatusValues)[number];
+export type ChecklistItemStatus = (typeof checklistItemStatusValues)[number];
 
 export interface TripAccommodationRecord {
   name: string;
@@ -91,4 +93,15 @@ export interface PlanInput {
   date?: string;
   time?: string;
   status: PlanStatus;
+}
+
+export interface ChecklistItemRecord {
+  id: string;
+  title: string;
+  status: ChecklistItemStatus;
+}
+
+export interface ChecklistItemInput {
+  title: string;
+  status: ChecklistItemStatus;
 }

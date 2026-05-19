@@ -37,6 +37,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
         label="..."
         items={[
           { href: dashboardUrl, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
+          { href: dashboardUrl, id: 'trip-checklist-link', label: t('tripChecklist.goChecklist') },
           { href: dashboardUrl, id: 'trip-ai-link', label: t('trip.goAiSuggestions') },
           { href: dashboardUrl, id: 'trip-accommodation-link', label: t('trip.goAccommodation') },
           { href: dashboardUrl, id: 'trip-accommodation-maps-link', label: t('trip.openAccommodationMap') },
@@ -83,6 +84,13 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           </Button>
         </div>
       </div>
+      <a
+        class="mt-5 rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-4 text-sm font-semibold text-[var(--color-text)] transition hover:opacity-90"
+        data-trip-checklist-notice
+        href={dashboardUrl}
+        hidden
+        id="trip-checklist-notice-link"
+      ></a>
       <div class="mt-5">
         <form class="grid gap-3 sm:grid-cols-3" data-plan-filters>
           <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">

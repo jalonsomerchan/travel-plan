@@ -11,8 +11,9 @@ import {
 } from '../../lib/app/location-links';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
@@ -154,11 +155,36 @@ function renderPlans(
   `;
 }
 
+function renderChecklistNotice(locale: Locale, tripId: string, items: ChecklistItemRecord[]) {
+  const target = document.querySelector<HTMLAnchorElement>('[data-trip-checklist-notice]');
+  const t = getPageTranslator(locale);
+
+  if (!target) {
+    return;
+  }
+
+  const pendingCount = items.filter((item) => item.status === 'pending').length;
+
+  if (pendingCount === 0) {
+    target.hidden = true;
+    target.textContent = '';
+    return;
+  }
+
+  target.hidden = false;
+  target.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
+  target.textContent =
+    pendingCount === 1
+      ? t('tripChecklist.pendingNotice.one')
+      : t('tripChecklist.pendingNotice.other').replace('{count}', String(pendingCount));
+}
+
 export function mountTripPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const calendarLink = document.querySelector<HTMLAnchorElement>('#trip-calendar-link');
   const mapLink = document.querySelector<HTMLAnchorElement>('#trip-map-link');
   const editLink = document.querySelector<HTMLAnchorElement>('#trip-edit-link');
+  const checklistLink = document.querySelector<HTMLAnchorElement>('#trip-checklist-link');
   const accommodationLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-link');
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
@@ -185,6 +211,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (calendarLink) calendarLink.href = getAppUrl(locale, 'calendar', { trip: tripId });
   if (mapLink) mapLink.href = getAppUrl(locale, 'map', { trip: tripId });
   if (editLink) editLink.href = getAppUrl(locale, 'trip-edit', { trip: tripId });
+  if (checklistLink) checklistLink.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
   if (accommodationLink) accommodationLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
   if (accommodationMapsLink) accommodationMapsLink.hidden = true;
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
@@ -284,6 +311,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     subscribeTripPlans(tripId, (plans) => {
       allPlans = plans;
       syncPlans();
+    });
+    subscribeTripChecklistItems(tripId, (items) => {
+      renderChecklistNotice(locale, tripId, items);
     });
   });
 }
