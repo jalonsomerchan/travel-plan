@@ -97,6 +97,16 @@ service cloud.firestore {
       );
     }
 
+    function tripListedForUser() {
+      return signedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        (
+          resource.data.memberIds is list &&
+          request.auth.uid in resource.data.memberIds
+        )
+      );
+    }
+
     function inviteRecipient(tripId) {
       return signedIn() && exists(
         /databases/$(database)/documents/tripInvites/$(tripId + '_' + signedEmail())
@@ -110,7 +120,8 @@ service cloud.firestore {
     }
 
     match /trips/{tripId} {
-      allow read: if tripMember(tripId);
+      allow get: if tripMember(tripId);
+      allow list: if tripListedForUser();
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if tripMember(tripId) || inviteRecipient(tripId);
 

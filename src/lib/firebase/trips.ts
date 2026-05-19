@@ -120,7 +120,11 @@ function mapInviteRecord(snapshot: { id: string; data: () => Record<string, unkn
   };
 }
 
-export function subscribeUserTrips(userId: string, callback: (trips: TripRecord[]) => void) {
+export function subscribeUserTrips(
+  userId: string,
+  callback: (trips: TripRecord[]) => void,
+  onError?: (error: Error) => void,
+) {
   const db = getFirebaseDb();
   const tripsQuery = query(
     collection(db, 'trips'),
@@ -133,6 +137,7 @@ export function subscribeUserTrips(userId: string, callback: (trips: TripRecord[
     (snapshot) => callback(snapshot.docs.map(mapTripRecord)),
     (error) => {
       console.error('subscribeUserTrips', error);
+      onError?.(error);
     },
   );
 }

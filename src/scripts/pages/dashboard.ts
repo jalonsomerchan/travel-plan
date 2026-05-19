@@ -60,6 +60,17 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
     .join('');
 }
 
+function renderTripsError(locale: Locale) {
+  const t = getPageTranslator(locale);
+  const target = document.querySelector<HTMLElement>('[data-trip-list]');
+
+  if (!target) {
+    return;
+  }
+
+  target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('firebase.permissionDenied'))}</article>`;
+}
+
 export function mountDashboardPage({ locale }: { locale: Locale }) {
   const signOutButton = document.querySelector<HTMLElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
@@ -74,9 +85,16 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
       return;
     }
     revealAppShell();
-    subscribeUserTrips(user.uid, (trips) => {
-      renderStats(locale, trips);
-      renderTrips(locale, trips);
-    });
+    subscribeUserTrips(
+      user.uid,
+      (trips) => {
+        renderStats(locale, trips);
+        renderTrips(locale, trips);
+      },
+      () => {
+        renderStats(locale, []);
+        renderTripsError(locale);
+      },
+    );
   });
 }
