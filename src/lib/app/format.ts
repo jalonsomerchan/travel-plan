@@ -1,5 +1,6 @@
 import type { Locale } from '../../config/site';
 import type { PlanRecord } from './models';
+import { isInvalidTripDateRange } from './trip-date-range';
 
 const intlLocales: Record<Locale, string> = {
   es: 'es-ES',
@@ -22,7 +23,16 @@ export function formatFriendlyDate(value: string | undefined, locale: Locale) {
   }).format(new Date(`${value}T00:00:00`));
 }
 
-export function formatDateRange(startDate: string, endDate: string, locale: Locale) {
+export function formatDateRange(
+  startDate: string,
+  endDate: string,
+  locale: Locale,
+  invalidRangeLabel = '',
+) {
+  if (invalidRangeLabel && isInvalidTripDateRange(startDate, endDate)) {
+    return invalidRangeLabel;
+  }
+
   return `${formatFriendlyDate(startDate, locale)} - ${formatFriendlyDate(endDate, locale)}`;
 }
 

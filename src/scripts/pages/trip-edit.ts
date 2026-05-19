@@ -4,12 +4,12 @@ import {
   getAccommodationLocationLabel,
 } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
-import { formatDateRange } from '../../lib/app/format';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator, syncTripShell } from './shared';
+import { ensureFirebaseReady, formatTripDateRange, getPageTranslator, syncTripShell } from './shared';
 import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripEditPage({ locale }: { locale: Locale }) {
@@ -32,7 +32,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
     subscribeTrip(tripId, (trip) => {
       if (!trip) return;
       syncTripShell(locale, trip);
-      if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      if (context) context.textContent = `${trip.name} · ${formatTripDateRange(locale, trip)}`;
       (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
       (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
       (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
@@ -54,13 +54,22 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(form);
+    const startDate = String(data.get('startDate') ?? '');
+    const endDate = String(data.get('endDate') ?? '');
+    const dateRangeValidation = validateTripDateRange(startDate, endDate);
+
+    if (!dateRangeValidation.valid) {
+      setMessage(message, t(dateRangeValidation.errorKey ?? 'trip.form.dateRangeError'), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('trip.form.save'), t('common.saving'));
     try {
       await updateTrip(tripId, {
         name: String(data.get('name') ?? ''),
         location: String(data.get('location') ?? ''),
-        startDate: String(data.get('startDate') ?? ''),
-        endDate: String(data.get('endDate') ?? ''),
+        startDate,
+        endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
         accommodation: getAccommodationInputFromForm(form),
       });
