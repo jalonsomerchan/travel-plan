@@ -35,6 +35,17 @@ describe('plan location coordinate saving', () => {
     });
   });
 
+  it('clears stale optional plan coordinates on update', () => {
+    const source = readText('src/lib/firebase/plans.ts');
+
+    assert.match(source, /deleteField/);
+    assert.match(source, /optionalPlanFields/);
+    assert.match(source, /locationName/);
+    assert.match(source, /locationLat/);
+    assert.match(source, /locationLng/);
+    assert.match(source, /getPlanUpdateData/);
+  });
+
   it('keeps coordinate validation messages translated', () => {
     const es = readJson('src/i18n/feature-translations/poi/es.json');
     const en = readJson('src/i18n/feature-translations/poi/en.json');
