@@ -1,11 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppActionsMenu from '../app/AppActionsMenu.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
 import LoadingState from '../app/LoadingState.astro';
-import Button from '../Button.astro';
-import Container from '../Container.astro';
-import { siteConfig, type Locale } from '../../config/site';
+import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
 interface Props {
@@ -15,61 +13,42 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardUrl = getLocalizedPath('/app/', locale);
+const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to TravelPlan';
 ---
 
 <BaseLayout title={t('dashboard.metaTitle')} description={t('dashboard.metaDescription')} locale={locale}>
   <AppShell
     eyebrow={t('dashboard.eyebrow')}
-    title={t('dashboard.title')}
-    description={t('dashboard.description')}
+    title={dashboardTitle}
     loading
     loadingLabel={t('common.loading')}
     breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb') }]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button href={dashboardUrl} variant="ghost">{t('dashboard.breadcrumb')}</Button>
-        <Button id="dashboard-invites-link" href={dashboardUrl} variant="ghost">{t('dashboard.goInvites')}</Button>
-      </div>
-      <div slot="primary">
-        <Button id="dashboard-create-trip-link" href={dashboardUrl}>{t('dashboard.goCreateTrip')}</Button>
-      </div>
-    </AppToolbar>
-    <div class="mt-6 flex flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 md:flex-row md:items-center md:justify-between">
-      <div>
-        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">{siteConfig.name}</p>
-        <p class="mt-2 flex items-center gap-3 text-lg font-semibold text-[var(--color-text)]" data-account-summary aria-live="polite">
-          <span aria-hidden="true" class="size-5 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--color-primary)]"></span>
-          <span class="sr-only">{t('dashboard.sessionLoading')}</span>
-        </p>
-      </div>
-      <Button id="sign-out-button" variant="secondary" type="button">{t('auth.signOut')}</Button>
+    <div slot="topbar" class="app-shell-topbar-row">
+      <span></span>
+      <AppActionsMenu
+        ariaLabel={t('dashboard.breadcrumb')}
+        label="..."
+        items={[
+          { href: dashboardUrl, id: 'dashboard-invites-link', label: t('dashboard.goInvites') },
+          { href: dashboardUrl, id: 'dashboard-create-trip-link', label: t('dashboard.goCreateTrip') },
+          { href: dashboardUrl, id: 'sign-out-button', label: t('auth.signOut') },
+        ]}
+      />
     </div>
-  </AppShell>
-
-  <Container class="grid gap-8 pb-12">
-    <section class="section-shell px-6 py-6">
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <span class="eyebrow">{t('dashboard.listEyebrow')}</span>
           <h2 class="mt-4 text-2xl font-black">{t('dashboard.listTitle')}</h2>
         </div>
-        <Button
-          aria-label={t('dashboard.goCreateTrip')}
-          class="min-w-11 px-0 text-2xl leading-none"
-          href={dashboardUrl}
-          id="dashboard-create-trip-inline-link"
-          title={t('dashboard.goCreateTrip')}
-        >
-          +
-        </Button>
         <div class="grid w-full grid-cols-3 gap-2 sm:gap-3" data-dashboard-stats></div>
       </div>
       <div class="mt-6 grid gap-4" data-trip-list>
         <LoadingState label={t('common.loading')} />
       </div>
-    </section>
-  </Container>
+    </div>
+  </AppShell>
 
   <script>
     import { mountDashboardPage } from '../../scripts/pages/dashboard';

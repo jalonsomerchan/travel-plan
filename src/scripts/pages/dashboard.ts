@@ -61,23 +61,18 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
 }
 
 export function mountDashboardPage({ locale }: { locale: Locale }) {
-  const t = getPageTranslator(locale);
-  const accountSummary = document.querySelector<HTMLElement>('[data-account-summary]');
-  const signOutButton = document.querySelector<HTMLButtonElement>('#sign-out-button');
+  const signOutButton = document.querySelector<HTMLElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
-  const createTripInlineLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-inline-link');
   const invitesLink = document.querySelector<HTMLAnchorElement>('#dashboard-invites-link');
   if (!ensureFirebaseReady(locale)) return;
   bindSignOut(signOutButton, locale);
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
-  if (createTripInlineLink) createTripInlineLink.href = getAppUrl(locale, 'trip-create');
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    if (accountSummary) accountSummary.textContent = user.email ?? t('dashboard.sessionReady');
     revealAppShell();
     subscribeUserTrips(user.uid, (trips) => {
       renderStats(locale, trips);
