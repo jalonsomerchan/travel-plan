@@ -3,7 +3,6 @@ import {
   arrayUnion,
   collection,
   doc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -23,10 +22,7 @@ import type {
 } from '../app/models';
 import { getFirebaseDb } from './config';
 
-export type InviteUserToTripErrorCode =
-  | 'duplicate-invite'
-  | 'invalid-email'
-  | 'invalid-recipient';
+export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
 export class InviteUserToTripError extends Error {
   constructor(readonly code: InviteUserToTripErrorCode) {
@@ -39,7 +35,11 @@ function normalizeEmail(email: string) {
 }
 
 function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(email);
+}
+
+function getInviteId(tripId: string, emailLower: string) {
+  return `${tripId}_${emailLower}`;
 }
 
 function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
@@ -212,20 +212,7 @@ export async function inviteUserToTrip(
     throw new InviteUserToTripError('invalid-recipient');
   }
 
-  const duplicateInvitesQuery = query(
-    collection(db, 'tripInvites'),
-    where('ownerId', '==', user.uid),
-    where('tripId', '==', tripId),
-    where('emailLower', '==', normalizedEmail),
-    where('status', '==', 'pending'),
-  );
-  const duplicateInvites = await getDocs(duplicateInvitesQuery);
-
-  if (!duplicateInvites.empty) {
-    throw new InviteUserToTripError('duplicate-invite');
-  }
-
-  await addDoc(collection(db, 'tripInvites'), {
+  await setDoc(doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail)), {
     tripId,
     tripName,
     tripLocation,
@@ -238,6 +225,7 @@ export async function inviteUserToTrip(
     role,
     status: 'pending',
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
 }
 
