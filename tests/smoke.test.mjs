@@ -92,6 +92,17 @@ describe('project smoke checks', () => {
     });
   });
 
+  it('keeps the reusable loading component accessible', () => {
+    const loadingStatePath = 'src/components/app/LoadingState.astro';
+    const loadingState = readText(loadingStatePath);
+
+    assert.equal(existsSync(join(root, loadingStatePath)), true, `${loadingStatePath} should exist`);
+    assert.match(loadingState, /role=\"status\"/);
+    assert.match(loadingState, /aria-busy=\"true\"/);
+    assert.match(loadingState, /sr-only/);
+    assert.match(loadingState, /animate-spin/);
+  });
+
   it('keeps Astro i18n enabled and aligned with site config', () => {
     const astroConfig = readText('astro.config.mjs');
     const readme = readText('README.md');
