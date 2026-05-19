@@ -13,6 +13,19 @@ import {
 } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator, getRoleLabel, syncTripShell } from './shared';
 
+const inviteErrorMessages: Record<Locale, Record<string, string>> = {
+  es: {
+    'duplicate-invite': 'Ya existe una invitacion pendiente para ese correo en este viaje.',
+    'invalid-email': 'Escribe un correo valido para enviar la invitacion.',
+    'invalid-recipient': 'Ese correo no puede recibir esta invitacion.',
+  },
+  en: {
+    'duplicate-invite': 'There is already a pending invite for that email in this trip.',
+    'invalid-email': 'Enter a valid email address to send the invite.',
+    'invalid-recipient': 'That email cannot receive this invite.',
+  },
+};
+
 function renderMembers(locale: Locale, members: TripMemberRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-member-list]');
   const t = getPageTranslator(locale);
@@ -28,7 +41,7 @@ function getInviteErrorMessage(locale: Locale, error: unknown) {
   const t = getPageTranslator(locale);
 
   if (error instanceof InviteUserToTripError) {
-    return t(`trip.invite.${error.code}`);
+    return inviteErrorMessages[locale]?.[error.code] ?? t('trip.invite.error');
   }
 
   return t('trip.invite.error');
