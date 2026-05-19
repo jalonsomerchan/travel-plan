@@ -9,6 +9,17 @@ import { observeSession } from '../../lib/firebase/session';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getWeekdayLabels } from './shared';
 
+function renderTripsPermissionError(locale: Locale) {
+  const t = getPageTranslator(locale);
+  const eventsTarget = document.querySelector<HTMLElement>('[data-global-events]');
+
+  if (!eventsTarget) {
+    return;
+  }
+
+  eventsTarget.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('firebase.permissionDenied'))}</article>`;
+}
+
 function renderWeekdays(locale: Locale, targetSelector: string) {
   const target = document.querySelector<HTMLElement>(targetSelector);
 
@@ -152,28 +163,38 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    subscribeUserTrips(user.uid, (items) => {
-      trips = items;
-      stopPlans();
-      plansByTrip = {};
+    subscribeUserTrips(
+      user.uid,
+      (items) => {
+        trips = items;
+        stopPlans();
+        plansByTrip = {};
 
-      if (trips.length === 0) {
+        if (trips.length === 0) {
+          render({});
+          return;
+        }
+
+        const stopCallbacks: Array<() => void> = [];
+
+        trips.forEach((trip) => {
+          stopCallbacks.push(
+            subscribeTripPlans(trip.id, (plans) => {
+              plansByTrip[trip.id] = plans;
+              render(plansByTrip);
+            }),
+          );
+        });
+
+        stopPlans = () => stopCallbacks.forEach((stop) => stop());
+      },
+      () => {
+        trips = [];
+        stopPlans();
+        plansByTrip = {};
         render({});
-        return;
-      }
-
-      const stopCallbacks: Array<() => void> = [];
-
-      trips.forEach((trip) => {
-        stopCallbacks.push(
-          subscribeTripPlans(trip.id, (plans) => {
-            plansByTrip[trip.id] = plans;
-            render(plansByTrip);
-          }),
-        );
-      });
-
-      stopPlans = () => stopCallbacks.forEach((stop) => stop());
-    });
+        renderTripsPermissionError(locale);
+      },
+    );
   });
 }

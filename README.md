@@ -118,6 +118,19 @@ Consulta [docs/firebase-guide.md](docs/firebase-guide.md) para:
 - índices esperados,
 - despliegue en GitHub Pages con `travelplan.alon.one`.
 
+Este repo incluye `firebase.json` para apuntar a:
+
+- `firebase/firestore.rules`
+- `firebase/firestore.indexes.json`
+
+Si cambias reglas o índices, publícalos en tu proyecto Firebase. Si no se despliegan, errores como `Missing or insufficient permissions` seguirán apareciendo aunque el repo esté corregido.
+
+Comando habitual:
+
+```sh
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
 ## IA autenticada
 
 Consulta [docs/ai-authenticated-client.md](docs/ai-authenticated-client.md) para el patrón obligatorio de integración con el cliente IA autenticado, validación JSON estricta y manejo de errores.
