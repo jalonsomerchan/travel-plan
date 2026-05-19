@@ -2,6 +2,8 @@ import { defaultLocale, locales, type Locale } from '../config/site';
 import { joinPathSegments, stripBasePath, withBasePath } from '../utils/paths';
 import en from './translations/en.json';
 import es from './translations/es.json';
+import geolocationEn from './feature-translations/geolocation/en.json';
+import geolocationEs from './feature-translations/geolocation/es.json';
 import mapEn from './feature-translations/map/en.json';
 import mapEs from './feature-translations/map/es.json';
 import poiEn from './feature-translations/poi/en.json';
@@ -11,6 +13,7 @@ import tripValidationEs from './feature-translations/trip-validation/es.json';
 
 export type TranslationKey =
   | keyof typeof es
+  | keyof typeof geolocationEs
   | keyof typeof mapEs
   | keyof typeof poiEs
   | keyof typeof tripValidationEs;
@@ -20,12 +23,14 @@ type TranslationDictionary = Record<string, string>;
 const translations: Record<Locale, TranslationDictionary> = {
   es: {
     ...es,
+    ...geolocationEs,
     ...mapEs,
     ...poiEs,
     ...tripValidationEs,
   },
   en: {
     ...en,
+    ...geolocationEn,
     ...mapEn,
     ...poiEn,
     ...tripValidationEn,
