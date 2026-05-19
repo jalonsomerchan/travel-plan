@@ -2,6 +2,7 @@ import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { getCalendarGrid, getMonthCursor, getMonthKey, getMonthLabel } from '../../lib/app/format';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
@@ -85,13 +86,19 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
               <div class="mt-3 grid gap-2">
                 ${dayPlans
                   .slice(0, 3)
-                  .map(
-                    (plan) => `
+                  .map((plan) => {
+                    const categoryLabel = getCategoryLabel(locale, plan.category);
+
+                    return `
                       <a class="rounded-[var(--radius-sm)] bg-[var(--color-surface-soft)] px-2 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)]" href="${getAppUrl(locale, 'plan', { trip: plan.trip.id, plan: plan.id })}">
-                        ${escapeHtml(plan.trip.name)} · ${escapeHtml(plan.name)}
+                        <span class="flex items-center gap-1.5">
+                          <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                          <span>${escapeHtml(plan.trip.name)} · ${escapeHtml(plan.name)}</span>
+                        </span>
+                        <span class="sr-only">${escapeHtml(categoryLabel)}</span>
                       </a>
-                    `,
-                  )
+                    `;
+                  })
                   .join('')}
               </div>
             </article>
@@ -105,18 +112,23 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
 
     eventsTarget.innerHTML = timelineItems.length
       ? timelineItems
-          .map(
-            (plan) => `
+          .map((plan) => {
+            const categoryLabel = getCategoryLabel(locale, plan.category);
+
+            return `
               <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
                 <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(plan.date ?? '')} ${escapeHtml(plan.time ?? '')}</p>
-                <h3 class="mt-2 text-lg font-bold">${escapeHtml(plan.name)}</h3>
-                <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.trip.name)} · ${escapeHtml(getCategoryLabel(locale, plan.category))}</p>
+                <div class="mt-2 flex items-center gap-2">
+                  <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                  <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+                </div>
+                <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(plan.trip.name)} · ${escapeHtml(categoryLabel)}</p>
                 <a class="mt-4 inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-text)]" href="${getAppUrl(locale, 'trip', { trip: plan.trip.id })}">
                   ${escapeHtml(t('calendar.openTrip'))}
                 </a>
               </article>
-            `,
-          )
+            `;
+          })
           .join('')
       : `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('calendar.empty'))}</article>`;
   };

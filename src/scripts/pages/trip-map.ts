@@ -7,6 +7,10 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange, formatPlanMoment } from '../../lib/app/format';
+import {
+  getPlanCategoryColors,
+  getPlanCategoryDotStyle,
+} from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
@@ -50,16 +54,21 @@ function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
   }
 
   target.innerHTML = locatedPlans
-    .map(
-      (plan) => `
+    .map((plan) => {
+      const categoryLabel = getCategoryLabel(locale, plan.category);
+
+      return `
         <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
-          <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(getCategoryLabel(locale, plan.category))} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
+          <div class="flex items-center gap-2">
+            <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+            <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+          </div>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getPlanLocationLabel(plan))}</p>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
         </a>
-      `,
-    )
+      `;
+    })
     .join('');
 }
 
@@ -135,13 +144,15 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         return;
       }
 
+      const categoryLabel = getCategoryLabel(locale, plan.category);
+      const colors = getPlanCategoryColors(plan.category);
       const latLng = L.latLng(plan.locationLat, plan.locationLng);
       bounds.extend(latLng);
 
       L.circleMarker(latLng, {
         radius: 9,
-        color: '#0f766e',
-        fillColor: '#34d399',
+        color: colors.border,
+        fillColor: colors.fill,
         fillOpacity: 0.9,
         weight: 3,
       })
@@ -149,7 +160,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
           `
             <strong>${escapeHtml(plan.name)}</strong><br />
             ${escapeHtml(getPlanLocationLabel(plan))}<br />
-            ${escapeHtml(getCategoryLabel(locale, plan.category))}
+            ${escapeHtml(categoryLabel)}
           `,
         )
         .addTo(markers);
