@@ -43,6 +43,10 @@ ASTRO_SITE=https://usuario.github.io
 ASTRO_BASE=/travel-plan
 ```
 
+## Sincronización de perfil
+
+Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nombre del usuario autenticado. Si esa escritura falla por reglas, permisos o conectividad, el acceso no se bloquea: Firebase Auth sigue siendo la fuente de verdad de la sesión y el error queda registrado con `console.warn` para depuración.
+
 ## Colecciones usadas
 
 - `users/{uid}`: perfil básico del usuario autenticado. Solo puede leerlo o escribirlo el propio usuario.
