@@ -44,6 +44,17 @@ service cloud.firestore {
         tripOwnedByCurrentUser(request.resource.data.tripId);
     }
 
+    function inviteMailCreatable() {
+      return signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.tripId is string &&
+        request.resource.data.to is string &&
+        request.resource.data.message.subject is string &&
+        request.resource.data.message.text is string &&
+        request.resource.data.message.html is string &&
+        tripOwnedByCurrentUser(request.resource.data.tripId);
+    }
+
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
@@ -76,6 +87,11 @@ service cloud.firestore {
       allow read: if tripInviteReadable();
       allow create: if tripInviteCreatable();
       allow update: if tripInviteReadable();
+    }
+
+    match /mail/{mailId} {
+      allow read, update, delete: if false;
+      allow create: if inviteMailCreatable();
     }
   }
 }
