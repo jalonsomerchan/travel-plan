@@ -20,7 +20,8 @@ describe('trip invite flow', () => {
     assert.match(source, /import type \{ User \} from 'firebase\/auth'/);
     assert.doesNotMatch(inviteFunction, /getDoc\(/);
     assert.match(inviteFunction, /getInviteId\(tripId, normalizedEmail\)/);
-    assert.match(inviteFunction, /setDoc\(doc\(db, 'tripInvites', inviteId\), inviteData\)/);
+    assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites', inviteId\)/);
+    assert.match(inviteFunction, /setDoc\(inviteRef, inviteData\)/);
     assert.match(inviteFunction, /setDoc\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
     assert.match(source, /collection\(db, 'userInvites', normalizedEmail, 'invites'\)/);
   });
