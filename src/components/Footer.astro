@@ -1,7 +1,8 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
-import { useTranslations } from '../i18n/ui';
+import { getPublicPagePath, getPublicPages } from '../data/public-pages';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -9,18 +10,28 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const publicPages = getPublicPages(locale);
 ---
 
 <footer class="border-t border-[var(--color-border)]">
-  <Container class="flex flex-col gap-3 py-8 text-sm text-[var(--color-text-soft)] md:flex-row md:items-center md:justify-between">
-    <p>© {new Date().getFullYear()} {siteConfig.name}. {t('footer.createdWith')}</p>
-    <div class="flex flex-wrap items-center gap-4">
-      <a class="transition hover:text-[var(--color-text)]" href={siteConfig.repositoryUrl}>
-        {t('footer.repository')}
-      </a>
-      <a class="transition hover:text-[var(--color-text)]" href="https://travelplan.alon.one">
-        travelplan.alon.one
-      </a>
+  <Container class="flex flex-col gap-5 py-8 text-sm text-[var(--color-text-soft)]">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <p>© {new Date().getFullYear()} {siteConfig.name}. {t('footer.createdWith')}</p>
+      <div class="flex flex-wrap items-center gap-4">
+        <a class="transition hover:text-[var(--color-text)]" href={siteConfig.repositoryUrl}>
+          {t('footer.repository')}
+        </a>
+        <a class="transition hover:text-[var(--color-text)]" href="https://travelplan.alon.one">
+          travelplan.alon.one
+        </a>
+      </div>
     </div>
+    <nav aria-label={t('footer.publicPages')} class="flex flex-wrap gap-x-4 gap-y-2 border-t border-[var(--color-border)] pt-4">
+      {publicPages.map((page) => (
+        <a class="transition hover:text-[var(--color-text)]" href={getLocalizedPath(getPublicPagePath(locale, page.id), locale)}>
+          {page.label}
+        </a>
+      ))}
+    </nav>
   </Container>
 </footer>
