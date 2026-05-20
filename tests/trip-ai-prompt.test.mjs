@@ -52,6 +52,20 @@ describe('trip AI prompt tool', () => {
     assert.match(pageScript, /data-trip-ai-candidate-checkbox/);
   });
 
+  it('keeps AI prompt candidate badges and title cleanup in place', () => {
+    const helper = readText('src/lib/app/trip-ai-prompt.ts');
+    const pageScript = readText('src/scripts/pages/trip-ai-prompt.ts');
+
+    assert.match(helper, /cleanPlanName/);
+    assert.match(helper, /getDescriptionWithTitleSources/);
+    assert.match(helper, /urlLikePattern/);
+    assert.match(helper, /never in name/);
+    assert.match(helper, /sin enlaces/);
+    assert.match(pageScript, /getPaymentLabel/);
+    assert.match(pageScript, /tripAi\.budget\.free/);
+    assert.match(pageScript, /candidate\.isPaid \? 'warning' : 'success'/);
+  });
+
   it('keeps feature translations aligned and registered', () => {
     const es = readJson('src/i18n/feature-translations/trip-ai-prompt/es.json');
     const en = readJson('src/i18n/feature-translations/trip-ai-prompt/en.json');
