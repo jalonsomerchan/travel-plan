@@ -118,14 +118,14 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
       if (trip) {
         syncTripShell(locale, trip);
         if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+        subscribeTripInvites(tripId, trip.ownerId, (invites) => {
+          currentInvites = invites;
+          renderPeople(locale, currentMembers, currentInvites);
+        });
       }
     });
     subscribeTripMembers(tripId, (members) => {
       currentMembers = members;
-      renderPeople(locale, currentMembers, currentInvites);
-    });
-    subscribeTripInvites(tripId, (invites) => {
-      currentInvites = invites;
       renderPeople(locale, currentMembers, currentInvites);
     });
   });
