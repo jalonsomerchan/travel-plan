@@ -66,8 +66,13 @@ service cloud.firestore {
         recipientTripAcceptanceUpdate();
 
       match /members/{memberId} {
-        allow read: if tripVisibleFromParent(tripId) || pendingInviteForCurrentUser(tripId);
-        allow create: if tripVisibleFromParent(tripId) || recipientMemberCreatable(tripId, memberId);
+        /*
+          TEMPORAL:
+          Permisivo mientras se estabiliza la aceptación de invitaciones.
+          El invitado necesita crear su documento de miembro antes de que
+          `request.auth.uid` exista en `memberIds`.
+        */
+        allow read, create: if signedIn();
         allow update, delete: if tripVisibleFromParent(tripId);
       }
 
