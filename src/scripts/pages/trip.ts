@@ -9,6 +9,7 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
+import { getFirstPlanLink, isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
@@ -102,6 +103,17 @@ function getCurrentLocationDistanceLabel(
   return formatDistance(distanceKm, locale);
 }
 
+function renderFirstPlanLink(locale: Locale, plan: PlanRecord) {
+  const t = getPageTranslator(locale);
+  const link = getFirstPlanLink(plan);
+
+  if (!link || !isSafeExternalPlanUrl(link.url)) {
+    return '';
+  }
+
+  return `<span class="mt-3 inline-flex text-sm font-semibold text-[var(--color-primary)]">↗ ${escapeHtml(link.label || t('plan.links.open'))}</span>`;
+}
+
 function syncCurrentLocationAction(plans: PlanRecord[], geolocation: GeolocationState) {
   const button = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
 
@@ -151,6 +163,7 @@ function renderPlans(
           <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
           ${currentLocationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">📍 ${escapeHtml(currentLocationDistance)}</p>` : ''}
           ${accommodationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">${escapeHtml(accommodationDistance)}</p>` : ''}
+          ${renderFirstPlanLink(locale, plan)}
         </a>
       `;
     }).join('')}
