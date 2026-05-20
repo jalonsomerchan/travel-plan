@@ -63,6 +63,7 @@ describe('poi smoke checks', () => {
     const map = readText('src/scripts/pages/trip-map.ts');
     const rules = readText('firebase/firestore.rules');
     const nav = readText('src/components/app/TripSectionNav.astro');
+    const actions = readText('src/components/app/TripActionsMenu.astro');
     const locationPicker = readText('src/scripts/pages/plan-location-picker.ts');
 
     assert.match(service, /pointsOfInterest/);
@@ -78,5 +79,7 @@ describe('poi smoke checks', () => {
     assert.match(map, /centerOnLocation: false/);
     assert.match(rules, /match \/pointsOfInterest\/{pointId}/);
     assert.match(nav, /trip-pois-link/);
+    assert.match(actions, /trip-pois-action-link/);
+    assert.doesNotMatch(actions, /id: 'trip-pois-link'/);
   });
 });
