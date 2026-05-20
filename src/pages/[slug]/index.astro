@@ -1,0 +1,21 @@
+---
+import PublicInfoPage from '../../components/pages/PublicInfoPage.astro';
+import { defaultLocale } from '../../config/site';
+import { getPublicPages } from '../../data/public-pages';
+import { getPublicPageBySlug } from '../../data/public-page-routing';
+
+export function getStaticPaths() {
+  return getPublicPages(defaultLocale).map((page) => ({
+    params: { slug: page.slug },
+    props: { id: page.id },
+  }));
+}
+
+const page = getPublicPageBySlug(defaultLocale, Astro.params.slug);
+
+if (!page) {
+  return Astro.redirect('/404/');
+}
+---
+
+<PublicInfoPage id={page.id} locale={defaultLocale} />
