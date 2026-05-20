@@ -217,7 +217,9 @@ export async function inviteUserToTrip(
     throw new InviteUserToTripError('invalid-recipient');
   }
 
-  await setDoc(doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail)), {
+  const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
+
+  await setDoc(inviteRef, {
     tripId,
     tripName,
     tripLocation,
