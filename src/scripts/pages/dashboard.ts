@@ -80,7 +80,10 @@ function renderInviteCount(locale: Locale, count: number) {
 
   if (target) {
     target.hidden = count === 0;
-    target.textContent = count > 0 ? t('dashboard.pendingInvites').replace('{count}', String(count)) : '';
+    const label = count > 0 ? t('dashboard.pendingInvites').replace('{count}', String(count)) : '';
+    target.innerHTML = label
+      ? `<span class="mt-0.5 shrink-0" aria-hidden="true">i</span><span class="min-w-0 flex-1 break-words">${escapeHtml(label)}</span>`
+      : '';
   }
 
   if (link) {
@@ -94,7 +97,7 @@ function renderInvitesError(locale: Locale) {
 
   if (target) {
     target.hidden = false;
-    target.textContent = t('dashboard.invitesError');
+    target.innerHTML = `<span class="mt-0.5 shrink-0" aria-hidden="true">!</span><span class="min-w-0 flex-1 break-words">${escapeHtml(t('dashboard.invitesError'))}</span>`;
     target.dataset.tone = 'danger';
   }
 }

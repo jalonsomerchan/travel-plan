@@ -171,16 +171,21 @@ function renderChecklistNotice(locale: Locale, tripId: string, items: ChecklistI
 
   if (pendingCount === 0) {
     target.hidden = true;
-    target.textContent = '';
+    target.innerHTML = '';
     return;
   }
 
-  target.hidden = false;
-  target.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
-  target.textContent =
+  const label =
     pendingCount === 1
       ? t('tripChecklist.pendingNotice.one')
       : t('tripChecklist.pendingNotice.other').replace('{count}', String(pendingCount));
+
+  target.hidden = false;
+  target.href = getAppUrl(locale, 'trip-checklist', { trip: tripId });
+  target.innerHTML = `
+    <span class="mt-0.5 shrink-0" aria-hidden="true">!</span>
+    <span class="min-w-0 flex-1 break-words">${escapeHtml(label)}</span>
+  `;
 }
 
 export function mountTripPage({ locale }: { locale: Locale }) {
@@ -201,6 +206,8 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
   const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
+  const filtersToggle = document.querySelector<HTMLButtonElement>('[data-plan-filters-toggle]');
+  const filtersForm = document.querySelector<HTMLFormElement>('[data-plan-filters]');
   const t = getPageTranslator(locale);
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
@@ -236,6 +243,12 @@ export function mountTripPage({ locale }: { locale: Locale }) {
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
       .join('');
   }
+  filtersToggle?.addEventListener('click', () => {
+    const isExpanded = filtersToggle.getAttribute('aria-expanded') === 'true';
+    filtersToggle.setAttribute('aria-expanded', String(!isExpanded));
+    filtersForm?.classList.toggle('hidden', isExpanded);
+    filtersForm?.classList.toggle('grid', !isExpanded);
+  });
 
   const syncPlans = () => {
     renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters), geolocation);

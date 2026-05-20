@@ -71,14 +71,24 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
         </div>
       </div>
       <a
-        class="mt-5 rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-4 text-sm font-semibold text-[var(--color-text)] transition hover:opacity-90"
+        class="mt-5 flex min-w-0 items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-4 text-sm font-semibold leading-snug text-[var(--color-text)] transition hover:opacity-90"
         data-trip-checklist-notice
         href={dashboardUrl}
         hidden
         id="trip-checklist-notice-link"
       ></a>
       <div class="mt-5">
-        <form class="grid gap-3 sm:grid-cols-3" data-plan-filters>
+        <button
+          aria-controls="trip-plan-filters"
+          aria-expanded="false"
+          class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2.5 text-sm font-bold text-[var(--color-text)] shadow-[var(--shadow-xs)] sm:hidden"
+          data-plan-filters-toggle
+          type="button"
+        >
+          <span aria-hidden="true">▾</span>
+          <span>{t('trip.filters.toggle')}</span>
+        </button>
+        <form class="mt-3 hidden gap-3 sm:grid sm:grid-cols-3" data-plan-filters id="trip-plan-filters">
           <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>{t('trip.filters.search')}</span>
             <input

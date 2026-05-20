@@ -133,6 +133,7 @@
   "trip.filters.search": "Search plan",
   "trip.filters.category": "Category",
   "trip.filters.status": "Status",
+  "trip.filters.toggle": "Filters",
   "trip.filters.allCategories": "All categories",
   "trip.filters.allStatuses": "All statuses",
   "tripAi.metaTitle": "AI trip suggestions",

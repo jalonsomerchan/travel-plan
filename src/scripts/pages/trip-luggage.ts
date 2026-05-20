@@ -27,6 +27,18 @@ function getPendingLuggageCount(items: ChecklistItemRecord[]) {
   return items.filter((item) => item.status === 'pending').length;
 }
 
+function getTrashIcon() {
+  return `
+    <svg aria-hidden="true" class="h-4 w-4" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v5" />
+      <path d="M14 11v5" />
+    </svg>
+  `;
+}
+
 function renderLuggageItems(locale: Locale, items: ChecklistItemRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-luggage-list]');
   const pendingTarget = document.querySelector<HTMLElement>('[data-luggage-pending-count]');
@@ -82,11 +94,13 @@ function renderLuggageItems(locale: Locale, items: ChecklistItemRecord[]) {
             </label>
             <button
               aria-label="${escapeHtml(t('tripLuggage.remove'))}"
-              class="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-sm font-semibold text-[var(--color-text-muted)] transition hover:border-[var(--color-danger)] hover:text-[var(--color-danger)]"
+              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-muted)] transition hover:border-[var(--color-danger)] hover:text-[var(--color-danger)]"
               data-luggage-remove="${escapeHtml(item.id)}"
+              title="${escapeHtml(t('tripLuggage.remove'))}"
               type="button"
             >
-              ${escapeHtml(t('tripLuggage.remove'))}
+              ${getTrashIcon()}
+              <span class="sr-only">${escapeHtml(t('tripLuggage.remove'))}</span>
             </button>
           </div>
         </article>

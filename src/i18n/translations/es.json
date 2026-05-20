@@ -133,6 +133,7 @@
   "trip.filters.search": "Buscar plan",
   "trip.filters.category": "Categoría",
   "trip.filters.status": "Estado",
+  "trip.filters.toggle": "Filtrar",
   "trip.filters.allCategories": "Todas las categorías",
   "trip.filters.allStatuses": "Todos los estados",
   "tripAi.metaTitle": "Sugerencias IA para el viaje",
