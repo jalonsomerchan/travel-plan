@@ -1,6 +1,7 @@
 import type { Locale } from '../../config/site';
 import type { TripRecord } from '../../lib/app/models';
 import type { TripAiPromptWizardOptions } from '../../lib/app/trip-ai-prompt-wizard';
+import { initLocationPickers } from './plan-location-picker';
 import { getPageTranslator } from './shared';
 
 interface WizardControllerOptions {
@@ -13,7 +14,7 @@ export interface TripAiPromptWizardController {
   syncTrip: (trip: TripRecord) => void;
 }
 
-const totalSteps = 4;
+const totalSteps = 5;
 
 function getFieldValue(root: HTMLElement | null, key: string) {
   const checked = root?.querySelector<HTMLInputElement>(`input[name="${key}"]:checked`);
@@ -26,8 +27,56 @@ function getString(root: HTMLElement | null, key: string, fallback: string) {
   return value || fallback;
 }
 
+function getNumber(root: HTMLElement | null, key: string) {
+  const value = getString(root, key, '');
+
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function getSelectedDates(root: HTMLElement | null) {
+  return Array.from(root?.querySelectorAll<HTMLInputElement>('input[name="selectedDates"]:checked') ?? []).map(
+    (field) => field.value,
+  );
+}
+
 function getTypes(root: HTMLElement | null) {
   return Array.from(root?.querySelectorAll<HTMLInputElement>('input[name="types"]:checked') ?? []).map((field) => field.value);
+}
+
+function formatDateLabel(date: string, locale: Locale) {
+  const value = new Date(`${date}T12:00:00`);
+
+  if (Number.isNaN(value.getTime())) {
+    return date;
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(value);
+}
+
+function getDateRange(startDate: string, endDate: string) {
+  const dates: string[] = [];
+  const cursor = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
+
+  if (Number.isNaN(cursor.getTime()) || Number.isNaN(end.getTime()) || cursor > end) {
+    return dates;
+  }
+
+  while (cursor <= end) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
 }
 
 export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOptions): TripAiPromptWizardController {
@@ -38,19 +87,21 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
   const progress = document.querySelector<HTMLElement>('[data-trip-ai-prompt-step-progress]');
   const steps = Array.from(document.querySelectorAll<HTMLElement>('[data-trip-ai-prompt-step]'));
   const chips = Array.from(document.querySelectorAll<HTMLElement>('[data-trip-ai-prompt-step-chip]'));
-  const dateFields = document.querySelector<HTMLElement>('[data-trip-ai-prompt-date-fields]');
+  const dateOptions = document.querySelector<HTMLElement>('[data-trip-ai-prompt-date-options]');
+  const dateList = document.querySelector<HTMLElement>('[data-trip-ai-prompt-date-list]');
   const t = getPageTranslator(locale);
   let currentStep = 0;
 
   const syncDateMode = () => {
-    if (!root || !dateFields) {
+    if (!root || !dateOptions) {
       return;
     }
 
-    const isScheduled = getFieldValue(root, 'dateMode') !== 'unscheduled';
-    dateFields.hidden = !isScheduled;
-    dateFields.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
-      input.disabled = !isScheduled;
+    const withDates = getFieldValue(root, 'dateMode') === 'with-dates';
+    dateOptions.hidden = !withDates;
+
+    dateOptions.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+      input.disabled = !withDates;
     });
   };
 
@@ -70,12 +121,14 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
     }
 
     if (prevButton) {
-      prevButton.hidden = currentStep === 0;
       prevButton.disabled = currentStep === 0;
+      prevButton.setAttribute('aria-disabled', prevButton.disabled ? 'true' : 'false');
     }
 
     if (nextButton) {
-      nextButton.textContent = currentStep === totalSteps - 1 ? t('tripAiPrompt.wizard.refreshPrompt') : t('tripAi.form.next');
+      nextButton.disabled = currentStep === totalSteps - 1;
+      nextButton.setAttribute('aria-disabled', nextButton.disabled ? 'true' : 'false');
+      nextButton.textContent = t('tripAi.form.next');
     }
   };
 
@@ -85,15 +138,34 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
     onChange();
   };
 
+  const renderTripDates = (trip: TripRecord) => {
+    if (!dateList) {
+      return;
+    }
+
+    const dates = getDateRange(trip.startDate, trip.endDate);
+    dateList.innerHTML = dates
+      .map(
+        (date) => `
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input checked name="selectedDates" type="checkbox" value="${date}" />
+            <span>${formatDateLabel(date, locale)}</span>
+          </label>
+        `,
+      )
+      .join('');
+  };
+
   const getOptions = (): TripAiPromptWizardOptions => ({
-    place: getString(root, 'place', ''),
-    dateMode: getString(root, 'dateMode', 'scheduled') as TripAiPromptWizardOptions['dateMode'],
-    startDate: getString(root, 'startDate', ''),
-    endDate: getString(root, 'endDate', ''),
-    planMode: getString(root, 'planMode', 'itinerary') as TripAiPromptWizardOptions['planMode'],
-    types: getTypes(root),
-    tourismStyle: getString(root, 'tourismStyle', 'balanced') as TripAiPromptWizardOptions['tourismStyle'],
+    place: getString(root, 'placeName', getString(root, 'placeQuery', '')),
+    placeLat: getNumber(root, 'placeLat'),
+    placeLng: getNumber(root, 'placeLng'),
+    dateMode: getString(root, 'dateMode', 'without-dates') as TripAiPromptWizardOptions['dateMode'],
+    selectedDates: getSelectedDates(root),
+    scheduleMode: getString(root, 'scheduleMode', 'planned') as TripAiPromptWizardOptions['scheduleMode'],
+    types: getTypes(root) as TripAiPromptWizardOptions['types'],
     budgetMode: getString(root, 'budgetMode', 'both') as TripAiPromptWizardOptions['budgetMode'],
+    bookingMode: getString(root, 'bookingMode', 'both') as TripAiPromptWizardOptions['bookingMode'],
     accessMode: getString(root, 'accessMode', 'public') as TripAiPromptWizardOptions['accessMode'],
   });
 
@@ -102,28 +174,37 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
       return;
     }
 
-    const placeInput = root.querySelector<HTMLInputElement>('input[name="place"]');
-    const startDateInput = root.querySelector<HTMLInputElement>('input[name="startDate"]');
-    const endDateInput = root.querySelector<HTMLInputElement>('input[name="endDate"]');
+    renderTripDates(trip);
+    initLocationPickers();
 
-    if (placeInput && !placeInput.value) {
-      placeInput.value = trip.location;
+    const placeQueryInput = root.querySelector<HTMLInputElement>('input[name="placeQuery"]');
+    const placeNameInput = root.querySelector<HTMLInputElement>('input[name="placeName"]');
+    const placeLatInput = root.querySelector<HTMLInputElement>('input[name="placeLat"]');
+    const placeLngInput = root.querySelector<HTMLInputElement>('input[name="placeLng"]');
+
+    const defaultPlaceName = trip.accommodation?.locationName || trip.location;
+    const defaultPlaceLat =
+      typeof trip.accommodation?.locationLat === 'number' ? trip.accommodation.locationLat : trip.locationLat;
+    const defaultPlaceLng =
+      typeof trip.accommodation?.locationLng === 'number' ? trip.accommodation.locationLng : trip.locationLng;
+
+    if (placeQueryInput && !placeQueryInput.value) {
+      placeQueryInput.value = defaultPlaceName;
     }
 
-    [startDateInput, endDateInput].forEach((input) => {
-      if (!input) return;
-      input.min = trip.startDate;
-      input.max = trip.endDate;
-    });
-
-    if (startDateInput && !startDateInput.value) {
-      startDateInput.value = trip.startDate;
+    if (placeNameInput && !placeNameInput.value) {
+      placeNameInput.value = defaultPlaceName;
     }
 
-    if (endDateInput && !endDateInput.value) {
-      endDateInput.value = trip.endDate;
+    if (placeLatInput && !placeLatInput.value && typeof defaultPlaceLat === 'number') {
+      placeLatInput.value = String(defaultPlaceLat);
     }
 
+    if (placeLngInput && !placeLngInput.value && typeof defaultPlaceLng === 'number') {
+      placeLngInput.value = String(defaultPlaceLng);
+    }
+
+    initLocationPickers();
     syncDateMode();
     onChange();
   };
@@ -152,6 +233,7 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
     goToStep(currentStep + 1);
   });
 
+  initLocationPickers();
   syncDateMode();
   updateStepUi();
 

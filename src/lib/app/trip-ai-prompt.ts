@@ -39,6 +39,14 @@ function formatAccommodation(trip: TripRecord, locale: Locale) {
     .join(' · ') || empty;
 }
 
+function formatPromptPlace(trip: TripRecord, locale: Locale) {
+  if (trip.accommodation?.locationName?.trim()) {
+    return trip.accommodation.locationName.trim();
+  }
+
+  return formatValue(trip.location, locale === 'es' ? 'Destino sin concretar' : 'Unknown destination');
+}
+
 function formatExistingPlans(plans: PlanRecord[], locale: Locale) {
   if (plans.length === 0) {
     return locale === 'es' ? 'Todavía no hay planes guardados.' : 'There are no saved plans yet.';
@@ -51,8 +59,7 @@ function formatExistingPlans(plans: PlanRecord[], locale: Locale) {
 
 export function buildTripAiPrompt(trip: TripRecord, plans: PlanRecord[], locale: Locale) {
   const categories = planCategoryValues.join(', ');
-  const statuses = planStatusValues.join(', ');
-  const tripLocation = formatValue(trip.location, locale === 'es' ? 'Destino sin concretar' : 'Unknown destination');
+  const tripLocation = formatPromptPlace(trip, locale);
   const accommodation = formatAccommodation(trip, locale);
   const existingPlans = formatExistingPlans(plans, locale);
 
@@ -75,13 +82,11 @@ Return a JSON object with this exact structure:
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
-      "status": "pending",
       "locationName": "Specific place or area",
       "locationLat": 0,
       "locationLng": 0,
       "isPaid": false,
       "isBooked": false,
-      "isOptional": false,
       "isImportant": false,
       "links": [{ "label": "Official website", "url": "https://example.com" }]
     }
@@ -91,11 +96,13 @@ Return a JSON object with this exact structure:
 Rules:
 - Create between 8 and 18 plans, distributed realistically across the trip dates.
 - Use only these categories: ${categories}.
-- Use only these statuses: ${statuses}. Usually use "pending".
+- status is optional. If you include it, use "proposed". If you omit it, TravelPlan will save it as proposed.
 - Use dates within the trip range only.
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
+- isBooked means the place or plan requires a reservation or booking in advance.
 - Do not invent bookings. If something is only a recommendation, keep isBooked as false.
+- isOptional is optional in the JSON. If omitted, TravelPlan will save it as false.
 - Keep name as a clean plain-text title: no links, no URLs, no markdown, no citations, no source names and no JSON fragments.
 - If you need to include a source, link, citation or official website, put it in description or links, never in name.
 - Return only JSON.`;
@@ -119,13 +126,11 @@ Devuelve un objeto JSON con esta estructura exacta:
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
-      "status": "pending",
       "locationName": "Lugar o zona concreta",
       "locationLat": 0,
       "locationLng": 0,
       "isPaid": false,
       "isBooked": false,
-      "isOptional": false,
       "isImportant": false,
       "links": [{ "label": "Web oficial", "url": "https://example.com" }]
     }
@@ -135,11 +140,13 @@ Devuelve un objeto JSON con esta estructura exacta:
 Reglas:
 - Crea entre 8 y 18 planes, repartidos de forma realista entre los días del viaje.
 - Usa solo estas categorías: ${categories}.
-- Usa solo estos estados: ${statuses}. Normalmente usa "pending".
+- status es opcional. Si lo incluyes, usa "proposed". Si lo omites, TravelPlan lo guardará como propuesto.
 - Usa únicamente fechas dentro del rango del viaje.
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
+- isBooked significa que el sitio o plan requiere reserva previa.
 - No inventes reservas. Si algo es una recomendación, deja isBooked como false.
+- isOptional es opcional en el JSON. Si se omite, TravelPlan lo guardará como false.
 - Mantén name como un título limpio en texto plano: sin enlaces, sin URLs, sin markdown, sin citas, sin nombres de fuente y sin fragmentos JSON.
 - Si necesitas incluir una fuente, enlace, cita o web oficial, ponlo en description o links, nunca en name.
 - Devuelve solo JSON.`;
@@ -168,7 +175,7 @@ function normalizeCategory(value: string): PlanCategory {
 }
 
 function normalizeStatus(value: string): PlanStatus {
-  return allowedStatuses.has(value as PlanStatus) ? (value as PlanStatus) : 'pending';
+  return allowedStatuses.has(value as PlanStatus) ? (value as PlanStatus) : 'proposed';
 }
 
 function getPlansPayload(parsed: unknown) {

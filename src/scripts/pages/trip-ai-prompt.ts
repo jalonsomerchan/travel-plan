@@ -100,6 +100,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   const promptMessage = document.querySelector<HTMLElement>('[data-trip-ai-prompt-message]');
   const importForm = document.querySelector<HTMLFormElement>('[data-trip-ai-import-form]');
   const importMessage = document.querySelector<HTMLElement>('[data-trip-ai-import-message]');
+  const candidatesSection = document.querySelector<HTMLElement>('[data-trip-ai-candidates-section]');
   const candidatesList = document.querySelector<HTMLElement>('[data-trip-ai-candidates-list]');
   const candidatesCount = document.querySelector<HTMLElement>('[data-trip-ai-candidates-count]');
   const candidatesActions = document.querySelector<HTMLElement>('[data-trip-ai-candidates-actions]');
@@ -108,6 +109,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let candidates: CandidateEntry[] = [];
+  let hasParsedResults = false;
   const wizard = initTripAiPromptWizard({ locale, onChange: () => updatePrompt() });
 
   if (!tripId || !promptOutput || !importForm || !candidatesList) {
@@ -146,6 +148,10 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
       candidatesActions.hidden = count === 0;
     }
 
+    if (candidatesSection) {
+      candidatesSection.hidden = !hasParsedResults;
+    }
+
     candidatesList.innerHTML = count === 0
       ? `<div class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] p-6 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('tripAiPrompt.candidates.empty'))}</div>`
       : candidates.map((candidate) => renderCandidate(locale, candidate)).join('');
@@ -153,6 +159,10 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
 
   const setCandidatesFromJson = (value: string) => {
     const parsed = parseTripAiPromptJson(value);
+    hasParsedResults = true;
+    if (candidatesSection) {
+      candidatesSection.hidden = false;
+    }
 
     candidates = parsed.candidates.map((candidate) => ({
       ...candidate,

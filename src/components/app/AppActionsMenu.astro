@@ -28,6 +28,67 @@ const { ariaLabel, label, items } = Astro.props;
   </div>
 </details>
 
+<script is:inline>
+  if (!window.__travelPlanActionsMenuInit) {
+    window.__travelPlanActionsMenuInit = true;
+
+    const selector = '.app-actions-menu';
+    const getMenus = () => Array.from(document.querySelectorAll(selector));
+    const closeMenu = (menu) => {
+      if (menu instanceof HTMLDetailsElement) {
+        menu.open = false;
+      }
+    };
+    const closeOtherMenus = (currentMenu) => {
+      getMenus().forEach((menu) => {
+        if (menu !== currentMenu) {
+          closeMenu(menu);
+        }
+      });
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const menu = target.closest(selector);
+      const trigger = target.closest('.app-actions-menu-trigger');
+      const action = target.closest('.app-actions-menu-link');
+
+      if (trigger) {
+        const currentMenu = trigger.closest(selector);
+
+        requestAnimationFrame(() => {
+          if (currentMenu instanceof HTMLDetailsElement && currentMenu.open) {
+            closeOtherMenus(currentMenu);
+          }
+        });
+        return;
+      }
+
+      if (action && menu instanceof HTMLDetailsElement) {
+        closeMenu(menu);
+        return;
+      }
+
+      if (!menu) {
+        getMenus().forEach(closeMenu);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      getMenus().forEach(closeMenu);
+    });
+  }
+</script>
+
 <style is:global>
   .section-shell:has(.app-actions-menu[open]) {
     position: relative;

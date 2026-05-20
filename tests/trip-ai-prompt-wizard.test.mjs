@@ -42,9 +42,10 @@ describe('trip AI prompt wizard', () => {
     const builder = readText('src/lib/app/trip-ai-prompt-builder.ts');
     const controller = readText('src/scripts/pages/trip-ai-prompt-wizard.ts');
 
-    ['dateMode', 'planMode', 'tourismStyle', 'budgetMode', 'accessMode'].forEach((name) => {
+    ['dateMode', 'scheduleMode', 'budgetMode', 'bookingMode', 'accessMode', 'types'].forEach((name) => {
       assert.match(wizard, new RegExp(`name=\\"${name}\\"`));
     });
+    assert.match(controller, /selectedDates/);
     assert.match(builder, /TripAiPromptWizardOptions/);
     assert.match(controller, /getOptions/);
     assert.match(controller, /syncTrip/);
@@ -57,7 +58,7 @@ describe('trip AI prompt wizard', () => {
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
     assert.ok(es['tripAiPrompt.wizard.place']);
     assert.ok(en['tripAiPrompt.wizard.accessMode']);
-    assert.ok(es['tripAiPrompt.wizard.planModeItinerary']);
-    assert.ok(en['tripAiPrompt.wizard.dateModeUnscheduled']);
+    assert.ok(es['tripAiPrompt.wizard.bookingModeRequired']);
+    assert.ok(en['tripAiPrompt.wizard.dateModeWithoutDates']);
   });
 });

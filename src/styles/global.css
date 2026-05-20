@@ -376,6 +376,7 @@ main {
 
 .app-card-shell {
   display: block;
+  position: relative;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-surface-raised);
@@ -385,6 +386,11 @@ main {
     transform var(--transition-base, 180ms ease),
     border-color var(--transition-base, 180ms ease),
     box-shadow var(--transition-base, 180ms ease);
+}
+
+.app-card-shell:has(.app-actions-menu[open]) {
+  z-index: 30;
+  overflow: visible;
 }
 
 .app-card-shell:hover {

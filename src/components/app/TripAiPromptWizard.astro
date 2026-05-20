@@ -1,8 +1,9 @@
 ---
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../i18n/ui';
-import { planCategoryValues } from '../../lib/app/models';
+import { tripAiPromptTypeValues } from '../../lib/app/trip-ai-prompt-wizard';
 import Button from '../Button.astro';
+import LocationPickerFields from './LocationPickerFields.astro';
 import TripAiPromptWizardResult from './TripAiPromptWizardResult.astro';
 
 interface Props {
@@ -12,10 +13,11 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const steps = [
-  t('tripAiPrompt.wizard.context'),
-  t('tripAiPrompt.wizard.planStyle'),
-  t('tripAiPrompt.wizard.access'),
-  t('tripAiPrompt.wizard.result'),
+  t('tripAiPrompt.wizard.placeStep'),
+  t('tripAiPrompt.wizard.typesStep'),
+  t('tripAiPrompt.wizard.datesStep'),
+  t('tripAiPrompt.wizard.detailsStep'),
+  t('tripAiPrompt.wizard.resultStep'),
 ];
 ---
 
@@ -34,7 +36,7 @@ const steps = [
   </div>
 
   <div class="-mx-4 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0" aria-label={t('tripAiPrompt.wizard.stepsLabel')}>
-    <div class="flex min-w-max gap-2 md:grid md:min-w-0 md:grid-cols-4 md:gap-3">
+    <div class="flex min-w-max gap-2 md:grid md:min-w-0 md:grid-cols-5 md:gap-3">
       {steps.map((label, index) => (
         <article class="wizard-step-chip min-w-32 px-3 py-2 text-xs md:min-w-0 md:text-sm" data-trip-ai-prompt-step-chip data-active={index === 0 ? 'true' : 'false'}>
           <span class="wizard-step-chip-index">{index + 1}</span>
@@ -48,102 +50,150 @@ const steps = [
     <section class="space-y-4" data-trip-ai-prompt-step="0">
       <div>
         <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '1')}</span>
-        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.contextTitle')}</h3>
-        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.contextHelper')}</p>
+        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.placeTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.placeHelper')}</p>
       </div>
-      <div>
-        <label class="field-label" for="trip-ai-prompt-place">{t('tripAiPrompt.wizard.place')}</label>
-        <input class="field-input" id="trip-ai-prompt-place" name="place" type="text" />
-      </div>
-      <fieldset class="space-y-3">
-        <legend class="field-label">{t('tripAiPrompt.wizard.dateMode')}</legend>
-        <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
-          <input checked name="dateMode" type="radio" value="scheduled" />
-          <span>{t('tripAiPrompt.wizard.dateModeScheduled')}</span>
-        </label>
-        <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
-          <input name="dateMode" type="radio" value="unscheduled" />
-          <span>{t('tripAiPrompt.wizard.dateModeUnscheduled')}</span>
-        </label>
-      </fieldset>
-      <div class="grid gap-4 sm:grid-cols-2" data-trip-ai-prompt-date-fields>
-        <div>
-          <label class="field-label" for="trip-ai-prompt-start-date">{t('tripAi.form.startDate')}</label>
-          <input class="field-input" id="trip-ai-prompt-start-date" name="startDate" type="date" />
-        </div>
-        <div>
-          <label class="field-label" for="trip-ai-prompt-end-date">{t('tripAi.form.endDate')}</label>
-          <input class="field-input" id="trip-ai-prompt-end-date" name="endDate" type="date" />
-        </div>
-      </div>
+      <LocationPickerFields
+        clearButtonName={t('tripAiPrompt.wizard.placeClear')}
+        helperKey="tripAiPrompt.wizard.placeFieldHelper"
+        latFieldName="placeLat"
+        locale={locale}
+        lngFieldName="placeLng"
+        nameFieldName="placeName"
+        prefix="trip-ai-prompt"
+        queryFieldLabel={t('tripAiPrompt.wizard.place')}
+        queryFieldName="placeQuery"
+        queryPlaceholder={t('tripAiPrompt.wizard.placePlaceholder')}
+        searchButtonName={t('tripAiPrompt.wizard.placeSearch')}
+        useCurrentLocationName={t('tripAiPrompt.wizard.placeCurrent')}
+      />
     </section>
 
     <section class="space-y-4" data-trip-ai-prompt-step="1" hidden>
       <div>
         <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '2')}</span>
-        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.planStyleTitle')}</h3>
-        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.planStyleHelper')}</p>
+        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.typesTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.typesHelper')}</p>
       </div>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="field-label" for="trip-ai-prompt-plan-mode">{t('tripAiPrompt.wizard.planMode')}</label>
-          <select class="field-select" id="trip-ai-prompt-plan-mode" name="planMode">
-            <option value="itinerary">{t('tripAiPrompt.wizard.planModeItinerary')}</option>
-            <option value="independent">{t('tripAiPrompt.wizard.planModeIndependent')}</option>
-          </select>
-        </div>
-        <div>
-          <label class="field-label" for="trip-ai-prompt-tourism-style">{t('tripAiPrompt.wizard.tourismStyle')}</label>
-          <select class="field-select" id="trip-ai-prompt-tourism-style" name="tourismStyle">
-            <option value="balanced">{t('tripAiPrompt.wizard.tourismStyleBalanced')}</option>
-            <option value="touristic">{t('tripAiPrompt.wizard.tourismStyleTouristic')}</option>
-            <option value="local">{t('tripAiPrompt.wizard.tourismStyleLocal')}</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <span class="field-label">{t('tripAiPrompt.wizard.types')}</span>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {planCategoryValues.map((category) => (
-            <label class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
-              <span class="flex items-start gap-3">
-                <input checked name="types" type="checkbox" value={category} />
-                <span>{t(`category.${category}`)}</span>
-              </span>
+      <fieldset class="space-y-3">
+        <legend class="field-label">{t('tripAiPrompt.wizard.types')}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {tripAiPromptTypeValues.map((type, index) => (
+            <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+              <input checked={index === 0} name="types" type="radio" value={type} />
+              <span>{t(`tripAiPrompt.wizard.type.${type}`)}</span>
             </label>
           ))}
         </div>
-      </div>
-      <div>
-        <label class="field-label" for="trip-ai-prompt-budget-mode">{t('tripAiPrompt.wizard.budgetMode')}</label>
-        <select class="field-select" id="trip-ai-prompt-budget-mode" name="budgetMode">
-          <option value="both">{t('tripAiPrompt.wizard.budgetModeBoth')}</option>
-          <option value="free">{t('tripAi.budget.free')}</option>
-          <option value="paid">{t('tripAi.budget.paid')}</option>
-        </select>
-      </div>
+      </fieldset>
     </section>
 
     <section class="space-y-4" data-trip-ai-prompt-step="2" hidden>
       <div>
         <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '3')}</span>
-        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.accessTitle')}</h3>
-        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.accessHelper')}</p>
+        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.datesTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.datesHelper')}</p>
       </div>
-      <div>
-        <label class="field-label" for="trip-ai-prompt-access-mode">{t('tripAiPrompt.wizard.accessMode')}</label>
-        <select class="field-select" id="trip-ai-prompt-access-mode" name="accessMode">
-          <option value="public">{t('tripAiPrompt.wizard.accessModePublic')}</option>
-          <option value="walking">{t('tripAiPrompt.wizard.accessModeWalking')}</option>
-          <option value="car">{t('tripAiPrompt.wizard.accessModeCar')}</option>
-          <option value="mixed">{t('tripAiPrompt.wizard.accessModeMixed')}</option>
-        </select>
+      <fieldset class="space-y-3">
+        <legend class="field-label">{t('tripAiPrompt.wizard.dateMode')}</legend>
+        <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+          <input checked name="dateMode" type="radio" value="without-dates" />
+          <span>{t('tripAiPrompt.wizard.dateModeWithoutDates')}</span>
+        </label>
+        <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+          <input name="dateMode" type="radio" value="with-dates" />
+          <span>{t('tripAiPrompt.wizard.dateModeWithDates')}</span>
+        </label>
+      </fieldset>
+
+      <div class="space-y-4" data-trip-ai-prompt-date-options hidden>
+        <div>
+          <span class="field-label">{t('tripAiPrompt.wizard.selectedDates')}</span>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2" data-trip-ai-prompt-date-list></div>
+        </div>
+        <fieldset class="space-y-3">
+          <legend class="field-label">{t('tripAiPrompt.wizard.scheduleMode')}</legend>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input checked name="scheduleMode" type="radio" value="planned" />
+            <span>{t('tripAiPrompt.wizard.scheduleModePlanned')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="scheduleMode" type="radio" value="independent" />
+            <span>{t('tripAiPrompt.wizard.scheduleModeIndependent')}</span>
+          </label>
+        </fieldset>
       </div>
     </section>
 
     <section class="space-y-4" data-trip-ai-prompt-step="3" hidden>
       <div>
         <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '4')}</span>
+        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.detailsTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.detailsHelper')}</p>
+      </div>
+
+      <fieldset class="space-y-3">
+        <legend class="field-label">{t('tripAiPrompt.wizard.budgetMode')}</legend>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input checked name="budgetMode" type="radio" value="both" />
+            <span>{t('tripAiPrompt.wizard.budgetModeBoth')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="budgetMode" type="radio" value="free" />
+            <span>{t('tripAi.budget.free')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="budgetMode" type="radio" value="paid" />
+            <span>{t('tripAi.budget.paid')}</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class="field-label">{t('tripAiPrompt.wizard.bookingMode')}</legend>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input checked name="bookingMode" type="radio" value="both" />
+            <span>{t('tripAiPrompt.wizard.bookingModeBoth')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="bookingMode" type="radio" value="no-booking" />
+            <span>{t('tripAiPrompt.wizard.bookingModeNoBooking')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="bookingMode" type="radio" value="booking-required" />
+            <span>{t('tripAiPrompt.wizard.bookingModeRequired')}</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class="field-label">{t('tripAiPrompt.wizard.accessMode')}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input checked name="accessMode" type="radio" value="public" />
+            <span>{t('tripAiPrompt.wizard.accessModePublic')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="accessMode" type="radio" value="walking" />
+            <span>{t('tripAiPrompt.wizard.accessModeWalking')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="accessMode" type="radio" value="car" />
+            <span>{t('tripAiPrompt.wizard.accessModeCar')}</span>
+          </label>
+          <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)]">
+            <input name="accessMode" type="radio" value="mixed" />
+            <span>{t('tripAiPrompt.wizard.accessModeMixed')}</span>
+          </label>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="space-y-4" data-trip-ai-prompt-step="4" hidden>
+      <div>
+        <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '5')}</span>
         <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.resultTitle')}</h3>
         <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.resultHelper')}</p>
       </div>
@@ -153,9 +203,9 @@ const steps = [
     <p class="text-sm text-[var(--color-text-soft)]" id="trip-ai-prompt-wizard-message">
       {t('tripAiPrompt.wizard.helper')}
     </p>
-    <div class="grid gap-3 sm:grid-cols-2">
-      <Button id="trip-ai-prompt-prev-step" type="button" variant="ghost">{t('tripAi.form.previous')}</Button>
-      <Button id="trip-ai-prompt-next-step" type="button" variant="secondary">{t('tripAi.form.next')}</Button>
+    <div class="flex gap-3">
+      <Button class="min-w-0 flex-1" id="trip-ai-prompt-prev-step" type="button" variant="ghost">{t('tripAi.form.previous')}</Button>
+      <Button class="min-w-0 flex-1" id="trip-ai-prompt-next-step" type="button" variant="secondary">{t('tripAi.form.next')}</Button>
     </div>
   </div>
 </section>

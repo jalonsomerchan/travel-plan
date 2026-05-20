@@ -16,10 +16,10 @@ const t = useTranslations(locale);
 <div class="space-y-8 pt-6">
   <TripAiPromptWizard locale={locale} />
 
-  <section class="border-t border-[var(--color-border)] pt-8" aria-labelledby="trip-ai-candidates-title">
+  <section class="border-t border-[var(--color-border)] pt-8" aria-labelledby="trip-ai-candidates-title" data-trip-ai-candidates-section hidden>
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <span class="eyebrow">{t('tripAiPrompt.candidates.eyebrow')}</span>
+        <span class="eyebrow">{`${t('tripAi.form.stepLabel').replace('{number}', '6')} · ${t('tripAiPrompt.candidates.eyebrow')}`}</span>
         <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]" id="trip-ai-candidates-title">
           {t('tripAiPrompt.candidates.title')}
         </h2>
