@@ -106,6 +106,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
+  let currentUserId = '';
   let tripLoaded = false;
   let itemsLoaded = false;
   let canAccessTrip = false;
@@ -140,6 +141,8 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
+
+    currentUserId = user.uid;
 
     subscribeTrip(tripId, (trip) => {
       currentTrip = trip;
@@ -204,7 +207,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     setButtonBusy(button, true, t('tripLuggage.form.add'), t('common.saving'));
 
     try {
-      await createTripLuggageItem(tripId, user.uid, {
+      await createTripLuggageItem(tripId, currentUserId, {
         title,
         status: 'pending',
       });

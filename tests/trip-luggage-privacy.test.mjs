@@ -16,8 +16,10 @@ describe('trip luggage privacy', () => {
 
     assert.match(service, /where\('ownerId', '==', userId\)/);
     assert.match(service, /ownerId: userId/);
+    assert.match(page, /let currentUserId = ''/);
+    assert.match(page, /currentUserId = user\.uid/);
     assert.match(page, /subscribeTripLuggageItems\(\s*tripId,\s*user\.uid/);
-    assert.match(page, /createTripLuggageItem\(tripId, user\.uid/);
+    assert.match(page, /createTripLuggageItem\(tripId, currentUserId/);
     assert.doesNotMatch(page, /trip\.ownerId !== user\.uid/);
   });
 
