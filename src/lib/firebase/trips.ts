@@ -4,7 +4,6 @@ import {
   arrayUnion,
   collection,
   doc,
-  getDoc,
   onSnapshot,
   orderBy,
   query,
@@ -23,10 +22,7 @@ import type {
 } from '../app/models';
 import { getFirebaseDb } from './config';
 
-export type InviteUserToTripErrorCode =
-  | 'duplicate-invite'
-  | 'invalid-email'
-  | 'invalid-recipient';
+export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
 export class InviteUserToTripError extends Error {
   constructor(readonly code: InviteUserToTripErrorCode) {
@@ -221,14 +217,7 @@ export async function inviteUserToTrip(
     throw new InviteUserToTripError('invalid-recipient');
   }
 
-  const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
-  const existingInvite = await getDoc(inviteRef);
-
-  if (existingInvite.exists() && existingInvite.data().status === 'pending') {
-    throw new InviteUserToTripError('duplicate-invite');
-  }
-
-  await setDoc(inviteRef, {
+  await setDoc(doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail)), {
     tripId,
     tripName,
     tripLocation,
@@ -240,7 +229,7 @@ export async function inviteUserToTrip(
     emailLower: normalizedEmail,
     role,
     status: 'pending',
-    createdAt: existingInvite.exists() ? existingInvite.data().createdAt : serverTimestamp(),
+    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
 }
