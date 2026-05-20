@@ -62,20 +62,16 @@ describe('trip invite flow', () => {
     assert.match(shareHelper, /mailto:/);
   });
 
-  it('keeps Firestore invite rules aligned with owners and recipients', () => {
+  it('keeps temporary invite rules and acceptance exception explicit', () => {
     const rules = readText('firebase/firestore.rules');
 
-    assert.match(rules, /function tripInviteCreatable\(\)/);
-    assert.match(rules, /tripOwnedByCurrentUser\(request\.resource\.data\.tripId\)/);
-    assert.match(rules, /request\.resource\.data\.ownerId == request\.auth\.uid/);
-    assert.match(rules, /function tripInviteReadable\(\)/);
-    assert.match(rules, /resource\.data\.ownerId == request\.auth\.uid/);
-    assert.match(rules, /userEmailLower\(\) == resource\.data\.emailLower/);
+    assert.match(rules, /TEMPORAL:/);
+    assert.match(rules, /allow read: if signedIn\(\);/);
     assert.match(rules, /match \/userInvites\/{emailLower}/);
-    assert.match(rules, /request\.resource\.data\.invites is map/);
-    assert.match(rules, /recipientInviteAccessible\(emailLower\)/);
-    assert.match(rules, /pendingInviteForCurrentUser\(tripId\)/);
-    assert.match(rules, /recipientMemberCreatable\(tripId, memberId\)/);
+    assert.match(rules, /match \/mail\/{mailId}/);
+    assert.match(rules, /recipientTripAcceptanceUpdate/);
+    assert.match(rules, /request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(\['memberIds', 'updatedAt'\]\)/);
+    assert.match(rules, /allow update: if tripVisibleFromResource\(\) \|\|\s*pendingInviteForCurrentUser\(tripId\) \|\|\s*recipientTripAcceptanceUpdate\(\)/);
   });
 
   it('keeps the members page using the invite service and visible feedback', () => {
