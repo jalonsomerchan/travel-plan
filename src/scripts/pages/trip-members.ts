@@ -9,6 +9,7 @@ import {
 import type { TripInviteRecord, TripMemberRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import {
   InviteUserToTripError,
   inviteUserToTrip,
@@ -99,36 +100,74 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const shareButton = document.querySelector<HTMLButtonElement>('#invite-share-button');
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
+  const inviteSubscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentUser: User | null = null;
   let currentMembers: TripMemberRecord[] = [];
   let currentInvites: TripInviteRecord[] = [];
+
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
+
   syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
+
+  const clearSubscriptions = () => {
+    subscriptions.clear();
+    inviteSubscriptions.clear();
+  };
+
+  const resetState = () => {
+    currentTrip = null;
+    currentUser = null;
+    currentMembers = [];
+    currentInvites = [];
+  };
+
+  window.addEventListener('pagehide', clearSubscriptions, { once: true });
+
   observeSession((user) => {
+    clearSubscriptions();
+    resetState();
     currentUser = user;
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
-      if (trip) {
+
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
+        inviteSubscriptions.clear();
+        currentInvites = [];
+
+        if (!trip) {
+          renderPeople(locale, currentMembers, currentInvites);
+          return;
+        }
+
         syncTripShell(locale, trip);
         if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-        subscribeTripInvites(tripId, trip.ownerId, (invites) => {
-          currentInvites = invites;
-          renderPeople(locale, currentMembers, currentInvites);
-        });
-      }
-    });
-    subscribeTripMembers(tripId, (members) => {
-      currentMembers = members;
-      renderPeople(locale, currentMembers, currentInvites);
-    });
+
+        inviteSubscriptions.add(
+          subscribeTripInvites(tripId, trip.ownerId, (invites) => {
+            currentInvites = invites;
+            renderPeople(locale, currentMembers, currentInvites);
+          }),
+        );
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripMembers(tripId, (members) => {
+        currentMembers = members;
+        renderPeople(locale, currentMembers, currentInvites);
+      }),
+    );
   });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!currentTrip || !currentUser) return;
@@ -145,6 +184,7 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
       setButtonBusy(button, false, t('trip.invite.action'), t('trip.invite.sending'));
     }
   });
+
   shareButton?.addEventListener('click', async () => {
     if (!currentTrip || !currentUser || !form) return;
     const data = new FormData(form);
