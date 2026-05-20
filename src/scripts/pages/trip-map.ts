@@ -19,6 +19,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
 import {
@@ -181,6 +182,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   const backTripLink = document.querySelector<HTMLAnchorElement>('#map-back-trip-link');
   const calendarLink = document.querySelector<HTMLAnchorElement>('#map-calendar-link');
   const mapCanvas = document.querySelector<HTMLElement>('[data-trip-map-canvas]');
+  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let currentPoints: TripPointOfInterestRecord[] = [];
@@ -214,6 +216,12 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   addMapTools(map, t, { currentLocation: { centerOnLocation: false, locateOnLoad: true } });
 
   const markers = L.layerGroup().addTo(map);
+
+  const resetState = () => {
+    currentTrip = null;
+    currentPlans = [];
+    currentPoints = [];
+  };
 
   const syncMap = () => {
     const locatedPlans = currentPlans.filter(hasPlanLocation);
@@ -267,33 +275,44 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     requestAnimationFrame(() => fitTripMap(map, bounds));
   };
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    resetState();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
-      if (tripName) {
-        tripName.textContent = trip
-          ? `${trip.name} · ${formatTripDateRange(locale, trip)}`
-          : t('trip.notFound');
-      }
-      if (trip) {
-        syncTripShell(locale, trip);
-      }
-      syncMap();
-    });
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
+        if (tripName) {
+          tripName.textContent = trip
+            ? `${trip.name} · ${formatTripDateRange(locale, trip)}`
+            : t('trip.notFound');
+        }
+        if (trip) {
+          syncTripShell(locale, trip);
+        }
+        syncMap();
+      }),
+    );
 
-    subscribeTripPlans(tripId, (plans) => {
-      currentPlans = plans;
-      syncMap();
-    });
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        currentPlans = plans;
+        syncMap();
+      }),
+    );
 
-    subscribeTripPointsOfInterest(tripId, (points) => {
-      currentPoints = points;
-      syncMap();
-    });
+    subscriptions.add(
+      subscribeTripPointsOfInterest(tripId, (points) => {
+        currentPoints = points;
+        syncMap();
+      }),
+    );
   });
 }
