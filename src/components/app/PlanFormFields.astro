@@ -2,6 +2,7 @@
 import { useTranslations } from '../../i18n/ui';
 import type { Locale } from '../../config/site';
 import { planCategoryValues, planStatusValues } from '../../lib/app/models';
+import PlanLinksFields from './PlanLinksFields.astro';
 import PlanLocationFields from './PlanLocationFields.astro';
 
 interface Props {
@@ -51,4 +52,5 @@ const t = useTranslations(locale);
     </div>
   </div>
   <PlanLocationFields locale={locale} prefix={prefix} />
+  <PlanLinksFields locale={locale} prefix={prefix} />
 </div>

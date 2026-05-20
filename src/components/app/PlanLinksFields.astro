@@ -1,0 +1,54 @@
+---
+import { useTranslations } from '../../i18n/ui';
+import type { Locale } from '../../config/site';
+
+interface Props {
+  locale: Locale;
+  prefix: string;
+}
+
+const { locale, prefix } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<fieldset
+  class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
+  data-plan-links-fieldset
+>
+  <legend class="text-sm font-bold text-[var(--color-text)]">{t('plan.links.title')}</legend>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <p class="text-sm text-[var(--color-text-soft)]">{t('plan.links.description')}</p>
+    <button class="app-card-link" data-plan-link-add type="button">{t('plan.links.add')}</button>
+  </div>
+  <div class="mt-4 space-y-3" data-plan-links-list></div>
+  <template data-plan-link-template>
+    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3" data-plan-link-row>
+      <div class="grid gap-3 md:grid-cols-[1fr_1.4fr_auto] md:items-end">
+        <div>
+          <label class="field-label" data-plan-link-label-for>{t('plan.links.label')}</label>
+          <input
+            class="field-input"
+            data-plan-link-label-input
+            name="linkLabel"
+            placeholder={t('plan.links.labelPlaceholder')}
+          />
+        </div>
+        <div>
+          <label class="field-label" data-plan-link-url-for>{t('plan.links.url')}</label>
+          <input
+            class="field-input"
+            data-plan-link-url-input
+            inputmode="url"
+            name="linkUrl"
+            placeholder={t('plan.links.urlPlaceholder')}
+            type="text"
+          />
+        </div>
+        <button class="app-card-link" data-plan-link-remove data-variant="secondary" type="button">
+          {t('plan.links.remove')}
+        </button>
+      </div>
+    </div>
+  </template>
+  <input type="hidden" data-plan-links-prefix value={prefix} />
+</fieldset>
