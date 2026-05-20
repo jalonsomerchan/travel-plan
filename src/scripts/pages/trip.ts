@@ -18,6 +18,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
@@ -223,6 +224,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const filtersToggle = document.querySelector<HTMLButtonElement>('[data-plan-filters-toggle]');
   const filtersForm = document.querySelector<HTMLFormElement>('[data-plan-filters]');
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
   const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
@@ -266,6 +268,14 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
   const syncPlans = () => {
     renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters), geolocation);
+  };
+
+  const resetState = () => {
+    allPlans = [];
+    currentTrip = null;
+    geolocation.isLoading = false;
+    geolocation.errorKey = null;
+    geolocation.location = null;
   };
 
   const updateGeolocation = (nextState: Partial<GeolocationState>) => {
@@ -314,47 +324,62 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     filters.status = statusSelect.value;
     syncPlans();
   });
+
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    resetState();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    subscribeTrip(tripId, (trip) => {
-      if (trip) {
-        currentTrip = trip;
-        syncTripShell(locale, trip);
-        setNavigationLinkHidden('trip-luggage-link', !trip.memberIds.includes(user.uid));
-        if (accommodationMapsLink) {
-          const hasLocation = hasAccommodationLocation(trip.accommodation);
-          const mapUrl = hasLocation
-            ? getGoogleMapsPlaceUrlFromCoordinates(
-                trip.accommodation.locationLat,
-                trip.accommodation.locationLng,
-              )
-            : trip.accommodation?.locationName
-              ? getGoogleMapsPlaceUrl(trip.accommodation.locationName)
-              : '';
 
-          accommodationMapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
-          accommodationMapsLink.hidden = !mapUrl;
-          accommodationMapsLink.target = mapUrl ? '_blank' : '';
-          accommodationMapsLink.rel = mapUrl ? 'noopener noreferrer' : '';
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        if (trip) {
+          currentTrip = trip;
+          syncTripShell(locale, trip);
+          setNavigationLinkHidden('trip-luggage-link', !trip.memberIds.includes(user.uid));
+          if (accommodationMapsLink) {
+            const hasLocation = hasAccommodationLocation(trip.accommodation);
+            const mapUrl = hasLocation
+              ? getGoogleMapsPlaceUrlFromCoordinates(
+                  trip.accommodation.locationLat,
+                  trip.accommodation.locationLng,
+                )
+              : trip.accommodation?.locationName
+                ? getGoogleMapsPlaceUrl(trip.accommodation.locationName)
+                : '';
+
+            accommodationMapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
+            accommodationMapsLink.hidden = !mapUrl;
+            accommodationMapsLink.target = mapUrl ? '_blank' : '';
+            accommodationMapsLink.rel = mapUrl ? 'noopener noreferrer' : '';
+          }
+          syncPlans();
+        } else {
+          currentTrip = null;
+          setNavigationLinkHidden('trip-luggage-link', true);
+          setAppShellTitle(t('trip.notFound'));
+          setAppShellDescription('');
+          setAppShellMeta([]);
         }
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        allPlans = plans;
         syncPlans();
-      } else {
-        currentTrip = null;
-        setNavigationLinkHidden('trip-luggage-link', true);
-        setAppShellTitle(t('trip.notFound'));
-        setAppShellDescription('');
-        setAppShellMeta([]);
-      }
-    });
-    subscribeTripPlans(tripId, (plans) => {
-      allPlans = plans;
-      syncPlans();
-    });
-    subscribeTripChecklistItems(tripId, (items) => {
-      renderChecklistNotice(locale, tripId, items);
-    });
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripChecklistItems(tripId, (items) => {
+        renderChecklistNotice(locale, tripId, items);
+      }),
+    );
   });
 }
