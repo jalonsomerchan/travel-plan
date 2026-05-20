@@ -41,7 +41,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       </div>
       <form class="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" id="trip-checklist-form">
         <ChecklistItemFormFields locale={locale} prefix="trip-checklist" />
-        <Button type="submit">{t('tripChecklist.form.add')}</Button>
+        <Button type="submit">{t('tripChecklist.form.addShort')}</Button>
         <p class="text-sm text-[var(--color-text-soft)] sm:col-span-2" id="trip-checklist-message" role="status" aria-live="polite"></p>
       </form>
       <div class="mt-8 border-t border-[var(--color-border)] pt-8">
