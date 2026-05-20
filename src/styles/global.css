@@ -584,6 +584,12 @@ main {
   color: var(--color-text);
 }
 
+.leaflet-control-attribution {
+  max-width: min(34rem, calc(100vw - 1rem));
+  border-radius: 999px 0 0 0;
+  white-space: normal;
+}
+
 .map-tool-card {
   display: grid;
   max-width: min(17rem, calc(100vw - 2rem));
@@ -949,15 +955,46 @@ main {
 @media (max-width: 42rem) {
   .leaflet-top.leaflet-left,
   .leaflet-top.leaflet-right {
-    position: static;
+    position: absolute;
     display: grid;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .leaflet-top.leaflet-left {
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+
+  .leaflet-top.leaflet-right {
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
   .leaflet-top .leaflet-control {
     float: none;
     margin: 0;
+    pointer-events: auto;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    max-width: calc(100% - 1rem);
+    pointer-events: none;
+  }
+
+  .leaflet-bottom.leaflet-right .leaflet-control {
+    pointer-events: auto;
+  }
+
+  .leaflet-control-attribution {
+    max-width: calc(100vw - 1rem);
+    border-radius: 999px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.7rem;
+    line-height: 1.25;
   }
 
   .map-tool-card {
@@ -967,9 +1004,10 @@ main {
 
   .map-layer-panel,
   .map-poi-panel {
-    position: static;
+    position: absolute;
     margin-top: 0.5rem;
     min-width: 0;
-    max-height: 18rem;
+    max-height: min(16rem, calc(100vh - 13rem));
+    width: min(18rem, calc(100vw - 2rem));
   }
 }
