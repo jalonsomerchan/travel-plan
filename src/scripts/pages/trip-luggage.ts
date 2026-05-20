@@ -8,6 +8,7 @@ import {
   updateTripLuggageItem,
 } from '../../lib/firebase/luggage';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
@@ -119,6 +120,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
   const addLabel = t('tripLuggage.form.addShort');
+  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
   let currentUserId = '';
@@ -137,6 +139,15 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   syncTripNavigation(locale, tripId);
   setNavigationLinkHidden('trip-luggage-link', true);
 
+  const resetState = () => {
+    currentTrip = null;
+    currentItems = [];
+    currentUserId = '';
+    tripLoaded = false;
+    itemsLoaded = false;
+    canAccessTrip = false;
+  };
+
   const syncShell = () => {
     if (!currentTrip) {
       return;
@@ -151,7 +162,12 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     }
   };
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    resetState();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
@@ -159,48 +175,52 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
 
     currentUserId = user.uid;
 
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
-      tripLoaded = true;
-      canAccessTrip = Boolean(trip && trip.memberIds.includes(user.uid));
-      setNavigationLinkHidden('trip-luggage-link', !canAccessTrip);
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
+        tripLoaded = true;
+        canAccessTrip = Boolean(trip && trip.memberIds.includes(user.uid));
+        setNavigationLinkHidden('trip-luggage-link', !canAccessTrip);
 
-      if (trip) {
-        if (!canAccessTrip) {
-          setAppShellTitle(t('tripLuggage.title'));
-          setAppShellDescription(t('tripLuggage.privateOnly'));
-          setAppShellMeta([trip.name]);
-          privateOnly.hidden = false;
+        if (trip) {
+          if (!canAccessTrip) {
+            setAppShellTitle(t('tripLuggage.title'));
+            setAppShellDescription(t('tripLuggage.privateOnly'));
+            setAppShellMeta([trip.name]);
+            privateOnly.hidden = false;
+            privateContent.hidden = true;
+            revealAppShell();
+            return;
+          }
+
+          syncShell();
+        } else {
+          setAppShellTitle(t('trip.notFound'));
+          setAppShellDescription('');
+          setAppShellMeta([]);
+          privateOnly.hidden = true;
           privateContent.hidden = true;
           revealAppShell();
-          return;
         }
+      }),
+    );
 
-        syncShell();
-      } else {
-        setAppShellTitle(t('trip.notFound'));
-        setAppShellDescription('');
-        setAppShellMeta([]);
-        privateOnly.hidden = true;
-        privateContent.hidden = true;
-        revealAppShell();
-      }
-    });
-
-    subscribeTripLuggageItems(
-      tripId,
-      user.uid,
-      (items) => {
-        currentItems = items;
-        itemsLoaded = true;
-        renderLuggageItems(locale, items);
-        syncShell();
-      },
-      () => {
-        itemsLoaded = true;
-        setMessage(message, t('firebase.permissionDenied'), 'danger');
-        syncShell();
-      },
+    subscriptions.add(
+      subscribeTripLuggageItems(
+        tripId,
+        user.uid,
+        (items) => {
+          currentItems = items;
+          itemsLoaded = true;
+          renderLuggageItems(locale, items);
+          syncShell();
+        },
+        () => {
+          itemsLoaded = true;
+          setMessage(message, t('firebase.permissionDenied'), 'danger');
+          syncShell();
+        },
+      ),
     );
   });
 
@@ -280,7 +300,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const luggageItemId = removeButton.dataset.luggageRemove;
+    const luggageItemId = removeButton.datasetLuggageRemove;
 
     if (!luggageItemId) {
       return;
