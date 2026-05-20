@@ -1,7 +1,7 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import type { PlanInput, PlanRecord, TripRecord } from '../../lib/app/models';
 import {
   buildTripAiPrompt,
   getChatGptPromptUrl,
@@ -28,6 +28,25 @@ interface CandidateEntry extends TripAiPromptCandidate {
 
 function getCandidateId(candidate: TripAiPromptCandidate) {
   return `candidate-${candidate.sourceIndex}-${candidate.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`;
+}
+
+function toPlanInput(candidate: CandidateEntry): PlanInput {
+  return {
+    name: candidate.name,
+    description: candidate.description,
+    category: candidate.category,
+    isPaid: candidate.isPaid,
+    isBooked: candidate.isBooked,
+    isOptional: candidate.isOptional,
+    isImportant: candidate.isImportant,
+    locationName: candidate.locationName,
+    locationLat: candidate.locationLat,
+    locationLng: candidate.locationLng,
+    date: candidate.date,
+    time: candidate.time,
+    status: candidate.status,
+    links: candidate.links,
+  };
 }
 
 function renderCandidate(locale: Locale, candidate: CandidateEntry) {
@@ -193,8 +212,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
       for (const candidate of selected) {
         candidate.saving = true;
         renderCandidates();
-        const { id, selected: _selected, saving: _saving, sourceIndex: _sourceIndex, ...input } = candidate;
-        await createPlan(tripId, input);
+        await createPlan(tripId, toPlanInput(candidate));
       }
 
       candidates = candidates.filter((candidate) => !candidate.selected);
