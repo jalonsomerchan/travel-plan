@@ -14,6 +14,8 @@ import planLinksEn from './feature-translations/plan-links/en.json';
 import planLinksEs from './feature-translations/plan-links/es.json';
 import poiEn from './feature-translations/poi/en.json';
 import poiEs from './feature-translations/poi/es.json';
+import tripAiPromptEn from './feature-translations/trip-ai-prompt/en.json';
+import tripAiPromptEs from './feature-translations/trip-ai-prompt/es.json';
 import tripValidationEn from './feature-translations/trip-validation/en.json';
 import tripValidationEs from './feature-translations/trip-validation/es.json';
 
@@ -25,6 +27,7 @@ export type TranslationKey =
   | keyof typeof mapEs
   | keyof typeof planLinksEs
   | keyof typeof poiEs
+  | keyof typeof tripAiPromptEs
   | keyof typeof tripValidationEs;
 
 type TranslationDictionary = Record<string, string>;
@@ -38,6 +41,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...mapEs,
     ...planLinksEs,
     ...poiEs,
+    ...tripAiPromptEs,
     ...tripValidationEs,
   },
   en: {
@@ -48,6 +52,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...mapEn,
     ...planLinksEn,
     ...poiEn,
+    ...tripAiPromptEn,
     ...tripValidationEn,
   },
 };

@@ -5,6 +5,7 @@ export type AppView =
   | 'dashboard'
   | 'trip'
   | 'trip-plan-suggestions'
+  | 'trip-ai-prompt'
   | 'trip-create'
   | 'trip-edit'
   | 'trip-checklist'
@@ -24,6 +25,7 @@ const appPaths: Record<AppView, string> = {
   dashboard: 'app',
   trip: 'app/trip',
   'trip-plan-suggestions': 'app/trip-plan-suggestions',
+  'trip-ai-prompt': 'app/trip-ai-prompt',
   'trip-create': 'app/trip-create',
   'trip-edit': 'app/trip-edit',
   'trip-checklist': 'app/trip-checklist',

@@ -1,0 +1,244 @@
+import type { Locale } from '../../config/site';
+import {
+  planCategoryValues,
+  planStatusValues,
+  type PlanCategory,
+  type PlanInput,
+  type PlanRecord,
+  type PlanStatus,
+  type TripRecord,
+} from './models';
+import { normalizePlanLinks, validatePlanLinks } from './plan-links';
+
+export interface TripAiPromptCandidate extends PlanInput {
+  sourceIndex: number;
+}
+
+export interface TripAiPromptParseResult {
+  candidates: TripAiPromptCandidate[];
+  errorKey?: string;
+}
+
+const allowedCategories = new Set<PlanCategory>(planCategoryValues);
+const allowedStatuses = new Set<PlanStatus>(planStatusValues);
+
+function formatValue(value: string | undefined, fallback: string) {
+  return value?.trim() || fallback;
+}
+
+function formatAccommodation(trip: TripRecord, locale: Locale) {
+  const empty = locale === 'es' ? 'No configurado' : 'Not configured';
+
+  if (!trip.accommodation) {
+    return empty;
+  }
+
+  return [trip.accommodation.name, trip.accommodation.locationName]
+    .filter(Boolean)
+    .join(' · ') || empty;
+}
+
+function formatExistingPlans(plans: PlanRecord[], locale: Locale) {
+  if (plans.length === 0) {
+    return locale === 'es' ? 'Todavía no hay planes guardados.' : 'There are no saved plans yet.';
+  }
+
+  return plans
+    .map((plan) => `- ${plan.name} (${plan.category}${plan.date ? ` · ${plan.date}` : ''})`)
+    .join('\n');
+}
+
+export function buildTripAiPrompt(trip: TripRecord, plans: PlanRecord[], locale: Locale) {
+  const categories = planCategoryValues.join(', ');
+  const statuses = planStatusValues.join(', ');
+  const tripLocation = formatValue(trip.location, locale === 'es' ? 'Destino sin concretar' : 'Unknown destination');
+  const accommodation = formatAccommodation(trip, locale);
+  const existingPlans = formatExistingPlans(plans, locale);
+
+  if (locale === 'en') {
+    return `You are an expert travel planner. Create a useful itinerary for this trip and return only valid JSON, without markdown fences or extra comments.
+
+Trip data:
+- Trip name: ${trip.name}
+- Destination: ${tripLocation}
+- Accommodation: ${accommodation}
+- Dates: from ${trip.startDate} to ${trip.endDate}
+- Already saved plans, to avoid duplicates:\n${existingPlans}
+
+Return a JSON object with this exact structure:
+{
+  "plans": [
+    {
+      "name": "Short plan title",
+      "description": "Why it is worth it and practical notes",
+      "category": "visit",
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM",
+      "status": "pending",
+      "locationName": "Specific place or area",
+      "locationLat": 0,
+      "locationLng": 0,
+      "isPaid": false,
+      "isBooked": false,
+      "isOptional": false,
+      "isImportant": false,
+      "links": [{ "label": "Official website", "url": "https://example.com" }]
+    }
+  ]
+}
+
+Rules:
+- Create between 8 and 18 plans, distributed realistically across the trip dates.
+- Use only these categories: ${categories}.
+- Use only these statuses: ${statuses}. Usually use "pending".
+- Use dates within the trip range only.
+- Coordinates are optional, but include them when you are reasonably confident.
+- links is optional and must only contain http or https URLs.
+- Do not invent bookings. If something is only a recommendation, keep isBooked as false.
+- Keep titles short and descriptions useful.
+- Return only JSON.`;
+  }
+
+  return `Actúa como una IA experta en planificación de viajes. Crea una planificación útil para este viaje y devuelve solo JSON válido, sin bloques markdown ni comentarios extra.
+
+Datos del viaje:
+- Nombre del viaje: ${trip.name}
+- Destino: ${tripLocation}
+- Alojamiento: ${accommodation}
+- Fechas: del ${trip.startDate} al ${trip.endDate}
+- Planes ya guardados, para evitar duplicados:\n${existingPlans}
+
+Devuelve un objeto JSON con esta estructura exacta:
+{
+  "plans": [
+    {
+      "name": "Título corto del plan",
+      "description": "Por qué merece la pena y notas prácticas",
+      "category": "visit",
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM",
+      "status": "pending",
+      "locationName": "Lugar o zona concreta",
+      "locationLat": 0,
+      "locationLng": 0,
+      "isPaid": false,
+      "isBooked": false,
+      "isOptional": false,
+      "isImportant": false,
+      "links": [{ "label": "Web oficial", "url": "https://example.com" }]
+    }
+  ]
+}
+
+Reglas:
+- Crea entre 8 y 18 planes, repartidos de forma realista entre los días del viaje.
+- Usa solo estas categorías: ${categories}.
+- Usa solo estos estados: ${statuses}. Normalmente usa "pending".
+- Usa únicamente fechas dentro del rango del viaje.
+- Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
+- links es opcional y solo debe contener URLs http o https.
+- No inventes reservas. Si algo es una recomendación, deja isBooked como false.
+- Mantén títulos cortos y descripciones útiles.
+- Devuelve solo JSON.`;
+}
+
+export function getChatGptPromptUrl(prompt: string) {
+  return `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
+}
+
+function getString(record: Record<string, unknown>, keys: string[]) {
+  const value = keys.map((key) => record[key]).find((item) => typeof item === 'string');
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function getBoolean(record: Record<string, unknown>, key: string) {
+  return record[key] === true;
+}
+
+function getNumber(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function normalizeCategory(value: string): PlanCategory {
+  return allowedCategories.has(value as PlanCategory) ? (value as PlanCategory) : 'visit';
+}
+
+function normalizeStatus(value: string): PlanStatus {
+  return allowedStatuses.has(value as PlanStatus) ? (value as PlanStatus) : 'pending';
+}
+
+function getPlansPayload(parsed: unknown) {
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (parsed && typeof parsed === 'object' && Array.isArray((parsed as { plans?: unknown }).plans)) {
+    return (parsed as { plans: unknown[] }).plans;
+  }
+
+  return null;
+}
+
+function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate | null {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+
+  const record = item as Record<string, unknown>;
+  const name = getString(record, ['name', 'title']);
+
+  if (!name) {
+    return null;
+  }
+
+  const links = normalizePlanLinks(record.links);
+  const linksValidation = validatePlanLinks(links);
+
+  if (!linksValidation.valid) {
+    return null;
+  }
+
+  return {
+    sourceIndex: index,
+    name,
+    description: getString(record, ['description', 'notes', 'reason']),
+    category: normalizeCategory(getString(record, ['category', 'type'])),
+    date: getString(record, ['date']) || undefined,
+    time: getString(record, ['time']) || undefined,
+    status: normalizeStatus(getString(record, ['status'])),
+    locationName: getString(record, ['locationName', 'location', 'place']) || undefined,
+    locationLat: getNumber(record, 'locationLat'),
+    locationLng: getNumber(record, 'locationLng'),
+    isPaid: getBoolean(record, 'isPaid'),
+    isBooked: getBoolean(record, 'isBooked'),
+    isOptional: getBoolean(record, 'isOptional'),
+    isImportant: getBoolean(record, 'isImportant'),
+    links,
+  };
+}
+
+export function parseTripAiPromptJson(value: string): TripAiPromptParseResult {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return { candidates: [], errorKey: 'tripAiPrompt.error.invalidJson' };
+  }
+
+  const payload = getPlansPayload(parsed);
+
+  if (!payload) {
+    return { candidates: [], errorKey: 'tripAiPrompt.error.missingPlans' };
+  }
+
+  const candidates = payload
+    .map((item, index) => normalizeCandidate(item, index))
+    .filter((item): item is TripAiPromptCandidate => Boolean(item));
+
+  return {
+    candidates,
+    errorKey: candidates.length === 0 ? 'tripAiPrompt.error.noValidPlans' : undefined,
+  };
+}
