@@ -3,14 +3,15 @@ import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
 import type { PlanInput, PlanRecord, TripRecord } from '../../lib/app/models';
 import {
-  buildTripAiPrompt,
   getChatGptPromptUrl,
   parseTripAiPromptJson,
   type TripAiPromptCandidate,
 } from '../../lib/app/trip-ai-prompt';
+import { buildTripAiPromptFromWizard } from '../../lib/app/trip-ai-prompt-builder';
 import { createPlan, subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
+import { initTripAiPromptWizard } from './trip-ai-prompt-wizard';
 import {
   ensureFirebaseReady,
   getCategoryLabel,
@@ -107,6 +108,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let candidates: CandidateEntry[] = [];
+  const wizard = initTripAiPromptWizard({ locale, onChange: () => updatePrompt() });
 
   if (!tripId || !promptOutput || !importForm || !candidatesList) {
     return;
@@ -118,18 +120,18 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
 
   syncTripNavigation(locale, tripId);
 
-  const updatePrompt = () => {
+  function updatePrompt() {
     if (!currentTrip) {
       return;
     }
 
-    const prompt = buildTripAiPrompt(currentTrip, currentPlans, locale);
+    const prompt = buildTripAiPromptFromWizard(currentTrip, currentPlans, locale, wizard.getOptions());
     promptOutput.value = prompt;
 
     if (promptChatGptLink) {
       promptChatGptLink.href = getChatGptPromptUrl(prompt);
     }
-  };
+  }
 
   const renderCandidates = () => {
     const count = candidates.length;
@@ -261,6 +263,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
       }
 
       syncTripShell(locale, trip);
+      wizard.syncTrip(trip);
       updatePrompt();
     });
 
