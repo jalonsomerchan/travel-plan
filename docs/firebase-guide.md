@@ -57,6 +57,45 @@ Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nom
 - `trips/{tripId}/luggageItems/{itemId}`: lista privada de equipaje visible solo para la persona creadora del viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
 - `tripInvites/{tripId_emailLower}`: invitaciones pendientes por correo. El cliente no consulta `users` para saber si ese correo tiene cuenta; al aceptar, se asigna el `userId` del usuario autenticado.
+- `mail/{mailId}`: cola de emails compatible con Firebase Extensions Trigger Email. La app crea un documento aquí al enviar una invitación, pero el correo solo sale si la extensión `firebase/firestore-send-email` está instalada y configurada con SMTP.
+
+## Envío real de correos de invitación
+
+La app está desplegada como frontend estático, así que no puede enviar SMTP directamente. Para enviar emails reales usa la extensión oficial de Firebase `firebase/firestore-send-email`.
+
+Configuración recomendada:
+
+1. Instala la extensión Trigger Email desde Firebase console o con CLI:
+
+```sh
+firebase ext:install firebase/firestore-send-email --project=travelplan-b7ee9
+```
+
+2. Configura el proveedor SMTP en la extensión.
+3. Usa `mail` como colección de documentos de email.
+4. Despliega las reglas de Firestore:
+
+```sh
+firebase deploy --only firestore:rules
+```
+
+Al enviar una invitación, la app crea también un documento en `mail` con esta forma:
+
+```json
+{
+  "to": "persona@example.com",
+  "message": {
+    "subject": "Invitación a Lisboa en TravelPlan",
+    "text": "Texto plano del email",
+    "html": "<p>HTML del email</p>"
+  },
+  "inviteId": "tripId_persona@example.com",
+  "tripId": "tripId",
+  "ownerId": "uid"
+}
+```
+
+Las reglas solo permiten crear documentos `mail` a usuarios autenticados que sean propietarios del viaje indicado por `tripId`. No se permite leer, editar ni borrar emails desde el cliente.
 
 ## Estructura recomendada para checklist de viaje
 
@@ -103,112 +142,14 @@ Regla práctica:
 - `luggageItems` no debe ser visible para miembros invitados.
 - Solo `ownerId` del viaje puede leer o escribir esa subcolección.
 
-## Reglas sugeridas de Firestore
-
-```txt
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function signedEmail() {
-      return signedIn() && request.auth.token.email != null
-        ? lower(request.auth.token.email)
-        : '';
-    }
-
-    function tripVisibleFromResource() {
-      return signedIn() && request.auth.uid in resource.data.memberIds;
-    }
-
-    function tripVisibleFromTripData(tripData) {
-      return signedIn() && request.auth.uid in tripData.memberIds;
-    }
-
-    function tripVisibleFromParent(tripId) {
-      return tripVisibleFromTripData(
-        get(/databases/$(database)/documents/trips/$(tripId)).data
-      );
-    }
-
-    function inviteRecipient(tripId) {
-      return signedIn() && exists(
-        /databases/$(database)/documents/tripInvites/$(tripId + '_' + signedEmail())
-      ) && get(
-        /databases/$(database)/documents/tripInvites/$(tripId + '_' + signedEmail())
-      ).data.status == 'pending';
-    }
-
-    match /users/{userId} {
-      allow read, write: if signedIn() && request.auth.uid == userId;
-    }
-
-    match /trips/{tripId} {
-      allow read: if tripVisibleFromResource();
-      allow create: if signedIn() &&
-        request.resource.data.ownerId == request.auth.uid &&
-        tripVisibleFromTripData(request.resource.data);
-      allow update: if tripVisibleFromResource() || inviteRecipient(tripId);
-
-      match /members/{memberId} {
-        allow read: if tripVisibleFromParent(tripId);
-        allow create: if tripVisibleFromParent(tripId) || (
-          inviteRecipient(tripId) &&
-          memberId == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid &&
-          lower(request.resource.data.email) == signedEmail()
-        );
-        allow update, delete: if tripVisibleFromParent(tripId);
-      }
-
-      match /plans/{planId} {
-        allow read: if tripVisibleFromParent(tripId);
-        allow write: if tripVisibleFromParent(tripId);
-      }
-
-      match /checklistItems/{checklistItemId} {
-        allow read: if tripVisibleFromParent(tripId);
-        allow write: if tripVisibleFromParent(tripId);
-      }
-
-      match /luggageItems/{luggageItemId} {
-        allow read, write: if signedIn() &&
-          get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
-      }
-    }
-
-    match /tripInvites/{inviteId} {
-      allow read: if signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        signedEmail() == resource.data.emailLower
-      );
-      allow create: if signedIn() &&
-        request.resource.data.ownerId == request.auth.uid &&
-        request.resource.data.emailLower is string &&
-        request.resource.data.status == 'pending';
-      allow update: if signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        signedEmail() == resource.data.emailLower
-      );
-    }
-  }
-}
-```
-
-Regla práctica:
-
-- Para esta app, la fuente principal de acceso a un viaje es `memberIds`.
-- El owner debe estar siempre incluido también en `memberIds`.
-- Si la query del dashboard lista `trips` por `memberIds`, las reglas de lectura de `trips` deben depender solo de ese campo del propio documento.
-
 ## Flujo de invitaciones
 
 1. La persona editora introduce un correo y un rol.
 2. La app crea o reemplaza `tripInvites/{tripId_emailLower}` con `emailLower`, rol y metadatos del viaje, sin consultar `users` por correo.
-3. El usuario invitado ve sus invitaciones pendientes filtrando por su propio email autenticado.
-4. Al aceptar, la app crea `trips/{tripId}/members/{uid}`, añade el `uid` a `memberIds` y marca la invitación como aceptada.
+3. La app crea un documento `mail` con el email de invitación.
+4. La extensión Trigger Email envía el correo si está instalada y configurada.
+5. El usuario invitado ve sus invitaciones pendientes filtrando por su propio email autenticado.
+6. Al aceptar, la app crea `trips/{tripId}/members/{uid}`, añade el `uid` a `memberIds` y marca la invitación como aceptada.
 
 Este diseño evita filtrar desde cliente si un correo tiene cuenta y evita el error `Missing or insufficient permissions` provocado por intentar leer perfiles ajenos en `users`.
 
@@ -228,6 +169,8 @@ Firestore suele pedir estos índices automáticamente desde la consola. Si apare
 3. Mantén `public/CNAME` con ese dominio.
 4. Define `ASTRO_SITE`, `ASTRO_BASE=/`, `PUBLIC_REPOSITORY_URL` y todas las `PUBLIC_FIREBASE_*` como `Repository variables`.
 5. Ejecuta `npm test` y `npm run build` antes de publicar.
+6. Si cambian reglas, ejecuta `firebase deploy --only firestore:rules`.
+7. Si quieres emails reales, instala y configura `firebase/firestore-send-email` con la colección `mail`.
 
 ## Limitación importante
 
