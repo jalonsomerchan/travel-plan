@@ -44,6 +44,22 @@ service cloud.firestore {
         tripOwnedByCurrentUser(request.resource.data.tripId);
     }
 
+    function recipientInviteAccessible(emailLower) {
+      return signedIn() && userEmailLower() == emailLower;
+    }
+
+    function recipientInviteWritable(emailLower) {
+      return signedIn() && (
+        userEmailLower() == emailLower ||
+        (
+          request.resource.data.ownerId == request.auth.uid &&
+          request.resource.data.emailLower == emailLower &&
+          request.resource.data.tripId is string &&
+          tripOwnedByCurrentUser(request.resource.data.tripId)
+        )
+      );
+    }
+
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
@@ -76,6 +92,12 @@ service cloud.firestore {
       allow read: if tripInviteReadable();
       allow create: if tripInviteCreatable();
       allow update: if tripInviteReadable();
+    }
+
+    match /userInvites/{emailLower}/invites/{inviteId} {
+      allow read: if recipientInviteAccessible(emailLower);
+      allow create, update: if recipientInviteWritable(emailLower);
+      allow delete: if false;
     }
   }
 }
