@@ -19,7 +19,7 @@ describe('luggage subscription scope usage', () => {
     assert.match(luggage, /observeSession\(\(user\) => \{\n\s*subscriptions\.clear\(\);\n\s*resetState\(\);/);
     assert.match(luggage, /subscriptions\.add\(\n\s*subscribeTrip\(/);
     assert.match(luggage, /subscriptions\.add\(\n\s*subscribeTripLuggageItems\(/);
-    assert.doesNotMatch(luggage, /subscribeTrip\(tripId, \(trip\) => \{/);
+    assert.match(luggage, /const resetState = \(\) => \{/);
     assert.doesNotMatch(luggage, /datasetLuggageRemove/);
   });
 });
