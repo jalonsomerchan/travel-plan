@@ -300,7 +300,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const luggageItemId = removeButton.datasetLuggageRemove;
+    const luggageItemId = removeButton.dataset.luggageRemove;
 
     if (!luggageItemId) {
       return;
