@@ -5,6 +5,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function userEmailLower() {
+      return lower(request.auth.token.email);
+    }
+
     function tripVisibleFromResource() {
       return signedIn() && request.auth.uid in resource.data.memberIds;
     }
@@ -22,6 +26,22 @@ service cloud.firestore {
     function tripOwnedByCurrentUser(tripId) {
       return signedIn() &&
         get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
+    }
+
+    function tripInviteReadable() {
+      return signedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        userEmailLower() == resource.data.emailLower
+      );
+    }
+
+    function tripInviteCreatable() {
+      return signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.tripId is string &&
+        request.resource.data.emailLower is string &&
+        request.resource.data.status == 'pending' &&
+        tripOwnedByCurrentUser(request.resource.data.tripId);
     }
 
     match /users/{userId} {
@@ -53,15 +73,9 @@ service cloud.firestore {
     }
 
     match /tripInvites/{inviteId} {
-      allow read: if signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        lower(request.auth.token.email) == resource.data.emailLower
-      );
-      allow create: if signedIn();
-      allow update: if signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        lower(request.auth.token.email) == resource.data.emailLower
-      );
+      allow read: if tripInviteReadable();
+      allow create: if tripInviteCreatable();
+      allow update: if tripInviteReadable();
     }
   }
 }
