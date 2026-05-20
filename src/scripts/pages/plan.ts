@@ -8,6 +8,7 @@ import {
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
 import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-links';
+import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { deletePlan, subscribePlan } from '../../lib/firebase/plans';
@@ -38,6 +39,27 @@ const accommodationMarkerIcon = L.divIcon({
   popupAnchor: [0, -38],
 });
 
+function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElement | null, planLinks: { label: string; url: string }[]) {
+  const safeLinks = planLinks.filter((link) => isSafeExternalPlanUrl(link.url));
+
+  if (!linksSection || !linksList) {
+    return;
+  }
+
+  linksSection.hidden = safeLinks.length === 0;
+  linksList.innerHTML = safeLinks
+    .map(
+      (link) => `
+        <li>
+          <a class="app-card-link" data-variant="secondary" href="${escapeHtml(link.url)}" rel="noopener noreferrer" target="_blank">
+            ${escapeHtml(link.label || link.url)}
+          </a>
+        </li>
+      `,
+    )
+    .join('');
+}
+
 export function mountPlanPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
   const tripId = params.get('trip') ?? '';
@@ -45,6 +67,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const description = document.querySelector<HTMLElement>('[data-plan-description]');
   const mapSection = document.querySelector<HTMLElement>('[data-plan-map-section]');
   const mapTarget = document.querySelector<HTMLElement>('[data-plan-map]');
+  const linksSection = document.querySelector<HTMLElement>('[data-plan-links-section]');
+  const linksList = document.querySelector<HTMLElement>('[data-plan-links-list]');
   const editLink = document.querySelector<HTMLAnchorElement>('#plan-edit-link');
   const visibleEditLink = document.querySelector<HTMLAnchorElement>('[data-plan-edit-visible-link]');
   const deleteButton = document.querySelector<HTMLButtonElement>('[data-plan-delete-button]');
@@ -91,6 +115,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         if (!plan) return;
         syncPlanShell(locale, trip, plan);
         description.textContent = plan.description || t('plan.descriptionEmpty');
+        renderPlanLinks(linksSection, linksList, plan.links);
 
         if (map) {
           map.remove();

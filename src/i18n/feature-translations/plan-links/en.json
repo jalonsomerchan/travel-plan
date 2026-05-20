@@ -1,0 +1,13 @@
+{
+  "plan.links.title": "Related links",
+  "plan.links.description": "Add bookings, tickets, menus, official websites or any useful link for this plan.",
+  "plan.links.add": "Add link",
+  "plan.links.remove": "Remove link",
+  "plan.links.label": "Link label",
+  "plan.links.url": "Link URL",
+  "plan.links.labelPlaceholder": "E.g. Booking, tickets or official website",
+  "plan.links.urlPlaceholder": "Full link URL",
+  "plan.links.empty": "This plan does not have related links yet.",
+  "plan.links.open": "Open link",
+  "plan.links.invalidUrl": "Links must use a complete and safe URL starting with http or https."
+}
