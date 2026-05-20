@@ -3,6 +3,7 @@ import type { Locale } from '../../config/site';
 import { useTranslations } from '../../i18n/ui';
 import { planCategoryValues } from '../../lib/app/models';
 import Button from '../Button.astro';
+import TripAiPromptWizardResult from './TripAiPromptWizardResult.astro';
 
 interface Props {
   locale: Locale;
@@ -14,10 +15,11 @@ const steps = [
   t('tripAiPrompt.wizard.context'),
   t('tripAiPrompt.wizard.planStyle'),
   t('tripAiPrompt.wizard.access'),
+  t('tripAiPrompt.wizard.result'),
 ];
 ---
 
-<section class="space-y-5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5 md:p-6" aria-labelledby="trip-ai-prompt-wizard-title">
+<section class="space-y-5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 md:p-6" aria-labelledby="trip-ai-prompt-wizard-title">
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <span class="eyebrow">{t('tripAiPrompt.wizard.eyebrow')}</span>
@@ -31,16 +33,18 @@ const steps = [
     <span class="status-pill" data-tone="primary">{t('tripAiPrompt.prompt.badge')}</span>
   </div>
 
-  <div class="grid gap-3 sm:grid-cols-3">
-    {steps.map((label, index) => (
-      <article class="wizard-step-chip" data-trip-ai-prompt-step-chip data-active={index === 0 ? 'true' : 'false'}>
-        <span class="wizard-step-chip-index">{index + 1}</span>
-        <strong class="wizard-step-chip-label">{label}</strong>
-      </article>
-    ))}
+  <div class="-mx-4 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0" aria-label={t('tripAiPrompt.wizard.stepsLabel')}>
+    <div class="flex min-w-max gap-2 md:grid md:min-w-0 md:grid-cols-4 md:gap-3">
+      {steps.map((label, index) => (
+        <article class="wizard-step-chip min-w-32 px-3 py-2 text-xs md:min-w-0 md:text-sm" data-trip-ai-prompt-step-chip data-active={index === 0 ? 'true' : 'false'}>
+          <span class="wizard-step-chip-index">{index + 1}</span>
+          <strong class="wizard-step-chip-label whitespace-nowrap md:whitespace-normal">{label}</strong>
+        </article>
+      ))}
+    </div>
   </div>
 
-  <form class="space-y-5" id="trip-ai-prompt-wizard">
+  <div class="space-y-5" id="trip-ai-prompt-wizard">
     <section class="space-y-4" data-trip-ai-prompt-step="0">
       <div>
         <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '1')}</span>
@@ -137,6 +141,15 @@ const steps = [
       </div>
     </section>
 
+    <section class="space-y-4" data-trip-ai-prompt-step="3" hidden>
+      <div>
+        <span class="eyebrow">{t('tripAi.form.stepLabel').replace('{number}', '4')}</span>
+        <h3 class="mt-3 text-xl font-black text-[var(--color-text)]">{t('tripAiPrompt.wizard.resultTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.wizard.resultHelper')}</p>
+      </div>
+      <TripAiPromptWizardResult locale={locale} />
+    </section>
+
     <p class="text-sm text-[var(--color-text-soft)]" id="trip-ai-prompt-wizard-message">
       {t('tripAiPrompt.wizard.helper')}
     </p>
@@ -144,5 +157,5 @@ const steps = [
       <Button id="trip-ai-prompt-prev-step" type="button" variant="ghost">{t('tripAi.form.previous')}</Button>
       <Button id="trip-ai-prompt-next-step" type="button" variant="secondary">{t('tripAi.form.next')}</Button>
     </div>
-  </form>
+  </div>
 </section>

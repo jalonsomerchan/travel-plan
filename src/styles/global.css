@@ -354,6 +354,15 @@ main {
   color: var(--color-text);
 }
 
+.app-actions-menu-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
 .app-actions-menu-link:hover {
   background: var(--color-surface-soft);
 }

@@ -117,6 +117,10 @@ export function getPlanStatusTone(status: PlanStatus) {
     return 'success';
   }
 
+  if (status === 'proposed') {
+    return 'warning';
+  }
+
   if (status === 'discarded') {
     return 'danger';
   }

@@ -9,6 +9,7 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
+import type { PlanStatus } from '../../lib/app/models';
 import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import { getFirstPlanLink, isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
@@ -16,7 +17,7 @@ import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
-import { subscribeTripPlans } from '../../lib/firebase/plans';
+import { deletePlan, subscribeTripPlans, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
@@ -72,8 +73,6 @@ function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
 }
 
 function getAccommodationDistanceLabel(locale: Locale, trip: TripRecord | null, plan: PlanRecord) {
-  const t = getPageTranslator(locale);
-
   if (!trip?.accommodation || !hasPlanLocation(plan) || !hasAccommodationLocation(trip.accommodation)) {
     return '';
   }
@@ -85,7 +84,7 @@ function getAccommodationDistanceLabel(locale: Locale, trip: TripRecord | null, 
     plan.locationLng,
   );
 
-  return `${t('accommodation.distanceLabel')}: ${formatDistance(distanceKm, locale)}`;
+  return formatDistance(distanceKm, locale);
 }
 
 function getCurrentLocationDistanceLabel(
@@ -118,6 +117,41 @@ function renderFirstPlanLink(locale: Locale, plan: PlanRecord) {
   return `<span class="mt-3 inline-flex text-sm font-semibold text-[var(--color-primary)]">↗ ${escapeHtml(link.label || t('plan.links.open'))}</span>`;
 }
 
+function getPlanDateLabel(locale: Locale, plan: PlanRecord) {
+  return formatPlanMoment(plan, locale) || getPageTranslator(locale)('trip.planCard.noDate');
+}
+
+function getPlanDistanceLabel(
+  locale: Locale,
+  trip: TripRecord | null,
+  geolocation: GeolocationState,
+  plan: PlanRecord,
+) {
+  return (
+    getCurrentLocationDistanceLabel(locale, geolocation.location, plan) ||
+    getAccommodationDistanceLabel(locale, trip, plan)
+  );
+}
+
+function getStatusChangeMenuItems(locale: Locale, plan: PlanRecord) {
+  const t = getPageTranslator(locale);
+  const items: Array<{ label: string; status: PlanStatus }> = [];
+
+  if (plan.status !== 'proposed') {
+    items.push({ label: t('trip.planCard.markProposed'), status: 'proposed' });
+  }
+
+  if (plan.status !== 'pending') {
+    items.push({ label: t('trip.planCard.markPending'), status: 'pending' });
+  }
+
+  if (plan.status !== 'visited') {
+    items.push({ label: t('trip.planCard.markVisited'), status: 'visited' });
+  }
+
+  return items;
+}
+
 function syncCurrentLocationAction(plans: PlanRecord[], geolocation: GeolocationState) {
   const button = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
 
@@ -148,27 +182,56 @@ function renderPlans(
     ${plans.map((plan) => {
       const description = plan.description?.trim();
       const categoryLabel = getCategoryLabel(locale, plan.category);
-      const accommodationDistance = getAccommodationDistanceLabel(locale, trip, plan);
-      const currentLocationDistance = getCurrentLocationDistanceLabel(locale, geolocation.location, plan);
+      const dateLabel = getPlanDateLabel(locale, plan);
+      const distanceLabel = getPlanDistanceLabel(locale, trip, geolocation, plan);
+      const menuItems = getStatusChangeMenuItems(locale, plan);
+      const planUrl = getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id });
+      const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id });
 
       return `
-        <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
-              </div>
-              <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)}</p>
+        <article class="app-card-shell">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <a class="block" href="${planUrl}">
+                <div class="flex items-center gap-2">
+                  <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+                  <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
+                </div>
+              </a>
+              ${description ? `<p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(description)}</p>` : ''}
             </div>
-            <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+            <div class="flex shrink-0 items-start gap-2">
+              <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+              <details class="app-actions-menu">
+                <summary aria-label="${escapeHtml(t('trip.planCard.actions'))}" class="app-actions-menu-trigger" title="${escapeHtml(t('trip.planCard.actions'))}">
+                  ...
+                </summary>
+                <div class="app-actions-menu-panel">
+                  ${menuItems
+                    .map(
+                      (item) => `
+                        <button class="app-actions-menu-link app-actions-menu-button" data-plan-status-action="${item.status}" data-plan-id="${escapeHtml(plan.id)}" type="button">
+                          ${escapeHtml(item.label)}
+                        </button>`,
+                    )
+                    .join('')}
+                  <a class="app-actions-menu-link" href="${planEditUrl}">
+                    ${escapeHtml(t('common.edit'))}
+                  </a>
+                  <button class="app-actions-menu-link app-actions-menu-button" data-plan-delete-action="${escapeHtml(plan.id)}" type="button">
+                    ${escapeHtml(t('common.delete'))}
+                  </button>
+                </div>
+              </details>
+            </div>
           </div>
-          ${description ? `<p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(description)}</p>` : ''}
-          <p class="mt-4 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
-          ${currentLocationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">📍 ${escapeHtml(currentLocationDistance)}</p>` : ''}
-          ${accommodationDistance ? `<p class="mt-2 text-sm font-semibold text-[var(--color-primary)]">${escapeHtml(accommodationDistance)}</p>` : ''}
+          <div class="mt-4 grid gap-2 text-sm text-[var(--color-text-soft)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+            <p class="min-w-0"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>
+            <p class="min-w-0"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
+            <p class="min-w-0 sm:text-right"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
+          </div>
           ${renderFirstPlanLink(locale, plan)}
-        </a>
+        </article>
       `;
     }).join('')}
   `;
@@ -218,6 +281,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const aiInlineLink = document.querySelector<HTMLAnchorElement>('#trip-ai-inline-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
   const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
+  const planList = document.querySelector<HTMLElement>('[data-plan-list]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
   const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
@@ -327,6 +391,51 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
   window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
 
+  planList?.addEventListener('click', async (event) => {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const statusButton = target.closest<HTMLElement>('[data-plan-status-action]');
+
+    if (statusButton) {
+      const planId = statusButton.dataset.planId ?? '';
+      const nextStatus = statusButton.dataset.planStatusAction as PlanStatus | undefined;
+      const plan = allPlans.find((item) => item.id === planId);
+
+      if (!planId || !nextStatus || !plan) {
+        return;
+      }
+
+      try {
+        await updatePlan(tripId, planId, { ...plan, status: nextStatus });
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : t('trip.planCard.statusError'));
+      }
+
+      return;
+    }
+
+    const deleteButton = target.closest<HTMLElement>('[data-plan-delete-action]');
+
+    if (!deleteButton) {
+      return;
+    }
+
+    const planId = deleteButton.dataset.planDeleteAction ?? '';
+
+    if (!planId || !window.confirm(t('plan.deleteConfirm'))) {
+      return;
+    }
+
+    try {
+      await deletePlan(tripId, planId);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : t('plan.deleteError'));
+    }
+  });
   observeSession((user) => {
     subscriptions.clear();
     resetState();

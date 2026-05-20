@@ -16,66 +16,6 @@ const t = useTranslations(locale);
 <div class="space-y-8 pt-6">
   <TripAiPromptWizard locale={locale} />
 
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]">
-    <section class="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5 md:p-6" aria-labelledby="trip-ai-prompt-title">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <span class="eyebrow">{t('tripAiPrompt.prompt.eyebrow')}</span>
-          <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]" id="trip-ai-prompt-title">
-            {t('tripAiPrompt.prompt.title')}
-          </h2>
-        </div>
-        <span class="status-pill" data-tone="primary">{t('tripAiPrompt.prompt.badge')}</span>
-      </div>
-      <p class="text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.prompt.helper')}</p>
-      <div>
-        <label class="field-label" for="trip-ai-prompt-output">{t('tripAiPrompt.prompt.label')}</label>
-        <textarea
-          class="field-textarea min-h-96 font-mono text-xs leading-relaxed"
-          data-trip-ai-prompt-output
-          id="trip-ai-prompt-output"
-          readonly
-          spellcheck="false"
-        >{t('common.loading')}</textarea>
-      </div>
-      <div class="flex flex-wrap gap-3">
-        <Button data-trip-ai-prompt-copy type="button">{t('tripAiPrompt.prompt.copy')}</Button>
-        <Button data-trip-ai-prompt-chatgpt href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank" variant="secondary">
-          {t('tripAiPrompt.prompt.openChatGpt')}
-        </Button>
-      </div>
-      <p class="text-sm text-[var(--color-text-soft)]" data-trip-ai-prompt-message>
-        {t('tripAiPrompt.prompt.copyHelper')}
-      </p>
-    </section>
-
-    <section class="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-5 md:p-6" aria-labelledby="trip-ai-json-title">
-      <div>
-        <span class="eyebrow">{t('tripAiPrompt.import.eyebrow')}</span>
-        <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]" id="trip-ai-json-title">
-          {t('tripAiPrompt.import.title')}
-        </h2>
-      </div>
-      <p class="text-sm text-[var(--color-text-soft)]">{t('tripAiPrompt.import.helper')}</p>
-      <form class="space-y-4" data-trip-ai-import-form>
-        <div>
-          <label class="field-label" for="trip-ai-json-input">{t('tripAiPrompt.import.label')}</label>
-          <textarea
-            class="field-textarea min-h-64 font-mono text-xs leading-relaxed"
-            id="trip-ai-json-input"
-            name="json"
-            placeholder={t('tripAiPrompt.import.placeholder')}
-            spellcheck="false"
-          ></textarea>
-        </div>
-        <Button type="submit" variant="secondary">{t('tripAiPrompt.import.parse')}</Button>
-      </form>
-      <p class="text-sm text-[var(--color-text-soft)]" data-trip-ai-import-message>
-        {t('tripAiPrompt.import.empty')}
-      </p>
-    </section>
-  </div>
-
   <section class="border-t border-[var(--color-border)] pt-8" aria-labelledby="trip-ai-candidates-title">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
