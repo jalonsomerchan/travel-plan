@@ -18,6 +18,7 @@ const updatedTripPages = [
   'src/components/pages/TripMembersPage.astro',
   'src/components/pages/TripMapPage.astro',
   'src/components/pages/TripPoisPage.astro',
+  'src/components/pages/TripPlanSuggestionsPage.astro',
   'src/components/pages/PlanPage.astro',
   'src/components/pages/PlanCreatePage.astro',
   'src/components/pages/PlanEditPage.astro',
