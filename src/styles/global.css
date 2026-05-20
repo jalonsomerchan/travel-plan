@@ -100,6 +100,12 @@ body {
   line-height: 1.6;
 }
 
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -953,6 +959,16 @@ main {
 }
 
 @media (max-width: 42rem) {
+  input,
+  select,
+  textarea,
+  .field-input,
+  .field-select,
+  .field-textarea,
+  .map-tool-select {
+    font-size: 16px;
+  }
+
   .leaflet-top.leaflet-left,
   .leaflet-top.leaflet-right {
     position: absolute;
