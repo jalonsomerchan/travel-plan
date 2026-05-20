@@ -9,6 +9,7 @@ import {
   updateTripChecklistItem,
 } from '../../lib/firebase/checklists';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
@@ -118,6 +119,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
   const addLabel = t('tripChecklist.form.addShort');
+  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
   let tripLoaded = false;
@@ -152,32 +154,44 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     }
   };
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    currentTrip = null;
+    currentItems = [];
+    tripLoaded = false;
+    itemsLoaded = false;
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
-      tripLoaded = true;
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
+        tripLoaded = true;
 
-      if (trip) {
+        if (trip) {
+          syncShell();
+        } else {
+          setAppShellTitle(t('trip.notFound'));
+          setAppShellDescription('');
+          setAppShellMeta([]);
+          revealAppShell();
+        }
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripChecklistItems(tripId, (items) => {
+        currentItems = items;
+        itemsLoaded = true;
+        renderChecklistItems(locale, items);
         syncShell();
-      } else {
-        setAppShellTitle(t('trip.notFound'));
-        setAppShellDescription('');
-        setAppShellMeta([]);
-        revealAppShell();
-      }
-    });
-
-    subscribeTripChecklistItems(tripId, (items) => {
-      currentItems = items;
-      itemsLoaded = true;
-      renderChecklistItems(locale, items);
-      syncShell();
-    });
+      }),
+    );
   });
 
   form.addEventListener('submit', async (event) => {
