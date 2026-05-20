@@ -1,5 +1,12 @@
 {
   "dashboard.pendingInvites": "Tienes {count} invitaciones pendientes.",
   "dashboard.goInvitesWithCount": "Invitaciones ({count})",
-  "dashboard.invitesError": "No se han podido cargar las invitaciones. Revisa que hayas iniciado sesión con el mismo correo invitado y que las reglas de Firestore estén publicadas."
+  "dashboard.invitesError": "No se han podido cargar las invitaciones. Revisa que hayas iniciado sesión con el mismo correo invitado y que las reglas de Firestore estén publicadas.",
+  "trip.invite.pendingStatus": "Pendiente",
+  "trip.invite.pendingListTitle": "Invitaciones pendientes",
+  "trip.invite.pendingEmpty": "Todavía no hay invitaciones pendientes.",
+  "trip.invite.shareAction": "Compartir",
+  "trip.invite.shareSuccess": "Invitación creada. Elige dónde compartirla.",
+  "trip.invite.shareFallback": "Invitación creada. Se ha abierto un correo para compartirla.",
+  "trip.invite.shareUnsupported": "Tu navegador no permite compartir directamente. Copia el enlace de invitaciones y envíaselo a la persona invitada."
 }
