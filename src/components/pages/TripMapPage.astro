@@ -34,18 +34,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
-    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+    <div slot="body" class="pt-6">
       <div class="min-w-0">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]" data-map-trip-name aria-live="polite">
-              <span class="sr-only">{t('common.loading')}</span>
-            </p>
-            <h2 class="mt-3 text-3xl font-black">{t('map.canvasTitle')}</h2>
-          </div>
+        <div class="flex justify-end">
           <span class="status-pill" data-tone="primary" data-map-count>0</span>
         </div>
-        <div class="mt-6 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
+        <div class="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
           <div class="trip-map-canvas trip-map-canvas--wide" data-trip-map-canvas aria-label={t('map.canvasTitle')}></div>
         </div>
       </div>
