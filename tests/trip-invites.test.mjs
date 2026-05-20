@@ -19,7 +19,8 @@ describe('trip invite flow', () => {
 
     assert.match(source, /import type \{ User \} from 'firebase\/auth'/);
     assert.doesNotMatch(inviteFunction, /getDoc\(/);
-    assert.match(inviteFunction, /setDoc\(doc\(db, 'tripInvites'/);
+    assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites'/);
+    assert.match(inviteFunction, /setDoc\(inviteRef/);
     assert.match(inviteFunction, /getInviteId\(tripId, normalizedEmail\)/);
     assert.match(inviteFunction, /status:\s*'pending'/);
   });
