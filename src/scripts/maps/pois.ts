@@ -98,8 +98,8 @@ function positionPortalPanel(panel: HTMLElement, trigger: HTMLElement) {
 
   panel.style.position = 'fixed';
   panel.style.right = 'auto';
+  panel.style.width = `${panelWidth}px`;
   panel.style.zIndex = '10000';
-  panel.style.setProperty('--map-poi-panel-width', `${panelWidth}px`);
   panel.style.left = `${left}px`;
   panel.style.top = `${top}px`;
 }
