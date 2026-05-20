@@ -4,8 +4,10 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
+  query,
   serverTimestamp,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import type { ChecklistItemInput, ChecklistItemRecord } from '../app/models';
 import { getFirebaseDb } from './config';
@@ -29,11 +31,12 @@ function mapLuggageItemRecord(snapshot: { id: string; data: () => Record<string,
 
 export function subscribeTripLuggageItems(
   tripId: string,
+  userId: string,
   callback: (items: ChecklistItemRecord[]) => void,
   onError?: (error: Error) => void,
 ) {
   const db = getFirebaseDb();
-  const luggageRef = collection(db, 'trips', tripId, 'luggageItems');
+  const luggageRef = query(collection(db, 'trips', tripId, 'luggageItems'), where('ownerId', '==', userId));
 
   return onSnapshot(
     luggageRef,
@@ -57,10 +60,11 @@ export function subscribeTripLuggageItems(
   );
 }
 
-export async function createTripLuggageItem(tripId: string, input: ChecklistItemInput) {
+export async function createTripLuggageItem(tripId: string, userId: string, input: ChecklistItemInput) {
   const db = getFirebaseDb();
   const luggageItemRef = await addDoc(collection(db, 'trips', tripId, 'luggageItems'), {
     ...getLuggageItemWriteData(input),
+    ownerId: userId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

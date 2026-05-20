@@ -108,7 +108,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   let currentItems: ChecklistItemRecord[] = [];
   let tripLoaded = false;
   let itemsLoaded = false;
-  let isOwner = false;
+  let canAccessTrip = false;
 
   if (!tripId || !form || !list || !privateOnly || !privateContent) {
     return;
@@ -128,13 +128,6 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
 
     syncLuggageShell(locale, currentTrip);
 
-    if (!isOwner && tripLoaded) {
-      privateOnly.hidden = false;
-      privateContent.hidden = true;
-      revealAppShell();
-      return;
-    }
-
     if (tripLoaded && itemsLoaded) {
       privateOnly.hidden = true;
       privateContent.hidden = false;
@@ -151,14 +144,18 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     subscribeTrip(tripId, (trip) => {
       currentTrip = trip;
       tripLoaded = true;
-      isOwner = Boolean(trip && trip.ownerId === user.uid);
-      setNavigationLinkHidden('trip-luggage-link', !isOwner);
+      canAccessTrip = Boolean(trip && trip.memberIds.includes(user.uid));
+      setNavigationLinkHidden('trip-luggage-link', !canAccessTrip);
 
       if (trip) {
-        if (!isOwner) {
+        if (!canAccessTrip) {
           setAppShellTitle(t('tripLuggage.title'));
           setAppShellDescription(t('tripLuggage.privateOnly'));
           setAppShellMeta([trip.name]);
+          privateOnly.hidden = false;
+          privateContent.hidden = true;
+          revealAppShell();
+          return;
         }
 
         syncShell();
@@ -174,6 +171,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
 
     subscribeTripLuggageItems(
       tripId,
+      user.uid,
       (items) => {
         currentItems = items;
         itemsLoaded = true;
@@ -181,12 +179,6 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
         syncShell();
       },
       () => {
-        if (!isOwner && tripLoaded) {
-          itemsLoaded = true;
-          syncShell();
-          return;
-        }
-
         itemsLoaded = true;
         setMessage(message, t('firebase.permissionDenied'), 'danger');
         syncShell();
@@ -197,7 +189,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    if (!isOwner) {
+    if (!canAccessTrip) {
       setMessage(message, t('tripLuggage.privateOnly'), 'danger');
       return;
     }
@@ -212,7 +204,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     setButtonBusy(button, true, t('tripLuggage.form.add'), t('common.saving'));
 
     try {
-      await createTripLuggageItem(tripId, {
+      await createTripLuggageItem(tripId, user.uid, {
         title,
         status: 'pending',
       });
@@ -226,7 +218,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   });
 
   list.addEventListener('change', async (event) => {
-    if (!isOwner) {
+    if (!canAccessTrip) {
       return;
     }
 
@@ -260,7 +252,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   });
 
   list.addEventListener('click', async (event) => {
-    if (!isOwner) {
+    if (!canAccessTrip) {
       return;
     }
 

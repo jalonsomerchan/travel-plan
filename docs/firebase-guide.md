@@ -54,7 +54,7 @@ Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nom
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
 - `trips/{tripId}/checklistItems/{itemId}`: checklist pequeña de preparación asociada al viaje.
-- `trips/{tripId}/luggageItems/{itemId}`: lista privada de equipaje visible solo para la persona creadora del viaje.
+- `trips/{tripId}/luggageItems/{itemId}`: lista privada de equipaje por persona dentro del viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
 - `tripInvites/{tripId_emailLower}`: invitaciones pendientes por correo. El cliente no consulta `users` para saber si ese correo tiene cuenta; al aceptar, se asigna el `userId` del usuario autenticado.
 
@@ -79,14 +79,15 @@ Campos esperados:
 
 Mantener esta estructura pequeña evita mezclar lógica de preparación con la de `plans`, que ya tiene fechas, ubicaciones y categorías propias.
 
-## Estructura recomendada para equipaje privado
+## Estructura recomendada para equipaje privado por persona
 
-La lista de equipaje debe seguir la misma estructura que la checklist, pero en una colección separada y privada para la persona propietaria del viaje.
+La lista de equipaje debe seguir la misma estructura que la checklist, pero en una colección separada donde cada documento pertenece a una persona del viaje.
 
 Documento por ítem en `trips/{tripId}/luggageItems/{itemId}`:
 
 ```json
 {
+  "ownerId": "uid-del-usuario",
   "title": "Pasaporte",
   "status": "pending"
 }
@@ -94,14 +95,16 @@ Documento por ítem en `trips/{tripId}/luggageItems/{itemId}`:
 
 Campos esperados:
 
+- `ownerId`: uid de la persona que ha creado el elemento.
 - `title`: texto corto visible en la UI.
 - `status`: `pending` o `completed`.
 - `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
 
 Regla práctica:
 
-- `luggageItems` no debe ser visible para miembros invitados.
-- Solo `ownerId` del viaje puede leer o escribir esa subcolección.
+- `luggageItems` solo debe ser accesible para miembros del viaje.
+- Cada miembro solo puede leer, crear, modificar o eliminar documentos con `ownerId` igual a su uid.
+- Las consultas de cliente deben filtrar por `ownerId` para que Firestore pueda validar la privacidad por documento.
 
 ## Reglas sugeridas de Firestore
 
@@ -174,8 +177,15 @@ service cloud.firestore {
       }
 
       match /luggageItems/{luggageItemId} {
-        allow read, write: if signedIn() &&
-          get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
+        allow read: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid;
+        allow create: if tripVisibleFromParent(tripId) &&
+          request.resource.data.ownerId == request.auth.uid;
+        allow update: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid &&
+          request.resource.data.ownerId == request.auth.uid;
+        allow delete: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid;
       }
     }
 

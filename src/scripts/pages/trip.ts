@@ -296,7 +296,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
       if (trip) {
         currentTrip = trip;
         syncTripShell(locale, trip);
-        setNavigationLinkHidden('trip-luggage-link', trip.ownerId !== user.uid);
+        setNavigationLinkHidden('trip-luggage-link', !trip.memberIds.includes(user.uid));
         if (accommodationMapsLink) {
           const hasLocation = hasAccommodationLocation(trip.accommodation);
           const mapUrl = hasLocation

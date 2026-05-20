@@ -85,7 +85,15 @@ service cloud.firestore {
       }
 
       match /luggageItems/{luggageItemId} {
-        allow read, write: if tripOwnedByCurrentUser(tripId);
+        allow read: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid;
+        allow create: if tripVisibleFromParent(tripId) &&
+          request.resource.data.ownerId == request.auth.uid;
+        allow update: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid &&
+          request.resource.data.ownerId == request.auth.uid;
+        allow delete: if tripVisibleFromParent(tripId) &&
+          resource.data.ownerId == request.auth.uid;
       }
     }
 
