@@ -1,7 +1,8 @@
 ---
 import PublicInfoPage from '../../components/pages/PublicInfoPage.astro';
 import { defaultLocale } from '../../config/site';
-import { getPublicPageBySlug, getPublicPages } from '../../data/public-pages';
+import { getPublicPages } from '../../data/public-pages';
+import { getPublicPageBySlug } from '../../data/public-page-routing';
 
 export function getStaticPaths() {
   return getPublicPages(defaultLocale).map((page) => ({
