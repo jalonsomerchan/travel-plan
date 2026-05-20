@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import { buildInviteEmail } from '../app/invite-email';
 import type {
   TripAccommodationRecord,
   TripInput,
@@ -203,6 +204,8 @@ export async function inviteUserToTrip(
   tripEndDate: string,
   email: string,
   role: TripMemberRole,
+  locale = 'es',
+  roleLabel = role,
 ) {
   const db = getFirebaseDb();
   const cleanEmail = email.trim();
@@ -218,6 +221,15 @@ export async function inviteUserToTrip(
   }
 
   const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
+  const inviteUrl = `${window.location.origin}${window.location.pathname.startsWith('/en/') ? '/en' : ''}${window.location.pathname.includes('/app/') ? '' : ''}${window.location.pathname.startsWith('/en/') ? '/app/trip-invites/' : '/app/trip-invites/'}`;
+  const inviteEmail = buildInviteEmail({
+    inviteUrl,
+    locale: locale === 'en' ? 'en' : 'es',
+    ownerEmail: user.email ?? '',
+    role,
+    roleLabel,
+    tripName,
+  });
 
   await setDoc(inviteRef, {
     tripId,
@@ -233,6 +245,15 @@ export async function inviteUserToTrip(
     status: 'pending',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  });
+
+  await addDoc(collection(db, 'mail'), {
+    to: cleanEmail,
+    message: inviteEmail,
+    inviteId: inviteRef.id,
+    tripId,
+    ownerId: user.uid,
+    createdAt: serverTimestamp(),
   });
 }
 
