@@ -28,4 +28,15 @@ describe('Firebase subscription scope helper', () => {
     assert.match(helper, /unsubscribe\(\)/);
     assert.match(helper, /unsubscribers\.clear\(\)/);
   });
+
+  it('is used by the checklist page to avoid duplicate active listeners', () => {
+    const checklist = readText('src/scripts/pages/trip-checklist.ts');
+
+    assert.match(checklist, /createSubscriptionScope/);
+    assert.match(checklist, /const subscriptions = createSubscriptionScope\(\)/);
+    assert.match(checklist, /window\.addEventListener\('pagehide', \(\) => subscriptions\.clear\(\), \{ once: true \}\)/);
+    assert.match(checklist, /observeSession\(\(user\) => \{\n\s*subscriptions\.clear\(\)/);
+    assert.match(checklist, /subscriptions\.add\(\n\s*subscribeTrip\(/);
+    assert.match(checklist, /subscriptions\.add\(\n\s*subscribeTripChecklistItems\(/);
+  });
 });
