@@ -100,6 +100,10 @@ body {
   line-height: 1.6;
 }
 
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 input,
 select,
 textarea {
@@ -130,6 +134,19 @@ main {
 
 ::selection {
   background: color-mix(in srgb, var(--color-primary), white 70%);
+}
+
+dialog {
+  margin: auto;
+}
+
+dialog::backdrop {
+  background: rgba(2, 6, 23, 0.66);
+  backdrop-filter: blur(8px);
+}
+
+.plan-ai-tour-modal {
+  color: var(--color-text);
 }
 
 .surface-panel {

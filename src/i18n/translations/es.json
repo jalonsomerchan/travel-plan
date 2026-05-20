@@ -289,6 +289,7 @@
   "plan.aiTour.eyebrow": "Freetour IA",
   "plan.aiTour.title": "Genera un tour para este plan",
   "plan.aiTour.helper": "Ajusta el estilo del tour, copia el prompt y pásaselo a tu IA favorita para obtener una guía lista para seguir.",
+  "plan.aiTour.closeLabel": "Cerrar modal del Freetour IA",
   "plan.aiTour.tone": "Tono",
   "plan.aiTour.tone.serious": "Más serio",
   "plan.aiTour.tone.fun": "Más divertido",
