@@ -13,19 +13,25 @@ export interface TripAiPromptWizardController {
   syncTrip: (trip: TripRecord) => void;
 }
 
-const totalSteps = 3;
+const totalSteps = 4;
 
-function getString(formData: FormData, key: string, fallback: string) {
-  const value = formData.get(key);
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+function getFieldValue(root: HTMLElement | null, key: string) {
+  const checked = root?.querySelector<HTMLInputElement>(`input[name="${key}"]:checked`);
+  const field = checked ?? root?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${key}"]`);
+  return field?.value ?? '';
 }
 
-function getTypes(formData: FormData) {
-  return formData.getAll('types').filter((value): value is string => typeof value === 'string');
+function getString(root: HTMLElement | null, key: string, fallback: string) {
+  const value = getFieldValue(root, key).trim();
+  return value || fallback;
+}
+
+function getTypes(root: HTMLElement | null) {
+  return Array.from(root?.querySelectorAll<HTMLInputElement>('input[name="types"]:checked') ?? []).map((field) => field.value);
 }
 
 export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOptions): TripAiPromptWizardController {
-  const form = document.querySelector<HTMLFormElement>('#trip-ai-prompt-wizard');
+  const root = document.querySelector<HTMLElement>('#trip-ai-prompt-wizard');
   const prevButton = document.querySelector<HTMLButtonElement>('#trip-ai-prompt-prev-step');
   const nextButton = document.querySelector<HTMLButtonElement>('#trip-ai-prompt-next-step');
   const message = document.querySelector<HTMLElement>('#trip-ai-prompt-wizard-message');
@@ -37,12 +43,11 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
   let currentStep = 0;
 
   const syncDateMode = () => {
-    if (!form || !dateFields) {
+    if (!root || !dateFields) {
       return;
     }
 
-    const formData = new FormData(form);
-    const isScheduled = formData.get('dateMode') !== 'unscheduled';
+    const isScheduled = getFieldValue(root, 'dateMode') !== 'unscheduled';
     dateFields.hidden = !isScheduled;
     dateFields.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
       input.disabled = !isScheduled;
@@ -80,30 +85,26 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
     onChange();
   };
 
-  const getOptions = (): TripAiPromptWizardOptions => {
-    const formData = form ? new FormData(form) : new FormData();
-
-    return {
-      place: getString(formData, 'place', ''),
-      dateMode: getString(formData, 'dateMode', 'scheduled') as TripAiPromptWizardOptions['dateMode'],
-      startDate: getString(formData, 'startDate', ''),
-      endDate: getString(formData, 'endDate', ''),
-      planMode: getString(formData, 'planMode', 'itinerary') as TripAiPromptWizardOptions['planMode'],
-      types: getTypes(formData),
-      tourismStyle: getString(formData, 'tourismStyle', 'balanced') as TripAiPromptWizardOptions['tourismStyle'],
-      budgetMode: getString(formData, 'budgetMode', 'both') as TripAiPromptWizardOptions['budgetMode'],
-      accessMode: getString(formData, 'accessMode', 'public') as TripAiPromptWizardOptions['accessMode'],
-    };
-  };
+  const getOptions = (): TripAiPromptWizardOptions => ({
+    place: getString(root, 'place', ''),
+    dateMode: getString(root, 'dateMode', 'scheduled') as TripAiPromptWizardOptions['dateMode'],
+    startDate: getString(root, 'startDate', ''),
+    endDate: getString(root, 'endDate', ''),
+    planMode: getString(root, 'planMode', 'itinerary') as TripAiPromptWizardOptions['planMode'],
+    types: getTypes(root),
+    tourismStyle: getString(root, 'tourismStyle', 'balanced') as TripAiPromptWizardOptions['tourismStyle'],
+    budgetMode: getString(root, 'budgetMode', 'both') as TripAiPromptWizardOptions['budgetMode'],
+    accessMode: getString(root, 'accessMode', 'public') as TripAiPromptWizardOptions['accessMode'],
+  });
 
   const syncTrip = (trip: TripRecord) => {
-    if (!form) {
+    if (!root) {
       return;
     }
 
-    const placeInput = form.elements.namedItem('place') as HTMLInputElement | null;
-    const startDateInput = form.elements.namedItem('startDate') as HTMLInputElement | null;
-    const endDateInput = form.elements.namedItem('endDate') as HTMLInputElement | null;
+    const placeInput = root.querySelector<HTMLInputElement>('input[name="place"]');
+    const startDateInput = root.querySelector<HTMLInputElement>('input[name="startDate"]');
+    const endDateInput = root.querySelector<HTMLInputElement>('input[name="endDate"]');
 
     if (placeInput && !placeInput.value) {
       placeInput.value = trip.location;
@@ -127,12 +128,12 @@ export function initTripAiPromptWizard({ locale, onChange }: WizardControllerOpt
     onChange();
   };
 
-  form?.addEventListener('input', () => {
+  root?.addEventListener('input', () => {
     syncDateMode();
     onChange();
   });
 
-  form?.addEventListener('change', () => {
+  root?.addEventListener('change', () => {
     syncDateMode();
     onChange();
   });
