@@ -80,9 +80,21 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
     event.preventDefault();
     if (!currentTrip || !currentUser) return;
     const data = new FormData(form);
+    const role = String(data.get('role') ?? 'viewer') as TripMemberRecord['role'];
     setButtonBusy(button, true, t('trip.invite.action'), t('trip.invite.sending'));
     try {
-      await inviteUserToTrip(currentUser, tripId, currentTrip.name, currentTrip.location, currentTrip.startDate, currentTrip.endDate, String(data.get('email') ?? ''), String(data.get('role') ?? 'viewer') as TripMemberRecord['role']);
+      await inviteUserToTrip(
+        currentUser,
+        tripId,
+        currentTrip.name,
+        currentTrip.location,
+        currentTrip.startDate,
+        currentTrip.endDate,
+        String(data.get('email') ?? ''),
+        role,
+        locale,
+        getRoleLabel(locale, role),
+      );
       form.reset();
       setMessage(message, t('trip.invite.sent'), 'success');
     } catch (error) {
