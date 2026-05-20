@@ -171,6 +171,7 @@ export function subscribeTripMembers(tripId: string, callback: (members: TripMem
 
 export function subscribeTripInvites(
   tripId: string,
+  ownerId: string,
   callback: (invites: TripInviteRecord[]) => void,
   onError?: (error: Error) => void,
 ) {
@@ -178,6 +179,7 @@ export function subscribeTripInvites(
   const invitesQuery = query(
     collection(db, 'tripInvites'),
     where('tripId', '==', tripId),
+    where('ownerId', '==', ownerId),
     where('status', '==', 'pending'),
   );
 
