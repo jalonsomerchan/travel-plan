@@ -38,10 +38,34 @@ function setStoredLayerId(layerId: string) {
   }
 }
 
+function positionPortalPanel(panel: HTMLElement, trigger: HTMLElement) {
+  const triggerRect = trigger.getBoundingClientRect();
+  const margin = 12;
+  const panelWidth = Math.min(320, window.innerWidth - margin * 2);
+  const panelHeight = panel.getBoundingClientRect().height;
+  const left = Math.min(
+    Math.max(margin, triggerRect.right - panelWidth),
+    window.innerWidth - panelWidth - margin,
+  );
+  const preferredTop = triggerRect.bottom + margin;
+  const fallbackTop = triggerRect.top - panelHeight - margin;
+  const top = preferredTop + panelHeight + margin <= window.innerHeight
+    ? preferredTop
+    : Math.max(margin, fallbackTop);
+
+  panel.style.position = 'fixed';
+  panel.style.right = 'auto';
+  panel.style.width = `${panelWidth}px`;
+  panel.style.zIndex = '10000';
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+}
+
 export function addMapLayerSelector(map: L.Map, t: MapTranslate) {
   const layers = new Map(mapLayers.map((layer) => [layer.id, createTileLayer(layer)]));
   let activeLayerId = getStoredLayerId() ?? defaultMapLayerId;
   let activeLayer = layers.get(activeLayerId) ?? layers.get(defaultMapLayerId);
+  let portalPanel: HTMLElement | null = null;
 
   if (!activeLayer) {
     return;
@@ -70,7 +94,7 @@ export function addMapLayerSelector(map: L.Map, t: MapTranslate) {
     `;
 
     const panel = document.createElement('div');
-    panel.className = 'map-layer-panel';
+    panel.className = 'map-tool-card map-layer-panel map-layer-panel-portal';
     panel.hidden = true;
 
     const title = document.createElement('p');
@@ -86,6 +110,16 @@ export function addMapLayerSelector(map: L.Map, t: MapTranslate) {
     const setPanelState = (open: boolean) => {
       panel.hidden = !open;
       trigger.setAttribute('aria-expanded', String(open));
+
+      if (open) {
+        positionPortalPanel(panel, trigger);
+      }
+    };
+
+    const syncPanelPosition = () => {
+      if (!panel.hidden) {
+        positionPortalPanel(panel, trigger);
+      }
     };
 
     const updateCurrentLabel = () => {
@@ -105,20 +139,20 @@ export function addMapLayerSelector(map: L.Map, t: MapTranslate) {
 
       option.addEventListener('click', () => {
         const nextLayerId = layer.id;
-      const nextLayer = layers.get(nextLayerId);
+        const nextLayer = layers.get(nextLayerId);
 
-      if (!nextLayer || nextLayer === activeLayer) {
-        return;
-      }
+        if (!nextLayer || nextLayer === activeLayer) {
+          return;
+        }
 
-      if (activeLayer) {
-        map.removeLayer(activeLayer);
-      }
+        if (activeLayer) {
+          map.removeLayer(activeLayer);
+        }
 
-      activeLayer = nextLayer;
-      activeLayerId = nextLayerId;
-      activeLayer.addTo(map);
-      setStoredLayerId(nextLayerId);
+        activeLayer = nextLayer;
+        activeLayerId = nextLayerId;
+        activeLayer.addTo(map);
+        setStoredLayerId(nextLayerId);
         updateCurrentLabel();
         options.querySelectorAll<HTMLElement>('.map-layer-option').forEach((element) => {
           element.dataset.active = String(element === option);
@@ -134,16 +168,28 @@ export function addMapLayerSelector(map: L.Map, t: MapTranslate) {
     });
 
     document.addEventListener('click', (event) => {
-      if (!container.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (!container.contains(target) && !panel.contains(target)) {
         setPanelState(false);
       }
     });
+    window.addEventListener('resize', syncPanelPosition);
+    window.addEventListener('scroll', syncPanelPosition, { passive: true });
+    map.on('resize move zoom', syncPanelPosition);
 
     updateCurrentLabel();
     panel.append(title, current, options);
-    container.append(trigger, panel);
+    document.body.append(panel);
+    portalPanel = panel;
+    container.append(trigger);
 
     return container;
+  };
+
+  control.onRemove = () => {
+    portalPanel?.remove();
+    portalPanel = null;
   };
 
   control.addTo(map);
