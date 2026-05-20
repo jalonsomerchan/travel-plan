@@ -1,4 +1,5 @@
 {
+  "status.plan.proposed": "Proposed",
   "trip.goAiPrompt": "AI prompt",
   "tripAiPrompt.metaTitle": "Trip AI prompt",
   "tripAiPrompt.metaDescription": "Generate a prompt with trip data, send it to an AI and paste the JSON to create selected plans.",
