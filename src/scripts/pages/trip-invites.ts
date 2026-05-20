@@ -3,6 +3,7 @@ import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { TripInviteRecord } from '../../lib/app/models';
+import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
 import { acceptInvite, subscribePendingInvites } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator, getRoleLabel } from './shared';
@@ -31,8 +32,34 @@ function renderInvites(locale: Locale, invites: TripInviteRecord[], user: User) 
     button.addEventListener('click', async () => {
       const invite = invites.find((item) => item.id === button.dataset.acceptInvite);
       if (!invite) return;
-      await acceptInvite(user, invite);
+      button.disabled = true;
+      try {
+        await acceptInvite(user, invite);
+      } catch (error) {
+        button.disabled = false;
+        renderInvitesError(locale, error instanceof Error ? error.message : undefined);
+      }
     });
+  });
+}
+
+function renderInvitesError(locale: Locale, detail?: string) {
+  const t = getPageTranslator(locale);
+  const target = document.querySelector<HTMLElement>('[data-invite-list]');
+
+  if (!target) return;
+
+  target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('dashboard.invitesError'))}${detail ? `<br /><span class="mt-2 block text-xs">${escapeHtml(detail)}</span>` : ''}</article>`;
+}
+
+function logInvitesPermissionError(user: User | null) {
+  const config = getFirebasePublicConfig();
+
+  console.error('subscribePendingInvites.debug', {
+    projectId: config.projectId,
+    authDomain: config.authDomain,
+    uid: user?.uid ?? null,
+    email: user?.email ?? null,
   });
 }
 
@@ -43,6 +70,17 @@ export function mountTripInvitesPage({ locale }: { locale: Locale }) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    if (user.email) subscribePendingInvites(user.email, (invites) => renderInvites(locale, invites, user));
+    if (!user.email) {
+      renderInvitesError(locale);
+      return;
+    }
+    subscribePendingInvites(
+      user.email,
+      (invites) => renderInvites(locale, invites, user),
+      (error) => {
+        logInvitesPermissionError(user);
+        renderInvitesError(locale, error.message);
+      },
+    );
   });
 }
