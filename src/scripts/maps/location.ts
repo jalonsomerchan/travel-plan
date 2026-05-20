@@ -15,7 +15,7 @@ export function addUserLocationMarker(
   let marker: L.Marker | null = null;
   const centerOnLocation = options.centerOnLocation ?? true;
 
-  const locate = (status?: HTMLElement, button?: HTMLButtonElement) => {
+  const locate = (status?: HTMLElement, button?: HTMLButtonElement, forceCenter = false) => {
     if (!('geolocation' in navigator)) {
       if (status) status.textContent = t('map.location.unsupported');
       return;
@@ -54,7 +54,7 @@ export function addUserLocationMarker(
 
         marker.bindPopup(escapeHtml(t('map.location.marker')));
 
-        if (centerOnLocation) {
+        if (centerOnLocation || forceCenter) {
           map.setView(latLng, Math.max(map.getZoom(), 15));
         }
 
@@ -124,7 +124,7 @@ export function addCurrentLocationControl(
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
 
-    button.addEventListener('click', () => userLocation.locate(status, button));
+    button.addEventListener('click', () => userLocation.locate(status, button, true));
 
     container.append(button, status);
 
