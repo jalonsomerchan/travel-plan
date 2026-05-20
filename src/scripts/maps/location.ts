@@ -2,9 +2,105 @@ import L from 'leaflet';
 import { escapeHtml } from '../../lib/app/dom';
 import type { MapTranslate } from './layers';
 
-export function addCurrentLocationControl(map: L.Map, t: MapTranslate) {
+interface CurrentLocationOptions {
+  centerOnLocation?: boolean;
+  locateOnLoad?: boolean;
+}
+
+export function addUserLocationMarker(
+  map: L.Map,
+  t: MapTranslate,
+  options: CurrentLocationOptions = {},
+) {
   let marker: L.Marker | null = null;
+  const centerOnLocation = options.centerOnLocation ?? true;
+
+  const locate = (status?: HTMLElement, button?: HTMLButtonElement) => {
+    if (!('geolocation' in navigator)) {
+      if (status) status.textContent = t('map.location.unsupported');
+      return;
+    }
+
+    if (button) button.disabled = true;
+    if (status) status.textContent = t('map.location.loading');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (button) button.disabled = false;
+
+        const { latitude, longitude } = position.coords;
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          if (status) status.textContent = t('map.location.unavailable');
+          return;
+        }
+
+        const latLng = L.latLng(latitude, longitude);
+
+        if (marker) {
+          marker.setLatLng(latLng);
+        } else {
+          marker = L.marker(latLng, {
+            icon: L.divIcon({
+              className: 'map-user-location-marker',
+              html: '<span aria-hidden="true"></span>',
+              iconAnchor: [10, 10],
+              iconSize: [20, 20],
+            }),
+            keyboard: true,
+            title: t('map.location.marker'),
+          }).addTo(map);
+        }
+
+        marker.bindPopup(escapeHtml(t('map.location.marker')));
+
+        if (centerOnLocation) {
+          map.setView(latLng, Math.max(map.getZoom(), 15));
+        }
+
+        if (status) status.textContent = t('map.location.marker');
+      },
+      (error) => {
+        if (button) button.disabled = false;
+
+        if (!status) {
+          return;
+        }
+
+        if (error.code === error.PERMISSION_DENIED) {
+          status.textContent = t('map.location.denied');
+          return;
+        }
+
+        if (error.code === error.TIMEOUT) {
+          status.textContent = t('map.location.timeout');
+          return;
+        }
+
+        status.textContent = t('map.location.unavailable');
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 30000,
+        timeout: 10000,
+      },
+    );
+  };
+
+  if (options.locateOnLoad) {
+    locate();
+  }
+
+  return { locate };
+}
+
+export function addCurrentLocationControl(
+  map: L.Map,
+  t: MapTranslate,
+  options: CurrentLocationOptions = {},
+) {
   const control = new L.Control({ position: 'topright' });
+  const userLocation = addUserLocationMarker(map, t, options);
 
   control.onAdd = () => {
     const container = L.DomUtil.create('div', 'map-icon-control map-location-control');
@@ -28,69 +124,7 @@ export function addCurrentLocationControl(map: L.Map, t: MapTranslate) {
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
 
-    button.addEventListener('click', () => {
-      if (!('geolocation' in navigator)) {
-        status.textContent = t('map.location.unsupported');
-        return;
-      }
-
-      button.disabled = true;
-      status.textContent = t('map.location.loading');
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          button.disabled = false;
-
-          const { latitude, longitude } = position.coords;
-
-          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-            status.textContent = t('map.location.unavailable');
-            return;
-          }
-
-          const latLng = L.latLng(latitude, longitude);
-
-          if (marker) {
-            marker.setLatLng(latLng);
-          } else {
-            marker = L.marker(latLng, {
-              icon: L.divIcon({
-                className: 'map-user-location-marker',
-                html: '<span aria-hidden="true"></span>',
-                iconAnchor: [10, 10],
-                iconSize: [20, 20],
-              }),
-              keyboard: true,
-              title: t('map.location.marker'),
-            }).addTo(map);
-          }
-
-          marker.bindPopup(escapeHtml(t('map.location.marker')));
-          map.setView(latLng, Math.max(map.getZoom(), 15));
-          status.textContent = t('map.location.marker');
-        },
-        (error) => {
-          button.disabled = false;
-
-          if (error.code === error.PERMISSION_DENIED) {
-            status.textContent = t('map.location.denied');
-            return;
-          }
-
-          if (error.code === error.TIMEOUT) {
-            status.textContent = t('map.location.timeout');
-            return;
-          }
-
-          status.textContent = t('map.location.unavailable');
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 30000,
-          timeout: 10000,
-        },
-      );
-    });
+    button.addEventListener('click', () => userLocation.locate(status, button));
 
     container.append(button, status);
 

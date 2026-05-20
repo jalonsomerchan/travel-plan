@@ -112,3 +112,20 @@ export interface ChecklistItemInput {
   title: string;
   status: ChecklistItemStatus;
 }
+
+export interface TripPointOfInterestRecord {
+  id: string;
+  name: string;
+  icon: string;
+  locationName: string;
+  locationLat: number;
+  locationLng: number;
+}
+
+export interface TripPointOfInterestInput {
+  name: string;
+  icon: string;
+  locationName: string;
+  locationLat: number;
+  locationLng: number;
+}

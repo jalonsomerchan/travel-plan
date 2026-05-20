@@ -15,6 +15,7 @@ interface Props {
   queryPlaceholder?: string;
   rootTestId?: string;
   searchButtonName: string;
+  useCurrentLocationName?: string;
 }
 
 const {
@@ -30,14 +31,17 @@ const {
   queryPlaceholder,
   rootTestId,
   searchButtonName,
+  useCurrentLocationName,
 } = Astro.props;
 const t = useTranslations(locale);
+const currentLocationLabel = useCurrentLocationName ?? t('plan.location.useCurrent');
 ---
 
 <section
   class="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
   data-location-picker
   data-empty-query-label={t('plan.location.emptyQuery')}
+  data-current-location-label={t('plan.location.currentLocation')}
   data-initialized-field-label={queryFieldLabel}
   data-no-results-label={t('plan.location.noResults')}
   data-search-error-label={t('plan.location.searchError')}
@@ -72,6 +76,13 @@ const t = useTranslations(locale);
           data-location-search-button
         >
           {searchButtonName}
+        </button>
+        <button
+          class="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:bg-[var(--color-surface-soft)]"
+          type="button"
+          data-location-current-button
+        >
+          {currentLocationLabel}
         </button>
       </div>
       <div

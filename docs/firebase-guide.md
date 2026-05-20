@@ -53,6 +53,7 @@ Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nom
 - `trips/{tripId}`: viaje principal con fechas, estado, dueño y `memberIds`.
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
+- `trips/{tripId}/pointsOfInterest/{pointId}`: puntos de interés guardados del viaje.
 - `trips/{tripId}/checklistItems/{itemId}`: checklist pequeña de preparación asociada al viaje.
 - `trips/{tripId}/luggageItems/{itemId}`: lista privada de equipaje por persona dentro del viaje.
 - `tripInvites/{inviteId}`: invitaciones pendientes por correo.
@@ -87,6 +88,29 @@ Compatibilidad:
 - Los planes antiguos sin `links` se interpretan como `links: []`.
 - Los enlaces se guardan como una lista pequeña de objetos `{ label, url }`, sin crear subcolecciones para evitar complejidad innecesaria.
 - En las vistas de lectura los enlaces externos se abren en una pestaña nueva con `rel="noopener noreferrer"`.
+
+## Estructura recomendada para puntos de interés
+
+Los puntos de interés guardan lugares importantes del viaje que deben aparecer en los mapas.
+
+Documento por punto en `trips/{tripId}/pointsOfInterest/{pointId}`:
+
+```json
+{
+  "name": "Mirador",
+  "icon": "view",
+  "locationName": "Mirador del río",
+  "locationLat": 40.4168,
+  "locationLng": -3.7038
+}
+```
+
+Campos esperados:
+
+- `name`: nombre visible del punto.
+- `icon`: identificador corto de icono controlado por la UI.
+- `locationName`: etiqueta de localización seleccionada o marcada en el mapa.
+- `locationLat` y `locationLng`: coordenadas numéricas obligatorias.
 
 ## Estructura recomendada para checklist de viaje
 

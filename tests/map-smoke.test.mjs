@@ -46,10 +46,12 @@ describe('map smoke checks', () => {
     const location = readText('src/scripts/maps/location.ts');
     const pois = readText('src/scripts/maps/pois.ts');
     const tripMap = readText('src/components/pages/TripMapPage.astro');
+    const tripMapScript = readText('src/scripts/pages/trip-map.ts');
     const planPage = readText('src/scripts/pages/plan.ts');
 
     assert.match(layers, /aria-label/);
     assert.match(location, /button.addEventListener\('click'/);
+    assert.match(location, /addUserLocationMarker/);
     assert.match(location, /navigator\.geolocation\.getCurrentPosition/);
     assert.match(location, /PERMISSION_DENIED/);
     assert.match(location, /TIMEOUT/);
@@ -57,6 +59,7 @@ describe('map smoke checks', () => {
     assert.match(pois, /role', 'status'/);
     assert.match(pois, /mapPoiLimit/);
     assert.match(tripMap, /aria-label=\{t\('map\.canvasTitle'\)\}/);
+    assert.match(tripMapScript, /centerOnLocation: false/);
     assert.match(planPage, /addMapTools\(map, t\)/);
   });
 

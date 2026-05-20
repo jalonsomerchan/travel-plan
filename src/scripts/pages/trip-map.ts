@@ -7,7 +7,7 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
-import type { PlanRecord, TripRecord } from '../../lib/app/models';
+import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
 import {
   getPlanCategoryColors,
   getPlanCategoryDotStyle,
@@ -15,6 +15,7 @@ import {
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
+import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
@@ -43,6 +44,28 @@ const accommodationMarkerIcon = L.divIcon({
   popupAnchor: [0, -38],
 });
 
+const poiIcons: Record<string, string> = {
+  camera: '◎',
+  food: '◆',
+  pin: '●',
+  star: '★',
+  view: '▲',
+};
+
+function createTripPoiIcon(point: TripPointOfInterestRecord) {
+  return L.divIcon({
+    className: 'trip-map-poi-marker',
+    html: `
+      <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:34px;justify-content:center;width:34px;">
+        ${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}
+      </span>
+    `,
+    iconAnchor: [17, 34],
+    iconSize: [34, 34],
+    popupAnchor: [0, -34],
+  });
+}
+
 function fitTripMap(map: L.Map, bounds: L.LatLngBounds) {
   map.invalidateSize();
 
@@ -65,26 +88,44 @@ function fitTripMap(map: L.Map, bounds: L.LatLngBounds) {
   });
 }
 
-function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
+function renderPlanList(
+  locale: Locale,
+  tripId: string,
+  plans: PlanRecord[],
+  points: TripPointOfInterestRecord[],
+) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-map-plan-list]');
   const count = document.querySelector<HTMLElement>('[data-map-count]');
   const locatedPlans = plans.filter(hasPlanLocation);
 
   if (count) {
-    count.textContent = String(locatedPlans.length);
+    count.textContent = String(locatedPlans.length + points.length);
   }
 
   if (!target) {
     return;
   }
 
-  if (locatedPlans.length === 0) {
+  if (locatedPlans.length === 0 && points.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('map.empty'))}</article>`;
     return;
   }
 
-  target.innerHTML = locatedPlans
+  target.innerHTML = [
+    ...points.map(
+      (point) => `
+        <article class="app-card-shell">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]">${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}</span>
+            <h3 class="text-lg font-bold">${escapeHtml(point.name)}</h3>
+          </div>
+          <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(point.locationName)}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]">${escapeHtml(t('tripPois.breadcrumb'))}</p>
+        </article>
+      `,
+    ),
+    ...locatedPlans
     .map((plan) => {
       const categoryLabel = getCategoryLabel(locale, plan.category);
 
@@ -99,8 +140,8 @@ function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
         </a>
       `;
-    })
-    .join('');
+    }),
+  ].join('');
 }
 
 function addAccommodationMarker(trip: TripRecord | null, markers: L.LayerGroup, bounds: L.LatLngBounds) {
@@ -132,6 +173,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   const mapCanvas = document.querySelector<HTMLElement>('[data-trip-map-canvas]');
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
+  let currentPoints: TripPointOfInterestRecord[] = [];
 
   if (!tripId || !mapCanvas) {
     if (tripName) {
@@ -159,13 +201,13 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     scrollWheelZoom: false,
   }).setView([40.4168, -3.7038], 5);
 
-  addMapTools(map, t);
+  addMapTools(map, t, { currentLocation: { centerOnLocation: false, locateOnLoad: true } });
 
   const markers = L.layerGroup().addTo(map);
 
   const syncMap = () => {
     const locatedPlans = currentPlans.filter(hasPlanLocation);
-    renderPlanList(locale, tripId, currentPlans);
+    renderPlanList(locale, tripId, currentPlans, currentPoints);
     markers.clearLayers();
 
     const bounds = L.latLngBounds([]);
@@ -199,6 +241,18 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
     addAccommodationMarker(currentTrip, markers, bounds);
 
+    currentPoints.forEach((point) => {
+      const latLng = L.latLng(point.locationLat, point.locationLng);
+      bounds.extend(latLng);
+      L.marker(latLng, {
+        icon: createTripPoiIcon(point),
+        keyboard: true,
+        title: point.name,
+      })
+        .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
+        .addTo(markers);
+    });
+
     requestAnimationFrame(() => fitTripMap(map, bounds));
   };
 
@@ -223,6 +277,11 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
     subscribeTripPlans(tripId, (plans) => {
       currentPlans = plans;
+      syncMap();
+    });
+
+    subscribeTripPointsOfInterest(tripId, (points) => {
+      currentPoints = points;
       syncMap();
     });
   });

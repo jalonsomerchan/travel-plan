@@ -19,6 +19,7 @@ interface PickerContext {
   lngInput: HTMLInputElement;
   clearButton: HTMLButtonElement;
   searchButton: HTMLButtonElement;
+  currentButton: HTMLButtonElement | null;
   searchResults: SearchResult[];
   activeResultIndex: number;
   searchRequestId: number;
@@ -205,6 +206,7 @@ function createPickerContext(root: HTMLElement) {
   const lngInput = root.querySelector<HTMLInputElement>('[data-location-lng]');
   const clearButton = root.querySelector<HTMLButtonElement>('[data-location-clear-button]');
   const searchButton = root.querySelector<HTMLButtonElement>('[data-location-search-button]');
+  const currentButton = root.querySelector<HTMLButtonElement>('[data-location-current-button]');
 
   if (
     !mapElement ||
@@ -250,6 +252,7 @@ function createPickerContext(root: HTMLElement) {
     lngInput,
     clearButton,
     searchButton,
+    currentButton,
     searchResults: [],
     activeResultIndex: -1,
     searchRequestId: 0,
@@ -441,6 +444,38 @@ export function initLocationPickers() {
       context.queryInput.value = '';
       resetResultsState(context, root.dataset.initialResults ?? '');
       applySelection(context, null);
+    });
+
+    context.currentButton?.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        resetResultsState(context, context.root.dataset.searchErrorLabel ?? 'Search error');
+        return;
+      }
+
+      context.currentButton.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          context.currentButton?.removeAttribute('disabled');
+          const { latitude, longitude } = position.coords;
+
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            resetResultsState(context, context.root.dataset.searchErrorLabel ?? 'Search error');
+            return;
+          }
+
+          applySelection(context, {
+            name: context.root.dataset.currentLocationLabel ?? context.root.dataset.unnamedLabel ?? 'Current location',
+            lat: latitude,
+            lng: longitude,
+          });
+          resetResultsState(context, context.root.dataset.initialResults ?? '');
+        },
+        () => {
+          context.currentButton?.removeAttribute('disabled');
+          resetResultsState(context, context.root.dataset.searchErrorLabel ?? 'Search error');
+        },
+        { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 },
+      );
     });
 
     root.dataset.ready = 'true';

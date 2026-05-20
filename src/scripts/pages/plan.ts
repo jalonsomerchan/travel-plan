@@ -11,7 +11,9 @@ import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-
 import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
+import type { TripPointOfInterestRecord } from '../../lib/app/models';
 import { deletePlan, subscribePlan } from '../../lib/firebase/plans';
+import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
@@ -38,6 +40,37 @@ const accommodationMarkerIcon = L.divIcon({
   iconSize: [38, 38],
   popupAnchor: [0, -38],
 });
+
+const poiIcons: Record<string, string> = {
+  camera: '◎',
+  food: '◆',
+  pin: '●',
+  star: '★',
+  view: '▲',
+};
+
+function addTripPoiMarkers(layer: L.LayerGroup, points: TripPointOfInterestRecord[]) {
+  layer.clearLayers();
+  points.forEach((point) => {
+    L.marker([point.locationLat, point.locationLng], {
+      icon: L.divIcon({
+        className: 'plan-map-trip-poi-marker',
+        html: `
+          <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:32px;justify-content:center;width:32px;">
+            ${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}
+          </span>
+        `,
+        iconAnchor: [16, 32],
+        iconSize: [32, 32],
+        popupAnchor: [0, -32],
+      }),
+      keyboard: true,
+      title: point.name,
+    })
+      .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
+      .addTo(layer);
+  });
+}
 
 function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElement | null, planLinks: { label: string; url: string }[]) {
   const safeLinks = planLinks.filter((link) => isSafeExternalPlanUrl(link.url));
@@ -79,6 +112,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const nearbyPoiRoot = document.querySelector<HTMLElement>('[data-nearby-poi]');
   const t = getPageTranslator(locale);
   let map: L.Map | null = null;
+  let poiLayer: L.LayerGroup | null = null;
+  let currentPoints: TripPointOfInterestRecord[] = [];
   if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -120,6 +155,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         if (map) {
           map.remove();
           map = null;
+          poiLayer = null;
         }
 
         if (hasPlanLocation(plan) && mapTarget) {
@@ -145,6 +181,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
           }).setView([plan.locationLat, plan.locationLng], 15);
 
           addMapTools(map, t);
+          poiLayer = L.layerGroup().addTo(map);
 
           L.circleMarker([plan.locationLat, plan.locationLng], {
             radius: 10,
@@ -155,6 +192,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
           })
             .bindPopup(escapeHtml(plan.name))
             .addTo(map);
+
+          addTripPoiMarkers(poiLayer, currentPoints);
 
           const accommodation = trip.accommodation;
 
@@ -203,6 +242,13 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
           });
         }
       });
+    });
+
+    subscribeTripPointsOfInterest(tripId, (points) => {
+      currentPoints = points;
+      if (poiLayer) {
+        addTripPoiMarkers(poiLayer, currentPoints);
+      }
     });
   });
 }

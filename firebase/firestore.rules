@@ -84,6 +84,10 @@ service cloud.firestore {
         allow read, write: if tripVisibleFromParent(tripId);
       }
 
+      match /pointsOfInterest/{pointId} {
+        allow read, write: if tripVisibleFromParent(tripId);
+      }
+
       match /luggageItems/{luggageItemId} {
         allow read: if tripVisibleFromParent(tripId) &&
           resource.data.ownerId == request.auth.uid;

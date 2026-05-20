@@ -20,6 +20,7 @@ describe('poi smoke checks', () => {
       'src/lib/app/poi.ts',
       'src/components/app/NearbyPoiExplorer.astro',
       'src/components/pages/TripPoisPage.astro',
+      'src/lib/firebase/trip-pois.ts',
       'src/pages/app/trip-pois/index.astro',
       'src/pages/[locale]/app/trip-pois/index.astro',
       'src/scripts/pages/nearby-poi-explorer.ts',
@@ -49,8 +50,32 @@ describe('poi smoke checks', () => {
 
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
     assert.ok(es['tripPois.metaTitle']);
+    assert.ok(es['tripPois.form.name']);
+    assert.ok(en['tripPois.form.location']);
     assert.ok(en['poi.plan.title']);
     assert.match(ui, /feature-translations\/poi\/es\.json/);
     assert.match(ui, /feature-translations\/poi\/en\.json/);
+  });
+
+  it('keeps saved trip points editable and visible on trip maps', () => {
+    const service = readText('src/lib/firebase/trip-pois.ts');
+    const page = readText('src/scripts/pages/trip-pois.ts');
+    const map = readText('src/scripts/pages/trip-map.ts');
+    const rules = readText('firebase/firestore.rules');
+    const nav = readText('src/components/app/TripSectionNav.astro');
+    const locationPicker = readText('src/scripts/pages/plan-location-picker.ts');
+
+    assert.match(service, /pointsOfInterest/);
+    assert.match(service, /createTripPointOfInterest/);
+    assert.match(service, /updateTripPointOfInterest/);
+    assert.match(page, /data-trip-poi-edit/);
+    assert.match(page, /initLocationPickers/);
+    assert.match(locationPicker, /data-location-current-button/);
+    assert.match(map, /subscribeTripPointsOfInterest/);
+    assert.match(map, /createTripPoiIcon/);
+    assert.match(map, /locateOnLoad: true/);
+    assert.match(map, /centerOnLocation: false/);
+    assert.match(rules, /match \/pointsOfInterest\/{pointId}/);
+    assert.match(nav, /trip-pois-link/);
   });
 });
