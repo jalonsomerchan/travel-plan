@@ -151,6 +151,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
       setAppShellMeta([trip.name]);
       setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
       revealAppShell();
+      initLocationPickers();
     });
 
     subscribeTripPointsOfInterest(tripId, (points) => {

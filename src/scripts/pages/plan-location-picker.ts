@@ -1,5 +1,8 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { Locale } from '../../config/site';
+import { addMapTools } from '../maps/leaflet-map-tools';
+import { getPageTranslator } from './shared';
 
 interface SearchResult {
   display_name: string;
@@ -41,6 +44,12 @@ function setInitialMessages(context: PickerContext) {
 function setResultsExpanded(context: PickerContext, expanded: boolean) {
   context.queryInput.setAttribute('aria-expanded', expanded ? 'true' : 'false');
   context.results.hidden = !expanded;
+}
+
+function refreshPickerMap(context: PickerContext) {
+  requestAnimationFrame(() => context.map.invalidateSize());
+  window.setTimeout(() => context.map.invalidateSize(), 120);
+  window.setTimeout(() => context.map.invalidateSize(), 320);
 }
 
 function clearDebounce(context: PickerContext) {
@@ -227,9 +236,8 @@ function createPickerContext(root: HTMLElement) {
     scrollWheelZoom: false,
   }).setView([40.4168, -3.7038], 5);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(map);
+  const locale = document.documentElement.lang as Locale;
+  addMapTools(map, getPageTranslator(locale));
 
   const marker = L.circleMarker([0, 0], {
     radius: 9,
@@ -281,7 +289,7 @@ function createPickerContext(root: HTMLElement) {
     });
   }
 
-  setTimeout(() => map.invalidateSize(), 0);
+  refreshPickerMap(context);
 
   return context;
 }
@@ -396,7 +404,7 @@ export function initLocationPickers() {
         applySelection(existingContext, null);
       }
 
-      setTimeout(() => existingContext.map.invalidateSize(), 0);
+      refreshPickerMap(existingContext);
       return;
     }
 

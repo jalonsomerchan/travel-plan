@@ -39,8 +39,10 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     const syncShell = () => {
       if (currentTrip && currentPlan) {
         syncPlanShell(locale, currentTrip, currentPlan);
+        initLocationPickers();
       } else if (currentTrip) {
         syncTripShell(locale, currentTrip);
+        initLocationPickers();
       }
     };
 

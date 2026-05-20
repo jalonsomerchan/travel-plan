@@ -48,6 +48,7 @@ describe('map smoke checks', () => {
     const tripMap = readText('src/components/pages/TripMapPage.astro');
     const tripMapScript = readText('src/scripts/pages/trip-map.ts');
     const planPage = readText('src/scripts/pages/plan.ts');
+    const locationPicker = readText('src/scripts/pages/plan-location-picker.ts');
 
     assert.match(layers, /aria-label/);
     assert.match(location, /button.addEventListener\('click'/);
@@ -58,6 +59,8 @@ describe('map smoke checks', () => {
     assert.match(location, /map-user-location-marker/);
     assert.match(pois, /role', 'status'/);
     assert.match(pois, /mapPoiLimit/);
+    assert.match(locationPicker, /addMapTools\(map, getPageTranslator\(locale\)\)/);
+    assert.match(locationPicker, /refreshPickerMap/);
     assert.match(tripMap, /aria-label=\{t\('map\.canvasTitle'\)\}/);
     assert.match(tripMapScript, /centerOnLocation: false/);
     assert.match(planPage, /addMapTools\(map, t\)/);

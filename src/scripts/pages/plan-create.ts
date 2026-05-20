@@ -33,6 +33,7 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
     subscribeTrip(tripId, (trip) => {
       if (trip) {
         syncTripShell(locale, trip);
+        initLocationPickers();
         if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
       }
     });

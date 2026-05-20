@@ -71,6 +71,7 @@ describe('poi smoke checks', () => {
     assert.match(page, /data-trip-poi-edit/);
     assert.match(page, /initLocationPickers/);
     assert.match(locationPicker, /data-location-current-button/);
+    assert.match(page, /revealAppShell\(\);\s*initLocationPickers\(\)/);
     assert.match(map, /subscribeTripPointsOfInterest/);
     assert.match(map, /createTripPoiIcon/);
     assert.match(map, /locateOnLoad: true/);
