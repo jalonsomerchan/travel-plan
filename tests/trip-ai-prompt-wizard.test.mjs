@@ -50,11 +50,21 @@ describe('trip AI prompt wizard', () => {
     assert.match(controller, /syncTrip/);
   });
 
+  it('forces saved wizard candidates to proposed status', () => {
+    const models = readText('src/lib/app/models.ts');
+    const script = readText('src/scripts/pages/trip-ai-prompt.ts');
+
+    assert.match(models, /'proposed'/);
+    assert.match(script, /status: 'proposed'/);
+  });
+
   it('keeps wizard translations aligned', () => {
     const es = readJson('src/i18n/feature-translations/trip-ai-prompt/es.json');
     const en = readJson('src/i18n/feature-translations/trip-ai-prompt/en.json');
 
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+    assert.equal(es['status.plan.proposed'], 'Propuesto');
+    assert.equal(en['status.plan.proposed'], 'Proposed');
     assert.ok(es['tripAiPrompt.wizard.place']);
     assert.ok(en['tripAiPrompt.wizard.accessMode']);
     assert.ok(es['tripAiPrompt.wizard.planModeItinerary']);
