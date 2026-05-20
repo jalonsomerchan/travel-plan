@@ -117,6 +117,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#trip-checklist-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  const addLabel = t('tripChecklist.form.addShort');
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
   let tripLoaded = false;
@@ -188,7 +189,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    setButtonBusy(button, true, t('tripChecklist.form.add'), t('common.saving'));
+    setButtonBusy(button, true, addLabel, t('common.saving'));
 
     try {
       await createTripChecklistItem(tripId, {
@@ -200,7 +201,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('tripChecklist.form.error'), 'danger');
     } finally {
-      setButtonBusy(button, false, t('tripChecklist.form.add'), t('common.saving'));
+      setButtonBusy(button, false, addLabel, t('common.saving'));
     }
   });
 

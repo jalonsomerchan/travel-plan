@@ -118,6 +118,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
   const privateContent = document.querySelector<HTMLElement>('[data-trip-luggage-private-content]');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  const addLabel = t('tripLuggage.form.addShort');
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
   let currentUserId = '';
@@ -218,7 +219,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
       return;
     }
 
-    setButtonBusy(button, true, t('tripLuggage.form.add'), t('common.saving'));
+    setButtonBusy(button, true, addLabel, t('common.saving'));
 
     try {
       await createTripLuggageItem(tripId, currentUserId, {
@@ -230,7 +231,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     } catch (error) {
       setMessage(message, error instanceof Error ? error.message : t('tripLuggage.form.error'), 'danger');
     } finally {
-      setButtonBusy(button, false, t('tripLuggage.form.add'), t('common.saving'));
+      setButtonBusy(button, false, addLabel, t('common.saving'));
     }
   });
 

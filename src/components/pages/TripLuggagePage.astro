@@ -49,14 +49,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           <span class="status-pill" data-tone="success" data-luggage-completed-count>0</span>
         </div>
         <p class="mt-4 text-sm text-[var(--color-text-soft)]">{t('tripLuggage.privateHelper')}</p>
-        <form class="mt-6 space-y-4" id="trip-luggage-form">
+        <form class="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" id="trip-luggage-form">
           <ChecklistItemFormFields locale={locale} prefix="trip-luggage" translationPrefix="tripLuggage" />
-          <p class="text-sm text-[var(--color-text-soft)]" id="trip-luggage-message">
-            {t('tripLuggage.form.helper')}
-          </p>
-          <div class="flex flex-wrap gap-3">
-            <Button type="submit">{t('tripLuggage.form.add')}</Button>
-          </div>
+          <Button type="submit">{t('tripLuggage.form.addShort')}</Button>
+          <p class="text-sm text-[var(--color-text-soft)] sm:col-span-2" id="trip-luggage-message" role="status" aria-live="polite"></p>
         </form>
         <div class="mt-8 border-t border-[var(--color-border)] pt-8">
           <div class="grid gap-4" data-luggage-list>

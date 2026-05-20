@@ -2,6 +2,8 @@ import { defaultLocale, locales, type Locale } from '../config/site';
 import { joinPathSegments, stripBasePath, withBasePath } from '../utils/paths';
 import en from './translations/en.json';
 import es from './translations/es.json';
+import checklistFormsEn from './feature-translations/checklist-forms/en.json';
+import checklistFormsEs from './feature-translations/checklist-forms/es.json';
 import geolocationEn from './feature-translations/geolocation/en.json';
 import geolocationEs from './feature-translations/geolocation/es.json';
 import invitesEn from './feature-translations/invites/en.json';
@@ -17,6 +19,7 @@ import tripValidationEs from './feature-translations/trip-validation/es.json';
 
 export type TranslationKey =
   | keyof typeof es
+  | keyof typeof checklistFormsEs
   | keyof typeof geolocationEs
   | keyof typeof invitesEs
   | keyof typeof mapEs
@@ -29,6 +32,7 @@ type TranslationDictionary = Record<string, string>;
 const translations: Record<Locale, TranslationDictionary> = {
   es: {
     ...es,
+    ...checklistFormsEs,
     ...geolocationEs,
     ...invitesEs,
     ...mapEs,
@@ -38,6 +42,7 @@ const translations: Record<Locale, TranslationDictionary> = {
   },
   en: {
     ...en,
+    ...checklistFormsEn,
     ...geolocationEn,
     ...invitesEn,
     ...mapEn,
