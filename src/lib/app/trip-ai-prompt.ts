@@ -8,7 +8,7 @@ import {
   type PlanStatus,
   type TripRecord,
 } from './models';
-import { normalizePlanLinks, validatePlanLinks } from './plan-links';
+import { isSafeExternalPlanUrl, normalizePlanLinks, validatePlanLinks } from './plan-links';
 
 export interface TripAiPromptCandidate extends PlanInput {
   sourceIndex: number;
@@ -230,10 +230,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
 
   const links = normalizePlanLinks(record.links);
   const linksValidation = validatePlanLinks(links);
-
-  if (!linksValidation.valid) {
-    return null;
-  }
+  const safeLinks = linksValidation.valid ? links : links.filter((link) => isSafeExternalPlanUrl(link.url));
 
   return {
     sourceIndex: index,
@@ -250,7 +247,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
     isBooked: getBoolean(record, 'isBooked'),
     isOptional: getBoolean(record, 'isOptional'),
     isImportant: getBoolean(record, 'isImportant'),
-    links,
+    links: safeLinks,
   };
 }
 

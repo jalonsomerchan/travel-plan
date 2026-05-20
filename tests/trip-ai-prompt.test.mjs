@@ -54,13 +54,17 @@ describe('trip AI prompt tool', () => {
 
   it('keeps AI prompt candidate badges and title cleanup in place', () => {
     const helper = readText('src/lib/app/trip-ai-prompt.ts');
+    const links = readText('src/lib/app/plan-links.ts');
     const pageScript = readText('src/scripts/pages/trip-ai-prompt.ts');
 
     assert.match(helper, /cleanPlanName/);
     assert.match(helper, /getDescriptionWithTitleSources/);
     assert.match(helper, /urlLikePattern/);
+    assert.match(helper, /safeLinks = linksValidation\.valid \? links : links\.filter/);
     assert.match(helper, /never in name/);
     assert.match(helper, /sin enlaces/);
+    assert.match(links, /sanitizePlanLinkUrl/);
+    assert.match(links, /replace\(\/%22\.\*\$\/i, ''\)/);
     assert.match(pageScript, /getPaymentLabel/);
     assert.match(pageScript, /tripAi\.budget\.free/);
     assert.match(pageScript, /candidate\.isPaid \? 'warning' : 'success'/);

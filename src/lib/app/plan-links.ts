@@ -7,6 +7,16 @@ export interface PlanLinksValidation {
   errorKey?: string;
 }
 
+function sanitizePlanLinkUrl(value: string) {
+  return value
+    .trim()
+    .replace(/^[[("'`\s]+/, '')
+    .replace(/[)"'`\]\s]+$/g, '')
+    .replace(/\]+\(https?:\/\/.*$/i, '')
+    .replace(/%22.*$/i, '')
+    .replace(/[.,;:]+$/g, '');
+}
+
 export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
   if (!Array.isArray(value)) {
     return [];
@@ -19,7 +29,7 @@ export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
       }
 
       const record = item as Record<string, unknown>;
-      const url = String(record.url ?? '').trim();
+      const url = sanitizePlanLinkUrl(String(record.url ?? ''));
       const label = String(record.label ?? '').trim() || url;
 
       if (!url) {
