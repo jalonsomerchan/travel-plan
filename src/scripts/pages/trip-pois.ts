@@ -9,6 +9,7 @@ import {
   updateTripPointOfInterest,
 } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initLocationPickers } from './plan-location-picker';
 import {
@@ -118,6 +119,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
   const cancelButton = document.querySelector<HTMLButtonElement>('[data-trip-poi-cancel-edit]');
   const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
   let currentPoints: TripPointOfInterestRecord[] = [];
 
   if (!tripId || !form || !list) {
@@ -131,33 +133,42 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
   syncTripNavigation(locale, tripId);
   initLocationPickers();
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    currentPoints = [];
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscribeTrip(tripId, (trip) => {
-      if (!trip) {
-        setAppShellTitle(t('trip.notFound'));
-        setAppShellDescription('');
-        setAppShellMeta([]);
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        if (!trip) {
+          setAppShellTitle(t('trip.notFound'));
+          setAppShellDescription('');
+          setAppShellMeta([]);
+          revealAppShell();
+          return;
+        }
+
+        setAppShellTitle(t('tripPois.titleWithTrip').replace('{trip}', trip.name));
+        setAppShellDescription(t('tripPois.description'));
+        setAppShellMeta([trip.name]);
+        setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
         revealAppShell();
-        return;
-      }
+        initLocationPickers();
+      }),
+    );
 
-      setAppShellTitle(t('tripPois.titleWithTrip').replace('{trip}', trip.name));
-      setAppShellDescription(t('tripPois.description'));
-      setAppShellMeta([trip.name]);
-      setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
-      revealAppShell();
-      initLocationPickers();
-    });
-
-    subscribeTripPointsOfInterest(tripId, (points) => {
-      currentPoints = points;
-      renderPoiList(locale, points);
-    });
+    subscriptions.add(
+      subscribeTripPointsOfInterest(tripId, (points) => {
+        currentPoints = points;
+        renderPoiList(locale, points);
+      }),
+    );
   });
 
   form.addEventListener('submit', async (event) => {
