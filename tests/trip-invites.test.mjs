@@ -67,6 +67,8 @@ describe('trip invite flow', () => {
 
     assert.match(rules, /TEMPORAL:/);
     assert.match(rules, /allow read: if signedIn\(\);/);
+    assert.match(rules, /match \/members\/{memberId}/);
+    assert.match(rules, /allow read, create: if signedIn\(\);/);
     assert.match(rules, /match \/userInvites\/{emailLower}/);
     assert.match(rules, /match \/mail\/{mailId}/);
     assert.match(rules, /recipientTripAcceptanceUpdate/);
