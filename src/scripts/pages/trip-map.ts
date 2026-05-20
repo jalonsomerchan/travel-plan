@@ -7,6 +7,7 @@ import {
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
+import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
 import {
   getPlanCategoryColors,
@@ -133,7 +134,7 @@ function renderPlanList(
         <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
           <div class="flex items-center gap-2">
             <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-            <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+            <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
           </div>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getPlanLocationLabel(plan))}</p>

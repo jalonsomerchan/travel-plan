@@ -9,6 +9,7 @@ import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
+import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import { getFirstPlanLink, isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
@@ -155,7 +156,7 @@ function renderPlans(
             <div>
               <div class="flex items-center gap-2">
                 <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+                <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
               </div>
               <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)}</p>
             </div>

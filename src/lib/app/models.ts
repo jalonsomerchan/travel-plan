@@ -80,6 +80,10 @@ export interface PlanRecord {
   name: string;
   description: string;
   category: PlanCategory;
+  isPaid: boolean;
+  isBooked: boolean;
+  isOptional: boolean;
+  isImportant: boolean;
   locationName?: string;
   locationLat?: number;
   locationLng?: number;
@@ -93,6 +97,10 @@ export interface PlanInput {
   name: string;
   description: string;
   category: PlanCategory;
+  isPaid: boolean;
+  isBooked: boolean;
+  isOptional: boolean;
+  isImportant: boolean;
   locationName?: string;
   locationLat?: number;
   locationLng?: number;

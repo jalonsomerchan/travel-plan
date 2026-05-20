@@ -51,6 +51,27 @@ const t = useTranslations(locale);
       <input class="field-input" id={`${prefix}-time`} name="time" type="time" />
     </div>
   </div>
+  <fieldset class="grid gap-3">
+    <legend class="field-label">{t('plan.form.flags')}</legend>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
+        <input id={`${prefix}-isPaid`} name="isPaid" type="checkbox" />
+        <span>{t('plan.form.isPaid')}</span>
+      </label>
+      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
+        <input id={`${prefix}-isBooked`} name="isBooked" type="checkbox" />
+        <span>{t('plan.form.isBooked')}</span>
+      </label>
+      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
+        <input id={`${prefix}-isOptional`} name="isOptional" type="checkbox" />
+        <span>{t('plan.form.isOptional')}</span>
+      </label>
+      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
+        <input id={`${prefix}-isImportant`} name="isImportant" type="checkbox" />
+        <span>{t('plan.form.isImportant')}</span>
+      </label>
+    </div>
+  </fieldset>
   <PlanLocationFields locale={locale} prefix={prefix} />
   <PlanLinksFields locale={locale} prefix={prefix} />
 </div>

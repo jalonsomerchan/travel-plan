@@ -1,7 +1,7 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
-import { useTranslations } from '../i18n/ui';
+import { useTranslations, getLocalizedPath } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -11,16 +11,134 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 ---
 
-<footer class="border-t border-[var(--color-border)]">
-  <Container class="flex flex-col gap-3 py-8 text-sm text-[var(--color-text-soft)] md:flex-row md:items-center md:justify-between">
-    <p>© {new Date().getFullYear()} {siteConfig.name}. {t('footer.createdWith')}</p>
-    <div class="flex flex-wrap items-center gap-4">
-      <a class="transition hover:text-[var(--color-text)]" href={siteConfig.repositoryUrl}>
-        {t('footer.repository')}
-      </a>
-      <a class="transition hover:text-[var(--color-text)]" href="https://travelplan.alon.one">
-        travelplan.alon.one
-      </a>
+<footer class="border-t border-[var(--color-border)] bg-gradient-to-b from-transparent to-[color-mix(in_srgb,var(--color-surface-soft),transparent_50%)] py-12 md:py-16 text-sm text-[var(--color-text-soft)]">
+  <Container>
+    <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
+      <!-- Columna 1: Branding y Descripción -->
+      <div class="flex flex-col gap-3 md:max-w-[240px]">
+        <a href={getLocalizedPath('/', locale)} class="text-base font-extrabold tracking-tight text-[var(--color-text)] transition duration-200 hover:opacity-80">
+          {siteConfig.name}
+        </a>
+        <p class="text-xs leading-relaxed text-[var(--color-text-soft)]">
+          {t('footer.createdWith')}
+        </p>
+        <p class="text-[10px] text-[var(--color-text-soft)] opacity-70 mt-3 pt-3 border-t border-[var(--color-border)] w-fit">
+          &copy; {new Date().getFullYear()} {siteConfig.name}.
+        </p>
+      </div>
+
+      <!-- Columna 2: Navegación del Proyecto -->
+      <div class="flex flex-col gap-3">
+        <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
+          {siteConfig.name}
+        </span>
+        <ul class="flex flex-col gap-2.5 text-xs">
+          <li>
+            <a href={getLocalizedPath('/', locale)} class="transition-colors duration-150 hover:text-[var(--color-text)]">
+              {t('nav.home')}
+            </a>
+          </li>
+          <li>
+            <a href={getLocalizedPath('/dashboard', locale)} class="transition-colors duration-150 hover:text-[var(--color-text)]">
+              {t('nav.dashboard')}
+            </a>
+          </li>
+          <li>
+            <a href={getLocalizedPath('/calendar', locale)} class="transition-colors duration-150 hover:text-[var(--color-text)]">
+              {t('nav.calendar')}
+            </a>
+          </li>
+          <li>
+            <a href={siteConfig.repositoryUrl} target="_blank" rel="noopener noreferrer" class="transition-colors duration-150 hover:text-[var(--color-text)] inline-flex items-center gap-1">
+              {t('footer.repository')}
+              <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Otros Proyectos -->
+      <div class="flex flex-col gap-3">
+        <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
+          {t('footer.otherProjects')}
+        </span>
+        <ul class="flex flex-col gap-2.5 text-xs">
+          <li>
+            <a href="https://jarramplas.alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold">
+                Jarramplas
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                {t('footer.jarramplas.desc')}
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="https://hityear.alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold">
+                HitYear
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                {t('footer.hityear.desc')}
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="https://infogasolina.alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold">
+                InfoGasolina
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                {t('footer.infogasolina.desc')}
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="https://facilpdf.alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold">
+                FácilPDF
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                {t('footer.facilpdf.desc')}
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="https://infoembalses.alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold">
+                InfoEmbalses
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                {t('footer.infoembalses.desc')}
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 4: Portfolio del Autor -->
+      <div class="flex flex-col gap-3">
+        <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
+          {t('footer.portfolio')}
+        </span>
+        <ul class="flex flex-col gap-2.5 text-xs">
+          <li>
+            <a href="https://alon.one" target="_blank" rel="noopener noreferrer" class="group flex flex-col gap-0.5">
+              <span class="transition-colors duration-150 group-hover:text-[var(--color-text)] font-semibold inline-flex items-center gap-1">
+                alon.one
+                <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </span>
+              <span class="text-[10px] text-[var(--color-text-soft)] opacity-80 group-hover:opacity-100 transition-opacity">
+                Jorge Alonso
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </Container>
 </footer>

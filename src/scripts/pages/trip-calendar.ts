@@ -1,6 +1,7 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
+import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getAppUrl } from '../../lib/app/routes';
@@ -50,7 +51,7 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
                         <div>
                           <div class="flex items-center gap-2">
                             <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                            <h4 class="text-lg font-bold text-[var(--color-text)]">${escapeHtml(plan.name)}</h4>
+                            <h4 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h4>
                           </div>
                           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(plan.time ?? t('calendar.noTime'))}</p>
                         </div>
@@ -77,7 +78,7 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
               <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(t('calendar.unscheduled'))}</p>
               <div class="mt-2 flex items-center gap-2">
                 <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                <h3 class="text-lg font-bold">${escapeHtml(plan.name)}</h3>
+                <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
               </div>
               <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
               <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">

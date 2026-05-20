@@ -61,6 +61,10 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
       (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;
       (form.elements.namedItem('status') as HTMLSelectElement).value = plan.status;
+      (form.elements.namedItem('isPaid') as HTMLInputElement).checked = plan.isPaid;
+      (form.elements.namedItem('isBooked') as HTMLInputElement).checked = plan.isBooked;
+      (form.elements.namedItem('isOptional') as HTMLInputElement).checked = plan.isOptional;
+      (form.elements.namedItem('isImportant') as HTMLInputElement).checked = plan.isImportant;
       (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
       (form.elements.namedItem('locationLat') as HTMLInputElement).value = plan.locationLat !== undefined ? String(plan.locationLat) : '';
       (form.elements.namedItem('locationLng') as HTMLInputElement).value = plan.locationLng !== undefined ? String(plan.locationLng) : '';
