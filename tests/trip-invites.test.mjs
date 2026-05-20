@@ -25,6 +25,27 @@ describe('trip invite flow', () => {
     assert.match(inviteFunction, /status:\s*'pending'/);
   });
 
+  it('queues a real invite email for Firebase Trigger Email', () => {
+    const tripsSource = readText('src/lib/firebase/trips.ts');
+    const emailBuilder = readText('src/lib/app/invite-email.ts');
+    const rules = readText('firebase/firestore.rules');
+    const docs = readText('docs/firebase-guide.md');
+
+    assert.match(tripsSource, /buildInviteEmail/);
+    assert.match(tripsSource, /addDoc\(collection\(db, 'mail'\)/);
+    assert.match(tripsSource, /to: cleanEmail/);
+    assert.match(tripsSource, /message: inviteEmail/);
+    assert.match(tripsSource, /getInvitePageUrl/);
+    assert.match(emailBuilder, /subject/);
+    assert.match(emailBuilder, /text/);
+    assert.match(emailBuilder, /html/);
+    assert.match(rules, /match \/mail\/{mailId}/);
+    assert.match(rules, /allow create: if inviteMailCreatable\(\)/);
+    assert.match(rules, /allow read, update, delete: if false/);
+    assert.match(docs, /firebase\/firestore-send-email/);
+    assert.match(docs, /colección `mail`/);
+  });
+
   it('surfaces pending invite receive state in dashboard and invite page', () => {
     const tripsSource = readText('src/lib/firebase/trips.ts');
     const dashboardSource = readText('src/scripts/pages/dashboard.ts');
