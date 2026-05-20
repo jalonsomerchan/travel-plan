@@ -34,7 +34,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
-    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+    <div slot="body" class="pt-6">
       <form class="grid gap-5" id="trip-poi-form">
         <input name="pointId" type="hidden" />
         <div class="grid gap-4 md:grid-cols-[1fr_12rem]">
