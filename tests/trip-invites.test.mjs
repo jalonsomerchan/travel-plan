@@ -25,6 +25,23 @@ describe('trip invite flow', () => {
     assert.match(inviteFunction, /status:\s*'pending'/);
   });
 
+  it('surfaces pending invite receive state in dashboard and invite page', () => {
+    const tripsSource = readText('src/lib/firebase/trips.ts');
+    const dashboardSource = readText('src/scripts/pages/dashboard.ts');
+    const dashboardComponent = readText('src/components/pages/DashboardPage.astro');
+    const invitesSource = readText('src/scripts/pages/trip-invites.ts');
+
+    assert.match(tripsSource, /onError\?: \(error: Error\) => void/);
+    assert.match(tripsSource, /onError\?\.\(error\)/);
+    assert.match(dashboardSource, /subscribePendingInvites/);
+    assert.match(dashboardSource, /renderInviteCount/);
+    assert.match(dashboardSource, /dashboard\.goInvitesWithCount/);
+    assert.match(dashboardComponent, /data-dashboard-invite-count/);
+    assert.match(dashboardComponent, /aria-live="polite"/);
+    assert.match(invitesSource, /renderInvitesError/);
+    assert.match(invitesSource, /subscribePendingInvites\(/);
+  });
+
   it('keeps Firestore invite rules aligned with owners and recipients', () => {
     const rules = readText('firebase/firestore.rules');
 
@@ -46,5 +63,18 @@ describe('trip invite flow', () => {
     assert.match(page, /getInviteErrorMessage/);
     assert.match(page, /setMessage\(message, t\('trip\.invite\.sent'\), 'success'\)/);
     assert.match(component, /id="invite-message"/);
+  });
+
+  it('keeps invite feature translations aligned', () => {
+    const ui = readText('src/i18n/ui.ts');
+    const es = readText('src/i18n/feature-translations/invites/es.json');
+    const en = readText('src/i18n/feature-translations/invites/en.json');
+
+    assert.match(ui, /feature-translations\/invites\/es\.json/);
+    assert.match(ui, /feature-translations\/invites\/en\.json/);
+    assert.match(es, /dashboard\.pendingInvites/);
+    assert.match(en, /dashboard\.pendingInvites/);
+    assert.match(es, /dashboard\.invitesError/);
+    assert.match(en, /dashboard\.invitesError/);
   });
 });
