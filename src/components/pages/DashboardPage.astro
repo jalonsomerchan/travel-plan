@@ -42,6 +42,13 @@ const addTripLabel = locale === 'es' ? 'Añadir viaje' : 'Add trip';
     <div class="mt-5 flex flex-wrap justify-start gap-3 md:mt-0 md:justify-end">
       <Button href={tripCreateUrl} id="dashboard-create-trip-hero-link">{addTripLabel}</Button>
     </div>
+    <p
+      class="mt-4 rounded-[var(--radius-md)] border border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)]"
+      data-dashboard-invite-count
+      hidden
+      role="status"
+      aria-live="polite"
+    ></p>
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <h2 class="text-2xl font-black">{t('dashboard.listTitle')}</h2>
