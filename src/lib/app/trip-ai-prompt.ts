@@ -21,6 +21,7 @@ export interface TripAiPromptParseResult {
 
 const allowedCategories = new Set<PlanCategory>(planCategoryValues);
 const allowedStatuses = new Set<PlanStatus>(planStatusValues);
+const urlLikePattern = /https?:\/\/\S+/gi;
 
 function formatValue(value: string | undefined, fallback: string) {
   return value?.trim() || fallback;
@@ -70,7 +71,7 @@ Return a JSON object with this exact structure:
   "plans": [
     {
       "name": "Short plan title",
-      "description": "Why it is worth it and practical notes",
+      "description": "Why it is worth it and practical notes. Put sources or reference links here, never in name.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -95,7 +96,8 @@ Rules:
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
 - Do not invent bookings. If something is only a recommendation, keep isBooked as false.
-- Keep titles short and descriptions useful.
+- Keep name as a clean plain-text title: no links, no URLs, no markdown, no citations, no source names and no JSON fragments.
+- If you need to include a source, link, citation or official website, put it in description or links, never in name.
 - Return only JSON.`;
   }
 
@@ -113,7 +115,7 @@ Devuelve un objeto JSON con esta estructura exacta:
   "plans": [
     {
       "name": "Título corto del plan",
-      "description": "Por qué merece la pena y notas prácticas",
+      "description": "Por qué merece la pena y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -138,7 +140,8 @@ Reglas:
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
 - No inventes reservas. Si algo es una recomendación, deja isBooked como false.
-- Mantén títulos cortos y descripciones útiles.
+- Mantén name como un título limpio en texto plano: sin enlaces, sin URLs, sin markdown, sin citas, sin nombres de fuente y sin fragmentos JSON.
+- Si necesitas incluir una fuente, enlace, cita o web oficial, ponlo en description o links, nunca en name.
 - Devuelve solo JSON.`;
 }
 
@@ -180,13 +183,39 @@ function getPlansPayload(parsed: unknown) {
   return null;
 }
 
+function getTitleSources(value: string) {
+  return [...new Set(value.match(urlLikePattern) ?? [])];
+}
+
+function cleanPlanName(value: string) {
+  return value
+    .replace(urlLikePattern, '')
+    .replace(/[{}<>[\]()]/g, ' ')
+    .replace(/%22|&quot;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s:;,.\-]+|[\s:;,.\-]+$/g, '')
+    .trim();
+}
+
+function getDescriptionWithTitleSources(description: string, rawName: string) {
+  const sources = getTitleSources(rawName);
+
+  if (sources.length === 0) {
+    return description;
+  }
+
+  const sourceText = `Referencia: ${sources.join(', ')}`;
+  return [description, sourceText].filter(Boolean).join('\n\n');
+}
+
 function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate | null {
   if (!item || typeof item !== 'object') {
     return null;
   }
 
   const record = item as Record<string, unknown>;
-  const name = getString(record, ['name', 'title']);
+  const rawName = getString(record, ['name', 'title']);
+  const name = cleanPlanName(rawName);
 
   if (!name) {
     return null;
@@ -202,7 +231,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
   return {
     sourceIndex: index,
     name,
-    description: getString(record, ['description', 'notes', 'reason']),
+    description: getDescriptionWithTitleSources(getString(record, ['description', 'notes', 'reason']), rawName),
     category: normalizeCategory(getString(record, ['category', 'type'])),
     date: getString(record, ['date']) || undefined,
     time: getString(record, ['time']) || undefined,
