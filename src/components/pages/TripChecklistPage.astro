@@ -39,14 +39,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
         <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>
       </div>
-      <form class="mt-6 space-y-4" id="trip-checklist-form">
+      <form class="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" id="trip-checklist-form">
         <ChecklistItemFormFields locale={locale} prefix="trip-checklist" />
-        <p class="text-sm text-[var(--color-text-soft)]" id="trip-checklist-message">
-          {t('tripChecklist.form.helper')}
-        </p>
-        <div class="flex flex-wrap gap-3">
-          <Button type="submit">{t('tripChecklist.form.add')}</Button>
-        </div>
+        <Button type="submit">{t('tripChecklist.form.add')}</Button>
+        <p class="text-sm text-[var(--color-text-soft)] sm:col-span-2" id="trip-checklist-message" role="status" aria-live="polite"></p>
       </form>
       <div class="mt-8 border-t border-[var(--color-border)] pt-8">
         <div class="grid gap-4" data-checklist-list>
