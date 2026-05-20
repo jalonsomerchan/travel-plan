@@ -45,7 +45,7 @@ function toPlanInput(candidate: CandidateEntry): PlanInput {
     locationLng: candidate.locationLng,
     date: candidate.date,
     time: candidate.time,
-    status: candidate.status,
+    status: 'proposed',
     links: candidate.links,
   };
 }
