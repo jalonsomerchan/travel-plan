@@ -65,6 +65,18 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           </div>
         </div>
       </dl>
+      <section
+        class="mt-6 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
+        data-plan-links-section
+        hidden
+        aria-labelledby="plan-links-title"
+      >
+        <h3 class="text-sm font-bold uppercase tracking-[0.14em] text-[var(--color-text-soft)]" id="plan-links-title">
+          {t('plan.links.title')}
+        </h3>
+        <p class="mt-1 text-sm text-[var(--color-text-soft)]">{t('plan.links.description')}</p>
+        <ul class="mt-4 grid gap-2" data-plan-links-list></ul>
+      </section>
       <NearbyPoiExplorer
         locale={locale}
         title={t('poi.plan.title')}
