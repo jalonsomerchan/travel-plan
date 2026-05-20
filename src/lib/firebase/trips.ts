@@ -43,6 +43,11 @@ function getInviteId(tripId: string, emailLower: string) {
   return `${tripId}_${emailLower}`;
 }
 
+function getInvitePageUrl() {
+  const basePath = window.location.pathname.split('/app/')[0];
+  return new URL(`${basePath}/app/trip-invites/`, window.location.origin).toString();
+}
+
 function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
   if (!value || typeof value !== 'object') {
     return undefined;
@@ -221,9 +226,8 @@ export async function inviteUserToTrip(
   }
 
   const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
-  const inviteUrl = `${window.location.origin}${window.location.pathname.startsWith('/en/') ? '/en' : ''}${window.location.pathname.includes('/app/') ? '' : ''}${window.location.pathname.startsWith('/en/') ? '/app/trip-invites/' : '/app/trip-invites/'}`;
   const inviteEmail = buildInviteEmail({
-    inviteUrl,
+    inviteUrl: getInvitePageUrl(),
     locale: locale === 'en' ? 'en' : 'es',
     ownerEmail: user.email ?? '',
     role,
