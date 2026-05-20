@@ -1,6 +1,8 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
+import { getPublicPageUi } from '../data/public-page-ui';
+import { getPublicPagePath, getPublicPages } from '../data/public-pages';
 import { useTranslations, getLocalizedPath } from '../i18n/ui';
 
 interface Props {
@@ -9,12 +11,13 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const publicPages = getPublicPages(locale);
+const publicPageUi = getPublicPageUi(locale);
 ---
 
 <footer class="border-t border-[var(--color-border)] bg-gradient-to-b from-transparent to-[color-mix(in_srgb,var(--color-surface-soft),transparent_50%)] py-12 md:py-16 text-sm text-[var(--color-text-soft)]">
   <Container>
-    <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
-      <!-- Columna 1: Branding y Descripción -->
+    <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-5 md:gap-8">
       <div class="flex flex-col gap-3 md:max-w-[240px]">
         <a href={getLocalizedPath('/', locale)} class="text-base font-extrabold tracking-tight text-[var(--color-text)] transition duration-200 hover:opacity-80">
           {siteConfig.name}
@@ -27,7 +30,6 @@ const t = useTranslations(locale);
         </p>
       </div>
 
-      <!-- Columna 2: Navegación del Proyecto -->
       <div class="flex flex-col gap-3">
         <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
           {siteConfig.name}
@@ -59,7 +61,21 @@ const t = useTranslations(locale);
         </ul>
       </div>
 
-      <!-- Columna 3: Otros Proyectos -->
+      <nav class="flex flex-col gap-3" aria-label={publicPageUi.navLabel}>
+        <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
+          {publicPageUi.navLabel}
+        </span>
+        <ul class="flex flex-col gap-2.5 text-xs">
+          {publicPages.map((page) => (
+            <li>
+              <a class="transition-colors duration-150 hover:text-[var(--color-text)]" href={getLocalizedPath(getPublicPagePath(locale, page.id), locale)}>
+                {page.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       <div class="flex flex-col gap-3">
         <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
           {t('footer.otherProjects')}
@@ -118,7 +134,6 @@ const t = useTranslations(locale);
         </ul>
       </div>
 
-      <!-- Columna 4: Portfolio del Autor -->
       <div class="flex flex-col gap-3">
         <span class="text-xs font-bold tracking-wider text-[var(--color-text)] uppercase opacity-85">
           {t('footer.portfolio')}
