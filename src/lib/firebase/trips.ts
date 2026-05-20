@@ -1,3 +1,4 @@
+import type { User } from 'firebase/auth';
 import {
   addDoc,
   arrayUnion,
@@ -11,7 +12,6 @@ import {
   setDoc,
   updateDoc,
   where,
-  type User,
 } from 'firebase/firestore';
 import type {
   TripAccommodationRecord,
