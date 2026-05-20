@@ -18,8 +18,8 @@ export function addCurrentLocationControl(map: L.Map, t: MapTranslate) {
     button.setAttribute('aria-label', t('map.location.button'));
     button.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 3v3.2M12 17.8V21M3 12h3.2M17.8 12H21M6.7 6.7l2.2 2.2M15.1 15.1l2.2 2.2M17.3 6.7l-2.2 2.2M8.9 15.1l-2.2 2.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-        <circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
+        <path d="M20.2 3.8 4.1 10.7c-1.3.6-1.2 2.5.2 2.9l5.5 1.5 1.5 5.5c.4 1.4 2.3 1.5 2.9.2l6.9-16.1c.3-.7-.3-1.3-.9-.9Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+        <path d="m10 14 4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
       </svg>
     `;
 

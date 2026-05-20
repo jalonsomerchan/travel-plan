@@ -145,9 +145,26 @@ export function addPoiControl(map: L.Map, t: MapTranslate) {
   };
 
   control.onAdd = () => {
-    const container = L.DomUtil.create('div', 'map-tool-card map-poi-control');
+    const container = L.DomUtil.create('div', 'map-poi-control');
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.disableScrollPropagation(container);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'map-icon-button';
+    trigger.title = t('map.poi.title');
+    trigger.setAttribute('aria-label', t('map.poi.toggleLabel'));
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 21s6.5-5.8 6.5-11.1A6.5 6.5 0 0 0 5.5 9.9C5.5 15.2 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+        <circle cx="12" cy="9.8" r="2.35" fill="none" stroke="currentColor" stroke-width="1.9"/>
+      </svg>
+    `;
+
+    const panel = document.createElement('div');
+    panel.className = 'map-tool-card map-poi-panel';
+    panel.hidden = true;
 
     const title = document.createElement('p');
     title.className = 'map-tool-title';
@@ -199,7 +216,23 @@ export function addPoiControl(map: L.Map, t: MapTranslate) {
       void loadPois(status);
     });
 
-    container.append(title, fieldset, refreshButton, status);
+    const setPanelState = (open: boolean) => {
+      panel.hidden = !open;
+      trigger.setAttribute('aria-expanded', String(open));
+    };
+
+    trigger.addEventListener('click', () => {
+      setPanelState(panel.hidden);
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!container.contains(event.target as Node)) {
+        setPanelState(false);
+      }
+    });
+
+    panel.append(title, fieldset, refreshButton, status);
+    container.append(trigger, panel);
 
     return container;
   };

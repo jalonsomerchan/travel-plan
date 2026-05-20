@@ -43,6 +43,28 @@ const accommodationMarkerIcon = L.divIcon({
   popupAnchor: [0, -38],
 });
 
+function fitTripMap(map: L.Map, bounds: L.LatLngBounds) {
+  map.invalidateSize();
+
+  if (!bounds.isValid()) {
+    map.setView([40.4168, -3.7038], 5);
+    return;
+  }
+
+  const northEast = bounds.getNorthEast();
+  const southWest = bounds.getSouthWest();
+
+  if (northEast.equals(southWest)) {
+    map.setView(bounds.getCenter(), 15);
+    return;
+  }
+
+  map.fitBounds(bounds.pad(0.2), {
+    maxZoom: 15,
+    padding: [28, 28],
+  });
+}
+
 function renderPlanList(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-map-plan-list]');
@@ -177,12 +199,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
     addAccommodationMarker(currentTrip, markers, bounds);
 
-    if (bounds.isValid()) {
-      map.fitBounds(bounds.pad(0.2));
-      return;
-    }
-
-    map.setView([40.4168, -3.7038], 5);
+    requestAnimationFrame(() => fitTripMap(map, bounds));
   };
 
   observeSession((user) => {
