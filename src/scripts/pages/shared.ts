@@ -283,12 +283,8 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
 
 export function syncTripShell(locale: Locale, trip: TripRecord) {
   setAppShellTitle(trip.name);
-  setAppShellDescription(trip.location);
-  setAppShellMeta([
-    formatTripDateRange(locale, trip),
-    getTripStatusLabel(locale, trip.status),
-    trip.ownerEmail,
-  ]);
+  setAppShellDescription(`${trip.location} · ${formatTripDateRange(locale, trip)}`);
+  setAppShellMeta([]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
   revealAppShell();
 }
