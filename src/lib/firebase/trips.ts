@@ -236,11 +236,16 @@ export async function inviteUserToTrip(
   });
 }
 
-export function subscribePendingInvites(email: string, callback: (invites: TripInviteRecord[]) => void) {
+export function subscribePendingInvites(
+  email: string,
+  callback: (invites: TripInviteRecord[]) => void,
+  onError?: (error: Error) => void,
+) {
   const db = getFirebaseDb();
+  const normalizedEmail = normalizeEmail(email);
   const invitesQuery = query(
     collection(db, 'tripInvites'),
-    where('emailLower', '==', email.toLowerCase()),
+    where('emailLower', '==', normalizedEmail),
     where('status', '==', 'pending'),
   );
 
@@ -249,6 +254,7 @@ export function subscribePendingInvites(email: string, callback: (invites: TripI
     (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
     (error) => {
       console.error('subscribePendingInvites', error);
+      onError?.(error);
     },
   );
 }
