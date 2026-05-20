@@ -1,6 +1,7 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { TripPointOfInterestInput, TripPointOfInterestRecord } from '../../lib/app/models';
+import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import { getAppUrl } from '../../lib/app/routes';
 import {
   createTripPointOfInterest,
@@ -22,18 +23,6 @@ import {
   setBreadcrumbItem,
   syncTripNavigation,
 } from './shared';
-
-const poiIcons: Record<string, string> = {
-  camera: '◎',
-  food: '◆',
-  pin: '●',
-  star: '★',
-  view: '▲',
-};
-
-function getPoiIcon(icon: string) {
-  return poiIcons[icon] ?? poiIcons.pin;
-}
 
 function getFormInput(form: HTMLFormElement, name: string) {
   return form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
@@ -94,7 +83,7 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
         <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
           <div class="flex items-start justify-between gap-3">
             <div class="flex min-w-0 items-start gap-3">
-              <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-lg font-black text-[var(--color-primary)]">${escapeHtml(getPoiIcon(point.icon))}</span>
+              <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-lg font-black text-[var(--color-primary)]">${escapeHtml(resolveTripPoiIcon(point.icon))}</span>
               <div class="min-w-0">
                 <h3 class="font-bold text-[var(--color-text)]">${escapeHtml(point.name)}</h3>
                 <p class="mt-1 break-words text-sm text-[var(--color-text-soft)]">${escapeHtml(point.locationName)}</p>

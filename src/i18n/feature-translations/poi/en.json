@@ -51,6 +51,8 @@
   "tripPois.empty": "You have not saved any points of interest for this trip yet.",
   "tripPois.form.name": "Point name",
   "tripPois.form.icon": "Icon",
+  "tripPois.form.iconPlaceholder": "E.g. 📍, 🍽️, 📷 or pin",
+  "tripPois.form.iconHelper": "You can type an emoji or use one of the suggested icons. Presets like pin or star still work too.",
   "tripPois.form.location": "Location",
   "tripPois.form.locationHelper": "Search a place, choose a result, pin the point on the map or use your current location.",
   "tripPois.form.helper": "Create a point with name, icon and location to show it on the trip maps.",

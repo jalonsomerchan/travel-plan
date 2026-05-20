@@ -9,6 +9,7 @@ import { escapeHtml } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
 import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
+import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import {
   getPlanCategoryColors,
   getPlanCategoryDotStyle,
@@ -47,20 +48,12 @@ const accommodationMarkerIcon = L.divIcon({
   popupAnchor: [0, -38],
 });
 
-const poiIcons: Record<string, string> = {
-  camera: '◎',
-  food: '◆',
-  pin: '●',
-  star: '★',
-  view: '▲',
-};
-
 function createTripPoiIcon(point: TripPointOfInterestRecord) {
   return L.divIcon({
     className: 'trip-map-poi-marker',
     html: `
       <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:34px;justify-content:center;width:34px;">
-        ${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}
+        ${escapeHtml(resolveTripPoiIcon(point.icon))}
       </span>
     `,
     iconAnchor: [17, 34],
@@ -120,7 +113,7 @@ function renderPlanList(
       (point) => `
         <article class="app-card-shell">
           <div class="flex items-center gap-2">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]">${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}</span>
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]">${escapeHtml(resolveTripPoiIcon(point.icon))}</span>
             <h3 class="text-lg font-bold">${escapeHtml(point.name)}</h3>
           </div>
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(point.locationName)}</p>

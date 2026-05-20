@@ -11,6 +11,7 @@ import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-
 import { buildPlanAiTourPrompt } from '../../lib/app/plan-ai-tour-prompt';
 import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
+import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import { getAppUrl } from '../../lib/app/routes';
 import { getChatGptPromptUrl } from '../../lib/app/trip-ai-prompt';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
@@ -43,14 +44,6 @@ const accommodationMarkerIcon = L.divIcon({
   popupAnchor: [0, -38],
 });
 
-const poiIcons: Record<string, string> = {
-  camera: '◎',
-  food: '◆',
-  pin: '●',
-  star: '★',
-  view: '▲',
-};
-
 function addTripPoiMarkers(layer: L.LayerGroup, points: TripPointOfInterestRecord[]) {
   layer.clearLayers();
   points.forEach((point) => {
@@ -59,7 +52,7 @@ function addTripPoiMarkers(layer: L.LayerGroup, points: TripPointOfInterestRecor
         className: 'plan-map-trip-poi-marker',
         html: `
           <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:32px;justify-content:center;width:32px;">
-            ${escapeHtml(poiIcons[point.icon] ?? poiIcons.pin)}
+            ${escapeHtml(resolveTripPoiIcon(point.icon))}
           </span>
         `,
         iconAnchor: [16, 32],

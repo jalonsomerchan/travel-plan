@@ -44,15 +44,29 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           </label>
           <label class="grid gap-2">
             <span class="field-label">{t('tripPois.form.icon')}</span>
-            <select class="field-select" name="icon">
-              <option value="star">★ {t('tripPois.icon.star')}</option>
-              <option value="camera">● {t('tripPois.icon.camera')}</option>
-              <option value="food">● {t('tripPois.icon.food')}</option>
-              <option value="view">● {t('tripPois.icon.view')}</option>
-              <option value="pin">● {t('tripPois.icon.pin')}</option>
-            </select>
+            <input
+              class="field-input"
+              list="trip-poi-icon-suggestions"
+              maxlength="16"
+              name="icon"
+              placeholder={t('tripPois.form.iconPlaceholder')}
+              value="pin"
+            />
           </label>
         </div>
+        <datalist id="trip-poi-icon-suggestions">
+          <option value="star">{t('tripPois.icon.star')}</option>
+          <option value="camera">{t('tripPois.icon.camera')}</option>
+          <option value="food">{t('tripPois.icon.food')}</option>
+          <option value="view">{t('tripPois.icon.view')}</option>
+          <option value="pin">{t('tripPois.icon.pin')}</option>
+          <option value="📍">{t('tripPois.icon.pin')}</option>
+          <option value="📷">{t('tripPois.icon.camera')}</option>
+          <option value="🍽️">{t('tripPois.icon.food')}</option>
+          <option value="🌄">{t('tripPois.icon.view')}</option>
+          <option value="⭐">{t('tripPois.icon.star')}</option>
+        </datalist>
+        <p class="text-sm text-[var(--color-text-soft)]">{t('tripPois.form.iconHelper')}</p>
         <LocationPickerFields
           clearButtonName={t('plan.location.clear')}
           helperKey="tripPois.form.locationHelper"

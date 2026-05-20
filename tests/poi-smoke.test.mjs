@@ -18,6 +18,7 @@ describe('poi smoke checks', () => {
     [
       'src/config/poi.ts',
       'src/lib/app/poi.ts',
+      'src/lib/app/trip-poi-icons.ts',
       'src/components/app/NearbyPoiExplorer.astro',
       'src/components/pages/TripPoisPage.astro',
       'src/lib/firebase/trip-pois.ts',
@@ -59,6 +60,8 @@ describe('poi smoke checks', () => {
 
   it('keeps saved trip points editable and visible on trip maps', () => {
     const service = readText('src/lib/firebase/trip-pois.ts');
+    const helper = readText('src/lib/app/trip-poi-icons.ts');
+    const pageComponent = readText('src/components/pages/TripPoisPage.astro');
     const page = readText('src/scripts/pages/trip-pois.ts');
     const map = readText('src/scripts/pages/trip-map.ts');
     const rules = readText('firebase/firestore.rules');
@@ -69,12 +72,18 @@ describe('poi smoke checks', () => {
     assert.match(service, /pointsOfInterest/);
     assert.match(service, /createTripPointOfInterest/);
     assert.match(service, /updateTripPointOfInterest/);
+    assert.match(helper, /resolveTripPoiIcon/);
+    assert.match(helper, /presetPoiIcons/);
+    assert.match(pageComponent, /list="trip-poi-icon-suggestions"/);
+    assert.match(pageComponent, /tripPois\.form\.iconHelper/);
     assert.match(page, /data-trip-poi-edit/);
     assert.match(page, /initLocationPickers/);
+    assert.match(page, /resolveTripPoiIcon/);
     assert.match(locationPicker, /data-location-current-button/);
     assert.match(page, /revealAppShell\(\);\s*initLocationPickers\(\)/);
     assert.match(map, /subscribeTripPointsOfInterest/);
     assert.match(map, /createTripPoiIcon/);
+    assert.match(map, /resolveTripPoiIcon/);
     assert.match(map, /locateOnLoad: true/);
     assert.match(map, /centerOnLocation: false/);
     assert.match(rules, /match \/pointsOfInterest\/{pointId}/);
