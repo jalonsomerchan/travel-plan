@@ -1,0 +1,22 @@
+---
+import type { Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+import AppSectionNav from './AppSectionNav.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+const invitesUrl = getLocalizedPath('/app/trip-invites/', locale);
+---
+
+<AppSectionNav
+  ariaLabel={t('dashboard.breadcrumb')}
+  items={[
+    { href: dashboardUrl, id: 'dashboard-trips-link', label: t('appNav.trips') },
+    { href: invitesUrl, id: 'dashboard-invites-link', label: t('dashboard.goInvites') },
+  ]}
+/>

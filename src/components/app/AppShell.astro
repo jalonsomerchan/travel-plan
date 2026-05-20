@@ -14,7 +14,6 @@ interface Props {
 }
 
 const {
-  eyebrow,
   title,
   description,
   breadcrumbs = [],
@@ -30,16 +29,15 @@ const shellClasses = [
 ---
 
 <Container class={containerClass}>
+  <div class="app-shell-topbar">
+    <slot name="topbar" />
+  </div>
   <section class:list={shellClasses}>
-    <div class="app-shell-topbar">
-      <slot name="topbar" />
-    </div>
     {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
     {loading && <LoadingState class="mt-6" label={loadingLabel} data-app-loading />}
     <div data-app-content={loading ? 'loading' : undefined} hidden={loading}>
       <div class="app-shell-layout">
         <div class="app-shell-copy">
-          {eyebrow && <span class="eyebrow">{eyebrow}</span>}
           <h1 class="app-shell-title" data-app-title>{title}</h1>
           {description && (
             <p class="app-shell-description prose-copy" data-app-description>
@@ -52,6 +50,7 @@ const shellClasses = [
           <slot />
         </div>
       </div>
+      <slot name="nav" />
       <slot name="body" />
     </div>
   </section>

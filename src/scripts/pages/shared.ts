@@ -262,6 +262,7 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
     button.dataset.fallbackHref = tripUrl;
   });
 
+  setNavigationLinkHref('trip-plans-link', tripUrl);
   setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
   setNavigationLinkHref('trip-checklist-link', getAppUrl(locale, 'trip-checklist', { trip: tripId }));
   setNavigationLinkHref('trip-luggage-link', getAppUrl(locale, 'trip-luggage', { trip: tripId }));

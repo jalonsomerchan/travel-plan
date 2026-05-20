@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
-import Button from '../Button.astro';
+import DashboardSectionNav from '../app/DashboardSectionNav.astro';
 import TripFormFields from '../app/TripFormFields.astro';
+import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -11,6 +12,7 @@ interface Props { locale: Locale; }
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homeUrl = getLocalizedPath('/', locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
 ---
 
 <BaseLayout title={t('tripCreate.metaTitle')} description={t('tripCreate.metaDescription')} locale={locale}>
@@ -18,13 +20,10 @@ const homeUrl = getLocalizedPath('/', locale);
     eyebrow={t('tripCreate.eyebrow')}
     title={t('tripCreate.title')}
     description={t('tripCreate.description')}
-    breadcrumbs={[{ label: t('nav.home'), href: homeUrl }, { label: t('dashboard.breadcrumb'), href: getLocalizedPath('/app/', locale) }, { label: t('tripCreate.breadcrumb') }]}
+    breadcrumbs={[{ label: t('nav.home'), href: homeUrl }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('tripCreate.breadcrumb') }]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button href={getLocalizedPath('/app/', locale)} variant="ghost">{t('common.cancel')}</Button>
-      </div>
-    </AppToolbar>
+    <AppBackButton slot="topbar" fallbackHref={dashboardUrl} label={t('common.goBack')} />
+    <DashboardSectionNav slot="nav" locale={locale} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <form class="mx-auto max-w-3xl space-y-4" id="trip-create-form">
         <TripFormFields locale={locale} prefix="trip-create" />

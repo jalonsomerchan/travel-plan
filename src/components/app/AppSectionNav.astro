@@ -1,0 +1,27 @@
+---
+interface NavItem {
+  href: string;
+  hidden?: boolean;
+  id?: string;
+  label: string;
+}
+
+interface Props {
+  ariaLabel: string;
+  items: NavItem[];
+}
+
+const { ariaLabel, items } = Astro.props;
+---
+
+<nav aria-label={ariaLabel} class="app-section-nav">
+  <ol>
+    {items.map((item) => (
+      <li>
+        <a hidden={item.hidden} href={item.href} id={item.id}>
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>

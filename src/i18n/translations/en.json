@@ -5,6 +5,8 @@
   "nav.dashboard": "Your trips",
   "nav.calendar": "Global calendar",
   "nav.tagline": "Shared trips and plans",
+  "appNav.plans": "Plans",
+  "appNav.trips": "Trips",
   "theme.toggle": "Toggle theme",
   "footer.createdWith": "Built for organizing getaways, routes and bookings from one shared space.",
   "footer.repository": "Project source",

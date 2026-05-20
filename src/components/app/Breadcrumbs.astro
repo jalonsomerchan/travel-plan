@@ -12,11 +12,11 @@ interface Props {
 const { items } = Astro.props;
 ---
 
-<nav aria-label="Breadcrumb" class="mb-6">
-  <ol class="flex flex-wrap items-center gap-2.5 text-sm text-[var(--color-text-soft)]">
+<nav aria-label="Breadcrumb" class="app-breadcrumbs mb-5">
+  <ol class="flex items-center gap-2.5 text-sm text-[var(--color-text-soft)]">
     {items.map((item, index) => (
       <>
-        <li>
+        <li class="shrink-0">
           {(item.href || (item.key && index < items.length - 1)) && index < items.length - 1 ? (
             <a
               class="inline-flex items-center rounded-full px-2.5 py-1.5 transition hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]"
@@ -36,7 +36,7 @@ const { items } = Astro.props;
             </span>
           )}
         </li>
-        {index < items.length - 1 && <li aria-hidden="true" class="text-[var(--color-text-soft)]/70">›</li>}
+        {index < items.length - 1 && <li aria-hidden="true" class="shrink-0 text-[var(--color-text-soft)]/70">›</li>}
       </>
     ))}
   </ol>

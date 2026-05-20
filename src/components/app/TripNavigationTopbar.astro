@@ -1,7 +1,6 @@
 ---
 import type { Locale } from '../../config/site';
 import { useTranslations } from '../../i18n/ui';
-import AppActionsMenu from './AppActionsMenu.astro';
 import AppBackButton from './AppBackButton.astro';
 
 interface Props {
@@ -15,21 +14,4 @@ const t = useTranslations(locale);
 
 <div class="app-shell-topbar-row">
   <AppBackButton data-trip-back-button fallbackHref={fallbackHref} label={t('common.goBack')} />
-  <AppActionsMenu
-    ariaLabel={t('trip.actionsMenu')}
-    label="..."
-    items={[
-      { href: fallbackHref, id: 'trip-create-plan-link', label: t('trip.goCreatePlan') },
-      { href: fallbackHref, id: 'trip-checklist-link', label: t('tripChecklist.goChecklist') },
-      { href: fallbackHref, hidden: true, id: 'trip-luggage-link', label: t('tripLuggage.goLuggage') },
-      { href: fallbackHref, id: 'trip-ai-link', label: t('trip.goAiSuggestions') },
-      { href: fallbackHref, id: 'trip-accommodation-link', label: t('trip.goAccommodation') },
-      { href: fallbackHref, id: 'trip-pois-link', label: t('trip.goNearbyPlaces') },
-      { href: fallbackHref, id: 'trip-accommodation-maps-link', label: t('trip.openAccommodationMap') },
-      { href: fallbackHref, id: 'trip-members-link', label: t('trip.goMembers') },
-      { href: fallbackHref, id: 'trip-calendar-link', label: t('trip.openCalendar') },
-      { href: fallbackHref, id: 'trip-map-link', label: t('trip.openMap') },
-      { href: fallbackHref, id: 'trip-edit-link', label: t('trip.goEdit') },
-    ]}
-  />
 </div>

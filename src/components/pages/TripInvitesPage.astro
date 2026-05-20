@@ -1,15 +1,16 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppBackButton from '../app/AppBackButton.astro';
 import AppShell from '../app/AppShell.astro';
-import AppToolbar from '../app/AppToolbar.astro';
+import DashboardSectionNav from '../app/DashboardSectionNav.astro';
 import LoadingState from '../app/LoadingState.astro';
-import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
 interface Props { locale: Locale; }
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
 ---
 
 <BaseLayout title={t('invites.metaTitle')} description={t('invites.metaDescription')} locale={locale}>
@@ -17,13 +18,10 @@ const t = useTranslations(locale);
     eyebrow={t('invites.eyebrow')}
     title={t('invites.title')}
     description={t('invites.description')}
-    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: getLocalizedPath('/app/', locale) }, { label: t('invites.breadcrumb') }]}
+    breadcrumbs={[{ label: t('nav.home'), href: getLocalizedPath('/', locale) }, { label: t('dashboard.breadcrumb'), href: dashboardUrl }, { label: t('invites.breadcrumb') }]}
   >
-    <AppToolbar>
-      <div slot="secondary">
-        <Button href={getLocalizedPath('/app/', locale)} variant="ghost">{t('trip.backToDashboard')}</Button>
-      </div>
-    </AppToolbar>
+    <AppBackButton slot="topbar" fallbackHref={dashboardUrl} label={t('common.goBack')} />
+    <DashboardSectionNav slot="nav" locale={locale} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <div class="grid gap-4" data-invite-list>
         <LoadingState label={t('common.loading')} />

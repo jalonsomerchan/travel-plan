@@ -5,6 +5,8 @@
   "nav.dashboard": "Tus viajes",
   "nav.calendar": "Calendario global",
   "nav.tagline": "Planes y viajes compartidos",
+  "appNav.plans": "Planes",
+  "appNav.trips": "Viajes",
   "theme.toggle": "Cambiar tema",
   "footer.createdWith": "Organiza escapadas, rutas y reservas con una sola base compartida.",
   "footer.repository": "Código del proyecto",

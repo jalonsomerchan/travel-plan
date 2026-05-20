@@ -143,14 +143,15 @@ main {
 
 .app-shell-layout {
   display: grid;
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
 }
 
 .app-shell-topbar {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.9rem;
-  min-height: 2.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .app-shell-topbar:empty {
@@ -170,15 +171,72 @@ main {
 }
 
 .app-shell-side {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
   min-width: 0;
 }
 
 .app-shell-title {
-  margin: 1rem 0 0;
+  margin: 0;
   font-size: clamp(2rem, 5vw, 3.75rem);
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 0.96;
+  color: var(--color-text);
+}
+
+.app-breadcrumbs {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.app-breadcrumbs ol {
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.app-section-nav {
+  margin-top: 1.35rem;
+  max-width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.45rem 0;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.app-section-nav ol {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-section-nav a {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition:
+    background var(--transition-base, 180ms ease),
+    color var(--transition-base, 180ms ease);
+}
+
+.app-section-nav a:hover {
+  background: var(--color-surface-soft);
   color: var(--color-text);
 }
 
@@ -322,23 +380,22 @@ main {
 
 .app-back-button {
   display: inline-flex;
-  min-height: 2.75rem;
+  min-height: 2rem;
   align-items: center;
-  gap: 0.55rem;
-  border: 1px solid var(--color-border);
+  gap: 0.35rem;
+  border: 0;
   border-radius: 999px;
-  background: var(--color-surface-soft);
-  padding: 0.65rem 1rem;
+  background: transparent;
+  padding: 0.15rem 0;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text-soft);
   cursor: pointer;
 }
 
 .app-back-button:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-surface-raised);
+  color: var(--color-text);
 }
 
 .app-card-link {
@@ -860,11 +917,6 @@ main {
 }
 
 @media (min-width: 48rem) {
-  .app-shell-layout {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
   .app-toolbar {
     align-items: flex-end;
   }
