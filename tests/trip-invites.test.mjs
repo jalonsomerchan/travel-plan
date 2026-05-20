@@ -23,7 +23,8 @@ describe('trip invite flow', () => {
     assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites', inviteId\)/);
     assert.match(inviteFunction, /setDoc\(inviteRef, inviteData\)/);
     assert.match(inviteFunction, /setDoc\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
-    assert.match(source, /collection\(db, 'userInvites', normalizedEmail, 'invites'\)/);
+    assert.match(inviteFunction, /setDoc\(getRecipientInviteIndexRef\(normalizedEmail\)/);
+    assert.match(source, /doc\(getFirebaseDb\(\), 'userInvites', emailLower\)/);
   });
 
   it('surfaces pending invite receive state in dashboard and invite page', () => {
@@ -34,6 +35,8 @@ describe('trip invite flow', () => {
 
     assert.match(tripsSource, /onError\?: \(error: Error\) => void/);
     assert.match(tripsSource, /onError\?\.\(error\)/);
+    assert.match(tripsSource, /getRecipientInviteIndexRef\(normalizedEmail\)/);
+    assert.match(tripsSource, /mapRecipientInviteIndex/);
     assert.match(dashboardSource, /subscribePendingInvites/);
     assert.match(dashboardSource, /renderInviteCount/);
     assert.match(dashboardSource, /dashboard\.goInvitesWithCount/);
@@ -68,7 +71,8 @@ describe('trip invite flow', () => {
     assert.match(rules, /function tripInviteReadable\(\)/);
     assert.match(rules, /resource\.data\.ownerId == request\.auth\.uid/);
     assert.match(rules, /userEmailLower\(\) == resource\.data\.emailLower/);
-    assert.match(rules, /match \/userInvites\/{emailLower}\/invites\/{inviteId}/);
+    assert.match(rules, /match \/userInvites\/{emailLower}/);
+    assert.match(rules, /request\.resource\.data\.invites is map/);
     assert.match(rules, /recipientInviteAccessible\(emailLower\)/);
     assert.match(rules, /pendingInviteForCurrentUser\(tripId\)/);
     assert.match(rules, /recipientMemberCreatable\(tripId, memberId\)/);
