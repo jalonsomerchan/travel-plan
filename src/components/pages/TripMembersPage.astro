@@ -46,11 +46,12 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
                 ))}
               </select>
             </div>
-            <div class="flex items-end">
+            <div class="flex items-end gap-3">
               <Button class="w-full md:w-auto" type="submit">{t('trip.invite.action')}</Button>
+              <Button class="w-full md:w-auto" id="invite-share-button" type="button" variant="secondary">{t('trip.invite.shareAction')}</Button>
             </div>
           </form>
-          <p class="mt-4 text-sm text-[var(--color-text-soft)]" id="invite-message">{t('trip.invite.helper')}</p>
+          <p class="mt-4 text-sm text-[var(--color-text-soft)]" id="invite-message" role="status" aria-live="polite">{t('trip.invite.helper')}</p>
         </div>
         <div class="min-w-0 border-t border-[var(--color-border)] pt-8 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
           <div class="grid gap-4" data-member-list>

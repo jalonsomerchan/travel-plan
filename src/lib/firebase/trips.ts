@@ -12,6 +12,11 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import {
+  getInviteId,
+  isValidInviteEmail,
+  normalizeInviteEmail,
+} from '../app/invite-share';
 import type {
   TripAccommodationRecord,
   TripInput,
@@ -31,15 +36,15 @@ export class InviteUserToTripError extends Error {
 }
 
 function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+  return normalizeInviteEmail(email);
 }
 
 function isValidEmail(email: string) {
-  return /^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(email);
+  return isValidInviteEmail(email);
 }
 
-function getInviteId(tripId: string, emailLower: string) {
-  return `${tripId}_${emailLower}`;
+function getRecipientInviteRef(emailLower: string, inviteId: string) {
+  return doc(getFirebaseDb(), 'userInvites', emailLower, 'invites', inviteId);
 }
 
 function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
@@ -164,6 +169,30 @@ export function subscribeTripMembers(tripId: string, callback: (members: TripMem
   );
 }
 
+export function subscribeTripInvites(
+  tripId: string,
+  ownerId: string,
+  callback: (invites: TripInviteRecord[]) => void,
+  onError?: (error: Error) => void,
+) {
+  const db = getFirebaseDb();
+  const invitesQuery = query(
+    collection(db, 'tripInvites'),
+    where('tripId', '==', tripId),
+    where('ownerId', '==', ownerId),
+    where('status', '==', 'pending'),
+  );
+
+  return onSnapshot(
+    invitesQuery,
+    (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
+    (error) => {
+      console.error('subscribeTripInvites', error);
+      onError?.(error);
+    },
+  );
+}
+
 export async function createTrip(user: User, input: TripInput) {
   const db = getFirebaseDb();
   const tripRef = await addDoc(collection(db, 'trips'), {
@@ -217,9 +246,9 @@ export async function inviteUserToTrip(
     throw new InviteUserToTripError('invalid-recipient');
   }
 
-  const inviteRef = doc(db, 'tripInvites', getInviteId(tripId, normalizedEmail));
-
-  await setDoc(inviteRef, {
+  const inviteId = getInviteId(tripId, normalizedEmail);
+  const inviteRef = doc(db, 'tripInvites', inviteId);
+  const inviteData = {
     tripId,
     tripName,
     tripLocation,
@@ -233,7 +262,10 @@ export async function inviteUserToTrip(
     status: 'pending',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  await setDoc(inviteRef, inviteData);
+  await setDoc(getRecipientInviteRef(normalizedEmail, inviteId), inviteData);
 }
 
 export function subscribePendingInvites(
@@ -244,8 +276,7 @@ export function subscribePendingInvites(
   const db = getFirebaseDb();
   const normalizedEmail = normalizeEmail(email);
   const invitesQuery = query(
-    collection(db, 'tripInvites'),
-    where('emailLower', '==', normalizedEmail),
+    collection(db, 'userInvites', normalizedEmail, 'invites'),
     where('status', '==', 'pending'),
   );
 
@@ -280,6 +311,12 @@ export async function acceptInvite(user: User, invite: TripInviteRecord) {
   });
 
   await updateDoc(doc(db, 'tripInvites', invite.id), {
+    status: 'accepted',
+    userId: user.uid,
+    updatedAt: serverTimestamp(),
+  });
+
+  await updateDoc(getRecipientInviteRef(invite.emailLower, invite.id), {
     status: 'accepted',
     userId: user.uid,
     updatedAt: serverTimestamp(),

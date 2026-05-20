@@ -28,6 +28,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
     }
 
+    function pendingInviteForCurrentUser(tripId) {
+      return signedIn() && exists(
+        /databases/$(database)/documents/userInvites/$(userEmailLower())/invites/$(tripId + '_' + userEmailLower())
+      ) && get(
+        /databases/$(database)/documents/userInvites/$(userEmailLower())/invites/$(tripId + '_' + userEmailLower())
+      ).data.status == 'pending';
+    }
+
     function tripInviteReadable() {
       return signedIn() && (
         resource.data.ownerId == request.auth.uid ||
@@ -44,19 +52,44 @@ service cloud.firestore {
         tripOwnedByCurrentUser(request.resource.data.tripId);
     }
 
+    function recipientInviteAccessible(emailLower) {
+      return signedIn() && userEmailLower() == emailLower;
+    }
+
+    function recipientInviteWritable(emailLower) {
+      return signedIn() && (
+        userEmailLower() == emailLower ||
+        (
+          request.resource.data.ownerId == request.auth.uid &&
+          request.resource.data.emailLower == emailLower &&
+          request.resource.data.tripId is string &&
+          tripOwnedByCurrentUser(request.resource.data.tripId)
+        )
+      );
+    }
+
+    function recipientMemberCreatable(tripId, memberId) {
+      return pendingInviteForCurrentUser(tripId) &&
+        memberId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid &&
+        lower(request.resource.data.email) == userEmailLower();
+    }
+
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
     match /trips/{tripId} {
-      allow read: if tripVisibleFromResource();
+      allow read: if tripVisibleFromResource() || pendingInviteForCurrentUser(tripId);
       allow create: if signedIn() &&
         request.resource.data.ownerId == request.auth.uid &&
         tripVisibleFromTripData(request.resource.data);
-      allow update: if tripVisibleFromResource();
+      allow update: if tripVisibleFromResource() || pendingInviteForCurrentUser(tripId);
 
       match /members/{memberId} {
-        allow read, write: if tripVisibleFromParent(tripId);
+        allow read: if tripVisibleFromParent(tripId) || pendingInviteForCurrentUser(tripId);
+        allow create: if tripVisibleFromParent(tripId) || recipientMemberCreatable(tripId, memberId);
+        allow update, delete: if tripVisibleFromParent(tripId);
       }
 
       match /plans/{planId} {
@@ -76,6 +109,12 @@ service cloud.firestore {
       allow read: if tripInviteReadable();
       allow create: if tripInviteCreatable();
       allow update: if tripInviteReadable();
+    }
+
+    match /userInvites/{emailLower}/invites/{inviteId} {
+      allow read: if recipientInviteAccessible(emailLower);
+      allow create, update: if recipientInviteWritable(emailLower);
+      allow delete: if false;
     }
   }
 }

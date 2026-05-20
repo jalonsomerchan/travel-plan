@@ -10,7 +10,7 @@ function readText(path) {
 }
 
 describe('trip invite flow', () => {
-  it('does not pre-read invite documents before sending', () => {
+  it('mirrors invites to recipient-scoped documents before reading them', () => {
     const source = readText('src/lib/firebase/trips.ts');
     const inviteFunction = source.slice(
       source.indexOf('export async function inviteUserToTrip'),
@@ -19,10 +19,11 @@ describe('trip invite flow', () => {
 
     assert.match(source, /import type \{ User \} from 'firebase\/auth'/);
     assert.doesNotMatch(inviteFunction, /getDoc\(/);
-    assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites'/);
-    assert.match(inviteFunction, /setDoc\(inviteRef/);
     assert.match(inviteFunction, /getInviteId\(tripId, normalizedEmail\)/);
-    assert.match(inviteFunction, /status:\s*'pending'/);
+    assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites', inviteId\)/);
+    assert.match(inviteFunction, /setDoc\(inviteRef, inviteData\)/);
+    assert.match(inviteFunction, /setDoc\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
+    assert.match(source, /collection\(db, 'userInvites', normalizedEmail, 'invites'\)/);
   });
 
   it('surfaces pending invite receive state in dashboard and invite page', () => {
@@ -42,6 +43,22 @@ describe('trip invite flow', () => {
     assert.match(invitesSource, /subscribePendingInvites\(/);
   });
 
+  it('shows pending invites in the trip members list and supports Web Share', () => {
+    const page = readText('src/scripts/pages/trip-members.ts');
+    const component = readText('src/components/pages/TripMembersPage.astro');
+    const shareHelper = readText('src/lib/app/invite-share.ts');
+
+    assert.match(page, /subscribeTripInvites/);
+    assert.match(page, /renderPeople/);
+    assert.match(page, /trip\.invite\.pendingStatus/);
+    assert.match(page, /navigator\.share/);
+    assert.match(page, /getInviteShareFallbackUrl/);
+    assert.match(component, /id="invite-share-button"/);
+    assert.match(component, /role="status"/);
+    assert.match(shareHelper, /buildInviteSharePayload/);
+    assert.match(shareHelper, /mailto:/);
+  });
+
   it('keeps Firestore invite rules aligned with owners and recipients', () => {
     const rules = readText('firebase/firestore.rules');
 
@@ -51,8 +68,10 @@ describe('trip invite flow', () => {
     assert.match(rules, /function tripInviteReadable\(\)/);
     assert.match(rules, /resource\.data\.ownerId == request\.auth\.uid/);
     assert.match(rules, /userEmailLower\(\) == resource\.data\.emailLower/);
-    assert.match(rules, /allow create: if tripInviteCreatable\(\)/);
-    assert.match(rules, /allow update: if tripInviteReadable\(\)/);
+    assert.match(rules, /match \/userInvites\/{emailLower}\/invites\/{inviteId}/);
+    assert.match(rules, /recipientInviteAccessible\(emailLower\)/);
+    assert.match(rules, /pendingInviteForCurrentUser\(tripId\)/);
+    assert.match(rules, /recipientMemberCreatable\(tripId, memberId\)/);
   });
 
   it('keeps the members page using the invite service and visible feedback', () => {
@@ -74,7 +93,9 @@ describe('trip invite flow', () => {
     assert.match(ui, /feature-translations\/invites\/en\.json/);
     assert.match(es, /dashboard\.pendingInvites/);
     assert.match(en, /dashboard\.pendingInvites/);
-    assert.match(es, /dashboard\.invitesError/);
-    assert.match(en, /dashboard\.invitesError/);
+    assert.match(es, /trip\.invite\.shareAction/);
+    assert.match(en, /trip\.invite\.shareAction/);
+    assert.match(es, /trip\.invite\.pendingStatus/);
+    assert.match(en, /trip\.invite\.pendingStatus/);
   });
 });
