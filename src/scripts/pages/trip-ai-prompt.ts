@@ -49,8 +49,15 @@ function toPlanInput(candidate: CandidateEntry): PlanInput {
   };
 }
 
+function getPaymentLabel(locale: Locale, isPaid: boolean) {
+  const t = getPageTranslator(locale);
+  return isPaid ? t('plan.flag.paid') : t('tripAi.budget.free');
+}
+
 function renderCandidate(locale: Locale, candidate: CandidateEntry) {
   const t = getPageTranslator(locale);
+  const categoryLabel = getCategoryLabel(locale, candidate.category);
+  const paymentLabel = getPaymentLabel(locale, candidate.isPaid);
   const moment = formatPlanMoment(candidate, locale) || t('calendar.unscheduled');
   const location = candidate.locationName || t('tripAiPrompt.candidates.noLocation');
 
@@ -68,7 +75,10 @@ function renderCandidate(locale: Locale, candidate: CandidateEntry) {
         <span class="min-w-0 flex-1">
           <span class="flex flex-wrap items-start justify-between gap-3">
             <strong class="text-lg text-[var(--color-text)]">${escapeHtml(candidate.name)}</strong>
-            <span class="status-pill" data-tone="primary">${escapeHtml(getCategoryLabel(locale, candidate.category))}</span>
+            <span class="flex flex-wrap gap-2">
+              <span class="status-pill" data-tone="primary">${escapeHtml(categoryLabel)}</span>
+              <span class="status-pill" data-tone="${candidate.isPaid ? 'warning' : 'success'}">${escapeHtml(paymentLabel)}</span>
+            </span>
           </span>
           <span class="mt-3 block text-sm text-[var(--color-text-muted)]">${escapeHtml(candidate.description || t('plan.descriptionEmpty'))}</span>
           <span class="mt-4 grid gap-2 text-sm text-[var(--color-text-soft)]">
