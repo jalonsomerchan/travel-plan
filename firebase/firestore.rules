@@ -28,17 +28,17 @@ service cloud.firestore {
         get(/databases/$(database)/documents/trips/$(tripId)).data.ownerId == request.auth.uid;
     }
 
-    function canReadTripInvite() {
+    function tripInviteReadable() {
       return signedIn() && (
-        resource == null ||
         resource.data.ownerId == request.auth.uid ||
         userEmailLower() == resource.data.emailLower
       );
     }
 
-    function canCreateTripInvite() {
+    function tripInviteCreatable() {
       return signedIn() &&
         request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.tripId is string &&
         request.resource.data.emailLower is string &&
         request.resource.data.status == 'pending' &&
         tripOwnedByCurrentUser(request.resource.data.tripId);
@@ -73,12 +73,9 @@ service cloud.firestore {
     }
 
     match /tripInvites/{inviteId} {
-      allow read: if canReadTripInvite();
-      allow create: if canCreateTripInvite();
-      allow update: if signedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        userEmailLower() == resource.data.emailLower
-      );
+      allow read: if tripInviteReadable();
+      allow create: if tripInviteCreatable();
+      allow update: if tripInviteReadable();
     }
   }
 }
