@@ -1,0 +1,5 @@
+{
+  "dashboard.pendingInvites": "You have {count} pending invitations.",
+  "dashboard.goInvitesWithCount": "Invitations ({count})",
+  "dashboard.invitesError": "Invitations could not be loaded. Check that you signed in with the invited email and that the Firestore rules are deployed."
+}
