@@ -10,7 +10,7 @@ export const planCategoryValues = [
   'bathroom',
   'other',
 ] as const;
-export const planStatusValues = ['pending', 'visited', 'discarded'] as const;
+export const planStatusValues = ['proposed', 'pending', 'visited', 'discarded'] as const;
 export const checklistItemStatusValues = ['pending', 'completed'] as const;
 
 export type TripStatus = (typeof tripStatusValues)[number];
