@@ -43,8 +43,16 @@ function isValidEmail(email: string) {
   return isValidInviteEmail(email);
 }
 
+function getRecipientInviteKey(inviteId: string) {
+  return encodeURIComponent(inviteId);
+}
+
 function getRecipientInviteRef(emailLower: string, inviteId: string) {
   return doc(getFirebaseDb(), 'userInvites', emailLower, 'invites', inviteId);
+}
+
+function getRecipientInviteIndexRef(emailLower: string) {
+  return doc(getFirebaseDb(), 'userInvites', emailLower);
 }
 
 function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
@@ -102,11 +110,9 @@ function mapMemberRecord(snapshot: { id: string; data: () => Record<string, unkn
   };
 }
 
-function mapInviteRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripInviteRecord {
-  const data = snapshot.data();
-
+function mapInviteData(id: string, data: Record<string, unknown>): TripInviteRecord {
   return {
-    id: snapshot.id,
+    id,
     tripId: String(data.tripId ?? ''),
     tripName: String(data.tripName ?? ''),
     tripLocation: String(data.tripLocation ?? ''),
@@ -119,6 +125,35 @@ function mapInviteRecord(snapshot: { id: string; data: () => Record<string, unkn
     role: (data.role as TripMemberRole) ?? 'viewer',
     status: (data.status as TripInviteRecord['status']) ?? 'pending',
   };
+}
+
+function mapInviteRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripInviteRecord {
+  return mapInviteData(snapshot.id, snapshot.data());
+}
+
+function getRecipientInviteIndexData(inviteId: string, inviteData: Record<string, unknown>) {
+  return {
+    emailLower: inviteData.emailLower,
+    invites: {
+      [getRecipientInviteKey(inviteId)]: {
+        ...inviteData,
+        id: inviteId,
+      },
+    },
+    updatedAt: serverTimestamp(),
+  };
+}
+
+function mapRecipientInviteIndex(data: Record<string, unknown>) {
+  const invites = data.invites;
+
+  if (!invites || typeof invites !== 'object') {
+    return [];
+  }
+
+  return Object.values(invites as Record<string, Record<string, unknown>>)
+    .map((invite) => mapInviteData(String(invite.id ?? ''), invite))
+    .filter((invite) => invite.id && invite.status === 'pending');
 }
 
 export function subscribeUserTrips(
@@ -266,6 +301,9 @@ export async function inviteUserToTrip(
 
   await setDoc(inviteRef, inviteData);
   await setDoc(getRecipientInviteRef(normalizedEmail, inviteId), inviteData);
+  await setDoc(getRecipientInviteIndexRef(normalizedEmail), getRecipientInviteIndexData(inviteId, inviteData), {
+    merge: true,
+  });
 }
 
 export function subscribePendingInvites(
@@ -275,14 +313,11 @@ export function subscribePendingInvites(
 ) {
   const db = getFirebaseDb();
   const normalizedEmail = normalizeEmail(email);
-  const invitesQuery = query(
-    collection(db, 'userInvites', normalizedEmail, 'invites'),
-    where('status', '==', 'pending'),
-  );
+  const inviteIndexRef = getRecipientInviteIndexRef(normalizedEmail);
 
   return onSnapshot(
-    invitesQuery,
-    (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
+    inviteIndexRef,
+    (snapshot) => callback(snapshot.exists() ? mapRecipientInviteIndex(snapshot.data()) : []),
     (error) => {
       console.error('subscribePendingInvites', error);
       onError?.(error);
@@ -297,6 +332,13 @@ export async function acceptInvite(user: User, invite: TripInviteRecord) {
   if (!userEmail || userEmail !== invite.emailLower) {
     throw new InviteUserToTripError('invalid-recipient');
   }
+
+  const acceptedInviteData = {
+    ...invite,
+    status: 'accepted',
+    userId: user.uid,
+    updatedAt: serverTimestamp(),
+  };
 
   await setDoc(doc(db, 'trips', invite.tripId, 'members', user.uid), {
     userId: user.uid,
@@ -321,4 +363,10 @@ export async function acceptInvite(user: User, invite: TripInviteRecord) {
     userId: user.uid,
     updatedAt: serverTimestamp(),
   });
+
+  await setDoc(
+    getRecipientInviteIndexRef(invite.emailLower),
+    getRecipientInviteIndexData(invite.id, acceptedInviteData),
+    { merge: true },
+  );
 }
