@@ -85,12 +85,20 @@ function positionPortalPanel(panel: HTMLElement, trigger: HTMLElement) {
   const triggerRect = trigger.getBoundingClientRect();
   const margin = 12;
   const panelWidth = Math.min(304, window.innerWidth - margin * 2);
+  const panelHeight = panel.getBoundingClientRect().height;
   const left = Math.min(
     Math.max(margin, triggerRect.right - panelWidth),
     window.innerWidth - panelWidth - margin,
   );
-  const top = Math.min(triggerRect.bottom + margin, window.innerHeight - margin);
+  const preferredTop = triggerRect.bottom + margin;
+  const fallbackTop = triggerRect.top - panelHeight - margin;
+  const top = preferredTop + panelHeight + margin <= window.innerHeight
+    ? preferredTop
+    : Math.max(margin, fallbackTop);
 
+  panel.style.position = 'fixed';
+  panel.style.right = 'auto';
+  panel.style.zIndex = '10000';
   panel.style.setProperty('--map-poi-panel-width', `${panelWidth}px`);
   panel.style.left = `${left}px`;
   panel.style.top = `${top}px`;
