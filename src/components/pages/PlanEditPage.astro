@@ -31,7 +31,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
-    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+    <div slot="body" class="pt-6">
       <h2 class="text-2xl font-black" data-plan-context>{t('plan.detailsTitle')}</h2>
       <form class="mx-auto mt-6 max-w-3xl space-y-4" id="plan-form">
         <PlanFormFields locale={locale} prefix="plan-edit" />
