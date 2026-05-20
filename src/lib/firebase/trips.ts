@@ -247,6 +247,7 @@ export async function inviteUserToTrip(
   }
 
   const inviteId = getInviteId(tripId, normalizedEmail);
+  const inviteRef = doc(db, 'tripInvites', inviteId);
   const inviteData = {
     tripId,
     tripName,
@@ -263,7 +264,7 @@ export async function inviteUserToTrip(
     updatedAt: serverTimestamp(),
   };
 
-  await setDoc(doc(db, 'tripInvites', inviteId), inviteData);
+  await setDoc(inviteRef, inviteData);
   await setDoc(getRecipientInviteRef(normalizedEmail, inviteId), inviteData);
 }
 
