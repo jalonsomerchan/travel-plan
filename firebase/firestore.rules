@@ -60,6 +60,10 @@ service cloud.firestore {
       return signedIn() && (
         userEmailLower() == emailLower ||
         (
+          request.resource.data.emailLower == emailLower &&
+          request.resource.data.invites is map
+        ) ||
+        (
           request.resource.data.ownerId == request.auth.uid &&
           request.resource.data.emailLower == emailLower &&
           request.resource.data.tripId is string &&
@@ -111,10 +115,16 @@ service cloud.firestore {
       allow update: if tripInviteReadable();
     }
 
-    match /userInvites/{emailLower}/invites/{inviteId} {
+    match /userInvites/{emailLower} {
       allow read: if recipientInviteAccessible(emailLower);
       allow create, update: if recipientInviteWritable(emailLower);
       allow delete: if false;
+
+      match /invites/{inviteId} {
+        allow read: if recipientInviteAccessible(emailLower);
+        allow create, update: if recipientInviteWritable(emailLower);
+        allow delete: if false;
+      }
     }
   }
 }
