@@ -1,3 +1,4 @@
+import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
@@ -5,8 +6,7 @@ import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
-import { subscribeUserTrips } from '../../lib/firebase/trips';
-import type { User } from 'firebase/auth';
+import { subscribePendingInvites, subscribeUserTrips } from '../../lib/firebase/trips';
 import {
   bindSignOut,
   ensureFirebaseReady,
@@ -73,10 +73,47 @@ function renderTripsError(locale: Locale) {
   target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-5 py-8 text-center text-sm text-[var(--color-danger)]">${escapeHtml(t('firebase.permissionDenied'))}</article>`;
 }
 
+function renderInviteCount(locale: Locale, count: number) {
+  const t = getPageTranslator(locale);
+  const target = document.querySelector<HTMLElement>('[data-dashboard-invite-count]');
+  const link = document.querySelector<HTMLElement>('#dashboard-invites-link');
+
+  if (target) {
+    target.hidden = count === 0;
+    target.textContent = count > 0 ? t('dashboard.pendingInvites').replace('{count}', String(count)) : '';
+  }
+
+  if (link) {
+    link.textContent = count > 0 ? t('dashboard.goInvitesWithCount').replace('{count}', String(count)) : t('dashboard.goInvites');
+  }
+}
+
+function renderInvitesError(locale: Locale) {
+  const t = getPageTranslator(locale);
+  const target = document.querySelector<HTMLElement>('[data-dashboard-invite-count]');
+
+  if (target) {
+    target.hidden = false;
+    target.textContent = t('dashboard.invitesError');
+    target.dataset.tone = 'danger';
+  }
+}
+
 function logTripsPermissionError(user: User | null) {
   const config = getFirebasePublicConfig();
 
   console.error('subscribeUserTrips.debug', {
+    projectId: config.projectId,
+    authDomain: config.authDomain,
+    uid: user?.uid ?? null,
+    email: user?.email ?? null,
+  });
+}
+
+function logInvitesPermissionError(user: User | null) {
+  const config = getFirebasePublicConfig();
+
+  console.error('subscribePendingInvites.debug', {
     projectId: config.projectId,
     authDomain: config.authDomain,
     uid: user?.uid ?? null,
@@ -110,5 +147,16 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
         renderTripsError(locale);
       },
     );
+
+    if (user.email) {
+      subscribePendingInvites(
+        user.email,
+        (invites) => renderInviteCount(locale, invites.length),
+        () => {
+          logInvitesPermissionError(user);
+          renderInvitesError(locale);
+        },
+      );
+    }
   });
 }

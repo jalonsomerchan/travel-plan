@@ -4,6 +4,8 @@ import en from './translations/en.json';
 import es from './translations/es.json';
 import geolocationEn from './feature-translations/geolocation/en.json';
 import geolocationEs from './feature-translations/geolocation/es.json';
+import invitesEn from './feature-translations/invites/en.json';
+import invitesEs from './feature-translations/invites/es.json';
 import mapEn from './feature-translations/map/en.json';
 import mapEs from './feature-translations/map/es.json';
 import poiEn from './feature-translations/poi/en.json';
@@ -14,6 +16,7 @@ import tripValidationEs from './feature-translations/trip-validation/es.json';
 export type TranslationKey =
   | keyof typeof es
   | keyof typeof geolocationEs
+  | keyof typeof invitesEs
   | keyof typeof mapEs
   | keyof typeof poiEs
   | keyof typeof tripValidationEs;
@@ -24,6 +27,7 @@ const translations: Record<Locale, TranslationDictionary> = {
   es: {
     ...es,
     ...geolocationEs,
+    ...invitesEs,
     ...mapEs,
     ...poiEs,
     ...tripValidationEs,
@@ -31,6 +35,7 @@ const translations: Record<Locale, TranslationDictionary> = {
   en: {
     ...en,
     ...geolocationEn,
+    ...invitesEn,
     ...mapEn,
     ...poiEn,
     ...tripValidationEn,
