@@ -30,6 +30,8 @@ export interface TripRecord {
   id: string;
   name: string;
   location: string;
+  locationLat?: number;
+  locationLng?: number;
   startDate: string;
   endDate: string;
   status: TripStatus;
@@ -42,6 +44,8 @@ export interface TripRecord {
 export interface TripInput {
   name: string;
   location: string;
+  locationLat?: number;
+  locationLng?: number;
   startDate: string;
   endDate: string;
   status: TripStatus;

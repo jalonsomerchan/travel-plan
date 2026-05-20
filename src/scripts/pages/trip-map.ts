@@ -14,6 +14,7 @@ import {
   getPlanCategoryDotStyle,
 } from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
+import { hasTripLocationCoordinates } from '../../lib/app/trip-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
@@ -165,6 +166,14 @@ function addAccommodationMarker(trip: TripRecord | null, markers: L.LayerGroup, 
     .addTo(markers);
 }
 
+function addTripLocationFallback(trip: TripRecord | null, bounds: L.LatLngBounds) {
+  if (!trip || hasAccommodationLocation(trip.accommodation) || !hasTripLocationCoordinates(trip)) {
+    return;
+  }
+
+  bounds.extend(L.latLng(trip.locationLat, trip.locationLng));
+}
+
 export function mountTripMapPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -241,6 +250,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     });
 
     addAccommodationMarker(currentTrip, markers, bounds);
+    addTripLocationFallback(currentTrip, bounds);
 
     currentPoints.forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);

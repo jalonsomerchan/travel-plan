@@ -1,5 +1,6 @@
 ---
 import AccommodationFormFields from './AccommodationFormFields.astro';
+import LocationPickerFields from './LocationPickerFields.astro';
 import { useTranslations } from '../../i18n/ui';
 import type { Locale } from '../../config/site';
 import { tripStatusValues } from '../../lib/app/models';
@@ -19,8 +20,19 @@ const t = useTranslations(locale);
     <input class="field-input" id={`${prefix}-name`} name="name" required />
   </div>
   <div>
-    <label class="field-label" for={`${prefix}-location`}>{t('trip.form.location')}</label>
-    <input class="field-input" id={`${prefix}-location`} name="location" required />
+    <LocationPickerFields
+      clearButtonName={t('trip.form.locationClear')}
+      helperKey="trip.form.locationHelper"
+      latFieldName="locationLat"
+      locale={locale}
+      lngFieldName="locationLng"
+      nameFieldName="location"
+      prefix={`${prefix}-location`}
+      queryFieldLabel={t('trip.form.location')}
+      queryFieldName="locationQuery"
+      required
+      searchButtonName={t('plan.location.search')}
+    />
   </div>
   <div class="grid gap-4 md:grid-cols-2">
     <div>

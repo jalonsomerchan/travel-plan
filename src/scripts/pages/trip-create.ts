@@ -3,6 +3,7 @@ import type { Locale } from '../../config/site';
 import { getAccommodationInputFromForm } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { TripRecord } from '../../lib/app/models';
+import { getTripLocationInputFromForm, getTripLocationValidationKey } from '../../lib/app/trip-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
@@ -29,17 +30,26 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
     const startDate = String(data.get('startDate') ?? '');
     const endDate = String(data.get('endDate') ?? '');
     const dateRangeValidation = validateTripDateRange(startDate, endDate);
+    const locationValidationKey = getTripLocationValidationKey(form);
 
     if (!dateRangeValidation.valid) {
       setMessage(message, t(dateRangeValidation.errorKey ?? 'trip.form.dateRangeError'), 'danger');
       return;
     }
 
+    if (locationValidationKey) {
+      setMessage(message, t(locationValidationKey), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('dashboard.createAction'), t('dashboard.creating'));
     try {
+      const tripLocation = getTripLocationInputFromForm(form);
       const tripId = await createTrip(currentUser, {
         name: String(data.get('name') ?? ''),
-        location: String(data.get('location') ?? ''),
+        location: tripLocation.location,
+        locationLat: tripLocation.locationLat,
+        locationLng: tripLocation.locationLng,
         startDate,
         endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],

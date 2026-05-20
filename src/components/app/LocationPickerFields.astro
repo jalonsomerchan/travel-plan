@@ -13,6 +13,7 @@ interface Props {
   queryFieldLabel: string;
   queryFieldName: string;
   queryPlaceholder?: string;
+  required?: boolean;
   rootTestId?: string;
   searchButtonName: string;
   useCurrentLocationName?: string;
@@ -29,6 +30,7 @@ const {
   queryFieldLabel,
   queryFieldName,
   queryPlaceholder,
+  required = false,
   rootTestId,
   searchButtonName,
   useCurrentLocationName,
@@ -65,6 +67,7 @@ const currentLocationLabel = useCurrentLocationName ?? t('plan.location.useCurre
             id={`${prefix}-location-query`}
             name={queryFieldName}
             placeholder={queryPlaceholder ?? t('plan.location.placeholder')}
+            required={required}
             role="combobox"
             type="search"
             data-location-query

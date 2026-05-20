@@ -3,6 +3,7 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteField,
   doc,
   onSnapshot,
   orderBy,
@@ -82,6 +83,22 @@ function getTripWriteData(input: TripInput) {
   };
 }
 
+function getTripUpdateData(input: TripInput) {
+  const data: Record<string, unknown> = {
+    ...getTripWriteData(input),
+  };
+
+  if (input.locationLat === undefined) {
+    data.locationLat = deleteField();
+  }
+
+  if (input.locationLng === undefined) {
+    data.locationLng = deleteField();
+  }
+
+  return data;
+}
+
 function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripRecord {
   const data = snapshot.data();
 
@@ -89,6 +106,8 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     id: snapshot.id,
     name: String(data.name ?? ''),
     location: String(data.location ?? ''),
+    locationLat: typeof data.locationLat === 'number' ? data.locationLat : undefined,
+    locationLng: typeof data.locationLng === 'number' ? data.locationLng : undefined,
     startDate: String(data.startDate ?? ''),
     endDate: String(data.endDate ?? ''),
     status: (data.status as TripRecord['status']) ?? 'idea',
@@ -253,7 +272,7 @@ export async function updateTrip(tripId: string, input: TripInput) {
   const db = getFirebaseDb();
 
   await updateDoc(doc(db, 'trips', tripId), {
-    ...getTripWriteData(input),
+    ...getTripUpdateData(input),
     updatedAt: serverTimestamp(),
   });
 }

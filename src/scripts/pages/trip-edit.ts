@@ -5,6 +5,7 @@ import {
 } from '../../lib/app/accommodation';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { TripRecord } from '../../lib/app/models';
+import { getTripLocationInputFromForm, getTripLocationValidationKey } from '../../lib/app/trip-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
@@ -42,6 +43,11 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
       if (context) context.textContent = `${trip.name} · ${formatTripDateRange(locale, trip)}`;
       (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
       (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
+      (form.elements.namedItem('locationLat') as HTMLInputElement).value =
+        typeof trip.locationLat === 'number' ? String(trip.locationLat) : '';
+      (form.elements.namedItem('locationLng') as HTMLInputElement).value =
+        typeof trip.locationLng === 'number' ? String(trip.locationLng) : '';
+      (form.elements.namedItem('locationQuery') as HTMLInputElement).value = trip.location;
       (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
       (form.elements.namedItem('endDate') as HTMLInputElement).value = trip.endDate;
       (form.elements.namedItem('status') as HTMLSelectElement).value = trip.status;
@@ -64,17 +70,26 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
     const startDate = String(data.get('startDate') ?? '');
     const endDate = String(data.get('endDate') ?? '');
     const dateRangeValidation = validateTripDateRange(startDate, endDate);
+    const locationValidationKey = getTripLocationValidationKey(form);
 
     if (!dateRangeValidation.valid) {
       setMessage(message, t(dateRangeValidation.errorKey ?? 'trip.form.dateRangeError'), 'danger');
       return;
     }
 
+    if (locationValidationKey) {
+      setMessage(message, t(locationValidationKey), 'danger');
+      return;
+    }
+
     setButtonBusy(button, true, t('trip.form.save'), t('common.saving'));
     try {
+      const tripLocation = getTripLocationInputFromForm(form);
       await updateTrip(tripId, {
         name: String(data.get('name') ?? ''),
-        location: String(data.get('location') ?? ''),
+        location: tripLocation.location,
+        locationLat: tripLocation.locationLat,
+        locationLng: tripLocation.locationLng,
         startDate,
         endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
