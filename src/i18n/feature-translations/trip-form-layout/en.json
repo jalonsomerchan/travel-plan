@@ -1,0 +1,8 @@
+{
+  "trip.form.sectionBasics": "Main details",
+  "trip.form.sectionBasicsHelp": "Define the trip name, dates and overall status.",
+  "trip.form.sectionDestination": "Trip destination",
+  "trip.form.sectionDestinationHelp": "Search for the trip base location to connect maps, distances and plans.",
+  "trip.form.sectionAccommodationHelp": "Add accommodation when you have it to calculate distances and show it on maps.",
+  "trip.form.statusHelp": "Use the status to separate drafts, active trips, visited trips or archived trips."
+}
