@@ -18,6 +18,7 @@ import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../li
 import { deletePlan, subscribePlan } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
 import { mountNearbyPoiExplorer } from './nearby-poi-explorer';
@@ -137,6 +138,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const openDirectionsLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-directions]');
   const nearbyPoiRoot = document.querySelector<HTMLElement>('[data-nearby-poi]');
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
+  const planSubscriptions = createSubscriptionScope();
   let map: L.Map | null = null;
   let poiLayer: L.LayerGroup | null = null;
   let currentPoints: TripPointOfInterestRecord[] = [];
@@ -245,130 +248,169 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     }
   });
   const nearbyPoiExplorer = mountNearbyPoiExplorer(nearbyPoiRoot, { locale });
+
+  const clearSubscriptions = () => {
+    subscriptions.clear();
+    planSubscriptions.clear();
+  };
+
+  const resetState = () => {
+    stopGuideSpeech();
+    currentPoints = [];
+    currentTrip = null;
+    currentPlan = null;
+    currentAiGuide = '';
+    poiLayer = null;
+    if (map) {
+      map.remove();
+      map = null;
+    }
+  };
+
+  window.addEventListener('pagehide', () => {
+    clearSubscriptions();
+    stopGuideSpeech();
+  }, { once: true });
+
   observeSession((user) => {
+    clearSubscriptions();
+    resetState();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    subscribeTrip(tripId, (trip) => {
-      if (!trip) return;
-      currentTrip = trip;
-      subscribePlan(tripId, planId, (plan) => {
-        if (!plan) return;
-        currentPlan = plan;
-        updateAiTourPrompt();
-        syncPlanShell(locale, trip, plan);
-        description.textContent = plan.description || t('plan.descriptionEmpty');
-        currentAiGuide = plan.aiGuide?.trim() ?? '';
 
-        if (aiGuideSection && aiGuideText) {
-          aiGuideSection.hidden = !currentAiGuide;
-          aiGuideText.textContent = currentAiGuide;
-        }
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        planSubscriptions.clear();
+        currentPlan = null;
+        currentAiGuide = '';
 
-        if (!currentAiGuide) {
-          stopGuideSpeech();
-        }
+        if (!trip) return;
+        currentTrip = trip;
 
-        renderPlanLinks(linksSection, linksList, plan.links);
+        planSubscriptions.add(
+          subscribePlan(tripId, planId, (plan) => {
+            if (!plan) return;
+            currentPlan = plan;
+            updateAiTourPrompt();
+            syncPlanShell(locale, trip, plan);
+            description.textContent = plan.description || t('plan.descriptionEmpty');
+            currentAiGuide = plan.aiGuide?.trim() ?? '';
 
-        if (map) {
-          map.remove();
-          map = null;
-          poiLayer = null;
-        }
+            if (aiGuideSection && aiGuideText) {
+              aiGuideSection.hidden = !currentAiGuide;
+              aiGuideText.textContent = currentAiGuide;
+            }
 
-        if (hasPlanLocation(plan) && mapTarget) {
-          if (mapSection) {
-            mapSection.hidden = false;
-          }
+            if (!currentAiGuide) {
+              stopGuideSpeech();
+            }
 
-          if (openOsmLink) {
-            openOsmLink.href = getOpenStreetMapPlaceUrlFromCoordinates(plan.locationLat, plan.locationLng);
-          }
+            renderPlanLinks(linksSection, linksList, plan.links);
 
-          if (openGoogleLink) {
-            openGoogleLink.href = getGoogleMapsPlaceUrl(getPlanLocationLabel(plan));
-          }
+            if (map) {
+              map.remove();
+              map = null;
+              poiLayer = null;
+            }
 
-          if (openDirectionsLink) {
-            openDirectionsLink.href = getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng);
-          }
+            if (hasPlanLocation(plan) && mapTarget) {
+              if (mapSection) {
+                mapSection.hidden = false;
+              }
 
-          map = L.map(mapTarget, {
-            zoomControl: true,
-            scrollWheelZoom: false,
-          }).setView([plan.locationLat, plan.locationLng], 15);
+              if (openOsmLink) {
+                openOsmLink.href = getOpenStreetMapPlaceUrlFromCoordinates(plan.locationLat, plan.locationLng);
+              }
 
-          addMapTools(map, t);
-          poiLayer = L.layerGroup().addTo(map);
+              if (openGoogleLink) {
+                openGoogleLink.href = getGoogleMapsPlaceUrl(getPlanLocationLabel(plan));
+              }
 
-          L.circleMarker([plan.locationLat, plan.locationLng], {
-            radius: 10,
-            color: '#0f766e',
-            fillColor: '#34d399',
-            fillOpacity: 0.92,
-            weight: 3,
-          })
-            .bindPopup(escapeHtml(plan.name))
-            .addTo(map);
+              if (openDirectionsLink) {
+                openDirectionsLink.href = getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng);
+              }
 
+              map = L.map(mapTarget, {
+                zoomControl: true,
+                scrollWheelZoom: false,
+              }).setView([plan.locationLat, plan.locationLng], 15);
+
+              addMapTools(map, t);
+              poiLayer = L.layerGroup().addTo(map);
+
+              L.circleMarker([plan.locationLat, plan.locationLng], {
+                radius: 10,
+                color: '#0f766e',
+                fillColor: '#34d399',
+                fillOpacity: 0.92,
+                weight: 3,
+              })
+                .bindPopup(escapeHtml(plan.name))
+                .addTo(map);
+
+              addTripPoiMarkers(poiLayer, currentPoints);
+
+              const accommodation = trip.accommodation;
+
+              if (hasAccommodationLocation(accommodation)) {
+                const accommodationLabel = getAccommodationLocationLabel(accommodation);
+                const accommodationLat = accommodation.locationLat;
+                const accommodationLng = accommodation.locationLng;
+
+                L.marker([accommodationLat, accommodationLng], {
+                  icon: accommodationMarkerIcon,
+                  keyboard: true,
+                  title: accommodationLabel || accommodation.name,
+                })
+                  .bindPopup(escapeHtml(accommodationLabel || accommodation.name))
+                  .addTo(map);
+
+                map.fitBounds(
+                  L.latLngBounds([
+                    [plan.locationLat, plan.locationLng],
+                    [accommodationLat, accommodationLng],
+                  ]),
+                  { maxZoom: 15, padding: [48, 48] },
+                );
+              }
+            } else if (mapSection) {
+              mapSection.hidden = true;
+            }
+
+            if (hasPlanLocation(plan)) {
+              nearbyPoiExplorer.setSource({
+                latitude: plan.locationLat,
+                longitude: plan.locationLng,
+                label: plan.name,
+                kind: 'plan',
+                emptyTitle: '',
+                emptyDescription: '',
+                emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
+              });
+            } else {
+              nearbyPoiExplorer.setSource({
+                label: plan.name,
+                kind: 'plan',
+                emptyTitle: t('poi.plan.noLocationTitle'),
+                emptyDescription: t('poi.plan.noLocationDescription'),
+                emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
+              });
+            }
+          }),
+        );
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripPointsOfInterest(tripId, (points) => {
+        currentPoints = points;
+        if (poiLayer) {
           addTripPoiMarkers(poiLayer, currentPoints);
-
-          const accommodation = trip.accommodation;
-
-          if (hasAccommodationLocation(accommodation)) {
-            const accommodationLabel = getAccommodationLocationLabel(accommodation);
-            const accommodationLat = accommodation.locationLat;
-            const accommodationLng = accommodation.locationLng;
-
-            L.marker([accommodationLat, accommodationLng], {
-              icon: accommodationMarkerIcon,
-              keyboard: true,
-              title: accommodationLabel || accommodation.name,
-            })
-              .bindPopup(escapeHtml(accommodationLabel || accommodation.name))
-              .addTo(map);
-
-            map.fitBounds(
-              L.latLngBounds([
-                [plan.locationLat, plan.locationLng],
-                [accommodationLat, accommodationLng],
-              ]),
-              { maxZoom: 15, padding: [48, 48] },
-            );
-          }
-        } else if (mapSection) {
-          mapSection.hidden = true;
         }
-
-        if (hasPlanLocation(plan)) {
-          nearbyPoiExplorer.setSource({
-            latitude: plan.locationLat,
-            longitude: plan.locationLng,
-            label: plan.name,
-            kind: 'plan',
-            emptyTitle: '',
-            emptyDescription: '',
-            emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
-          });
-        } else {
-          nearbyPoiExplorer.setSource({
-            label: plan.name,
-            kind: 'plan',
-            emptyTitle: t('poi.plan.noLocationTitle'),
-            emptyDescription: t('poi.plan.noLocationDescription'),
-            emptyActionHref: getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId }),
-          });
-        }
-      });
-    });
-
-    subscribeTripPointsOfInterest(tripId, (points) => {
-      currentPoints = points;
-      if (poiLayer) {
-        addTripPoiMarkers(poiLayer, currentPoints);
-      }
-    });
+      }),
+    );
   });
 }
