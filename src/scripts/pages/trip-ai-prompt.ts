@@ -48,6 +48,7 @@ function toPlanInput(candidate: CandidateEntry): PlanInput {
     time: candidate.time,
     status: 'proposed',
     links: candidate.links,
+    aiGuide: candidate.aiGuide,
   };
 }
 

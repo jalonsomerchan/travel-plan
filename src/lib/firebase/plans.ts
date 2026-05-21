@@ -12,7 +12,7 @@ import type { PlanInput, PlanRecord } from '../app/models';
 import { normalizePlanLinks } from '../app/plan-links';
 import { getFirebaseDb } from './config';
 
-const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time'] as const;
+const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time', 'aiGuide'] as const;
 
 function getPlanCreateData(input: PlanInput) {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
@@ -49,6 +49,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
     time: data.time ? String(data.time) : undefined,
     status: (data.status as PlanRecord['status']) ?? 'pending',
     links: normalizePlanLinks(data.links),
+    aiGuide: data.aiGuide ? String(data.aiGuide) : undefined,
   };
 }
 
