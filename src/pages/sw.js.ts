@@ -4,7 +4,7 @@ export function GET() {
   const basePath = getBasePath();
   const shellUrls = [withBasePath(''), withBasePath('manifest.webmanifest'), withBasePath('favicon.svg')];
   const serviceWorker = `
-const CACHE_NAME = 'travel-plan-shell-v2';
+const CACHE_NAME = 'travel-plan-shell-v3';
 const BASE_PATH = ${JSON.stringify(basePath)};
 const SHELL_URLS = ${JSON.stringify(shellUrls)};
 
@@ -22,6 +22,25 @@ async function putIfOk(cache, request, response) {
     await cache.put(request, response.clone());
   }
   return response;
+}
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    return await putIfOk(cache, request, await fetch(request));
+  } catch {
+    return (await cache.match(request)) || cache.match(SHELL_URLS[0]);
+  }
+}
+
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  if (cached) return cached;
+
+  return putIfOk(cache, request, await fetch(request));
 }
 
 self.addEventListener('install', (event) => {
@@ -46,26 +65,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        try {
-          return await putIfOk(cache, request, await fetch(request));
-        } catch {
-          return (await cache.match(request)) || cache.match(SHELL_URLS[0]);
-        }
-      }),
-    );
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  if (['script', 'style', 'image', 'font', 'manifest'].includes(request.destination)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const cached = await cache.match(request);
-        if (cached) return cached;
-        return putIfOk(cache, request, await fetch(request));
-      }),
-    );
+  if (['script', 'style', 'manifest'].includes(request.destination)) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  if (['image', 'font'].includes(request.destination)) {
+    event.respondWith(cacheFirst(request));
   }
 });
 `;
