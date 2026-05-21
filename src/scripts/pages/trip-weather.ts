@@ -174,49 +174,48 @@ function renderWeatherDays(
     ? model.days
         .map(
           (day) => `
-            <button
-              aria-pressed="${String(day.date === activeDate)}"
-              class="trip-weather-day-button"
-              data-weather-day-button="${day.date}"
-              type="button"
-            >
-              <p class="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(day.date)}</p>
-              <h3 class="mt-2 text-xl font-black">${escapeHtml(formatFriendlyDate(day.date, locale))}</h3>
-              ${getWeatherDaySummary(day, model.temperatureUnit, unavailableLabel, laterLabel, t)}
-            </button>
+            <details class="trip-weather-day-accordion" ${day.date === activeDate ? 'open' : ''}>
+              <summary class="trip-weather-day-summary-button" data-weather-day-button="${day.date}">
+                <div class="trip-weather-day-topline">
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(day.date)}</p>
+                    <h3 class="mt-2 text-xl font-black">${escapeHtml(formatFriendlyDate(day.date, locale))}</h3>
+                  </div>
+                  <span aria-hidden="true" class="trip-weather-day-chevron">›</span>
+                </div>
+                ${getWeatherDaySummary(day, model.temperatureUnit, unavailableLabel, laterLabel, t)}
+              </summary>
+              <div class="trip-weather-day-hours" data-weather-day-hours="${day.date}">
+                ${renderWeatherHoursContent(locale, model, day.date, t)}
+              </div>
+            </details>
           `,
         )
         .join('')
     : renderEmptyState(unavailableLabel);
 }
 
-function renderWeatherHours(
+function renderWeatherHoursContent(
   locale: Locale,
   model: WeatherYearViewModel,
   activeDate: string,
   t: ReturnType<typeof getPageTranslator>,
 ) {
-  const target = document.querySelector<HTMLElement>('[data-weather-hours]');
-  const title = document.querySelector<HTMLElement>('[data-weather-hours-title]');
   const day = model.days.find((entry) => entry.date === activeDate);
 
-  if (!target || !title || !day) {
-    return;
+  if (!day) {
+    return renderEmptyState(t('weather.hoursUnavailable'));
   }
 
-  title.textContent = t('weather.hoursTitleWithDate').replace('{date}', formatFriendlyDate(activeDate, locale));
-
   if (day.mode === 'later') {
-    target.innerHTML = renderEmptyState(t('weather.card.availableLater'));
-    return;
+    return renderEmptyState(t('weather.card.availableLater'));
   }
 
   if (day.mode === 'unavailable' || day.hourly.length === 0) {
-    target.innerHTML = renderEmptyState(t('weather.hoursUnavailable'));
-    return;
+    return renderEmptyState(t('weather.hoursUnavailable'));
   }
 
-  target.innerHTML = day.hourly
+  return day.hourly
     .map((hour) => {
       const label = t(getWeatherLabelKeyForCode(hour.weatherCode));
 
@@ -229,7 +228,7 @@ function renderWeatherHours(
               )}</p>
               <p class="trip-weather-hour-summary mt-1">${escapeHtml(label)}</p>
             </div>
-            <div class="flex items-center justify-center">
+            <div class="flex items-center justify-start sm:justify-center">
               ${getWeatherIconSvg(hour.weatherCode, hour.isDay, label)}
             </div>
             <div class="trip-weather-hour-temperatures">
@@ -332,7 +331,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
       t('weather.card.availableLater'),
       t,
     );
-    renderWeatherHours(locale, model, activeDate, t);
     return true;
   };
 
@@ -350,14 +348,9 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
 
     if (!requirement.ready || !range || typeof currentTrip.locationLat !== 'number' || typeof currentTrip.locationLng !== 'number') {
       const targetDays = document.querySelector<HTMLElement>('[data-weather-days]');
-      const targetHours = document.querySelector<HTMLElement>('[data-weather-hours]');
 
       if (targetDays) {
         targetDays.innerHTML = renderEmptyState(t('weather.card.missingConfig'));
-      }
-
-      if (targetHours) {
-        targetHours.innerHTML = renderEmptyState(t('weather.card.missingConfig'));
       }
 
       return;
@@ -366,14 +359,9 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
     const token = requestToken + 1;
     requestToken = token;
     const targetDays = document.querySelector<HTMLElement>('[data-weather-days]');
-    const targetHours = document.querySelector<HTMLElement>('[data-weather-hours]');
 
     if (targetDays) {
       targetDays.innerHTML = renderEmptyState(t('common.loading'));
-    }
-
-    if (targetHours) {
-      targetHours.innerHTML = renderEmptyState(t('common.loading'));
     }
 
     try {
@@ -400,10 +388,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
       if (targetDays) {
         targetDays.innerHTML = renderEmptyState(t('weather.card.error'));
       }
-
-      if (targetHours) {
-        targetHours.innerHTML = renderEmptyState(t('weather.card.error'));
-      }
     }
   };
 
@@ -415,6 +399,34 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
     { once: true },
   );
 
+  document.addEventListener('toggle', (event) => {
+    const target = event.target;
+
+    if (!(target instanceof HTMLDetailsElement)) {
+      return;
+    }
+
+    if (!target.classList.contains('trip-weather-day-accordion') || !target.open) {
+      return;
+    }
+
+    const summary = target.querySelector<HTMLElement>('[data-weather-day-button]');
+    const date = summary?.dataset.weatherDayButton ?? '';
+    const model = yearCache.get(activeYear);
+
+    if (!date || !model) {
+      return;
+    }
+
+    document.querySelectorAll<HTMLDetailsElement>('.trip-weather-day-accordion[open]').forEach((item) => {
+      if (item !== target) {
+        item.open = false;
+      }
+    });
+
+    selectedDayByYear.set(activeYear, date);
+  });
+
   document.addEventListener('click', (event) => {
     const target = event.target;
 
@@ -424,41 +436,17 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
 
     const yearButton = target.closest<HTMLElement>('[data-weather-year-tab]');
 
-    if (yearButton) {
-      const year = Number(yearButton.dataset.weatherYearTab ?? '');
-
-      if (Number.isFinite(year) && year !== activeYear) {
-        activeYear = year;
-        renderWeatherTabs(getTripWeatherYears(currentTrip ?? { startDate: '' }), activeYear);
-        void loadYear(activeYear);
-      }
-
+    if (!yearButton) {
       return;
     }
 
-    const dayButton = target.closest<HTMLElement>('[data-weather-day-button]');
+    const year = Number(yearButton.dataset.weatherYearTab ?? '');
 
-    if (!dayButton) {
-      return;
+    if (Number.isFinite(year) && year !== activeYear) {
+      activeYear = year;
+      renderWeatherTabs(getTripWeatherYears(currentTrip ?? { startDate: '' }), activeYear);
+      void loadYear(activeYear);
     }
-
-    const date = dayButton.dataset.weatherDayButton ?? '';
-    const model = yearCache.get(activeYear);
-
-    if (!date || !model) {
-      return;
-    }
-
-    selectedDayByYear.set(activeYear, date);
-    renderWeatherDays(
-      locale,
-      model,
-      date,
-      t('weather.hoursUnavailable'),
-      t('weather.card.availableLater'),
-      t,
-    );
-    renderWeatherHours(locale, model, date, t);
   });
 
   observeSession((user) => {
@@ -477,14 +465,9 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
 
         if (!trip) {
           const targetDays = document.querySelector<HTMLElement>('[data-weather-days]');
-          const targetHours = document.querySelector<HTMLElement>('[data-weather-hours]');
 
           if (targetDays) {
             targetDays.innerHTML = renderEmptyState(t('trip.notFound'));
-          }
-
-          if (targetHours) {
-            targetHours.innerHTML = renderEmptyState(t('trip.notFound'));
           }
 
           return;

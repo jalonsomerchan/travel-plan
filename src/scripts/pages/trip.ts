@@ -296,7 +296,7 @@ function renderWeatherCardState(
   locale: Locale,
   tripId: string,
   trip: TripRecord | null,
-  state: { actionable: boolean; badge: string; body: string },
+  state: { actionable: boolean; body: string },
 ) {
   const target = document.querySelector<HTMLElement>('[data-trip-weather-card]');
 
@@ -312,12 +312,7 @@ function renderWeatherCardState(
     `
       <div class="trip-weather-card-inner">
         <div class="trip-weather-card-copy">
-          <div class="trip-weather-card-badges">
-            <span class="eyebrow">${escapeHtml(state.badge)}</span>
-            <span class="status-pill" data-tone="${state.actionable ? 'primary' : 'warning'}">${escapeHtml(
-              trip.location,
-            )}</span>
-          </div>
+          <p class="trip-weather-card-location">${escapeHtml(trip.location)}</p>
           ${state.body}
         </div>
         <span class="trip-weather-card-arrow" aria-hidden="true">${state.actionable ? '›' : ''}</span>
@@ -331,7 +326,6 @@ function renderMissingWeatherCard(locale: Locale, tripId: string, trip: TripReco
 
   renderWeatherCardState(locale, tripId, trip, {
     actionable: false,
-    badge: t('weather.navLabel'),
     body: `
       <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
       <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.missingConfig'))}</p>
@@ -344,7 +338,6 @@ function renderPastWeatherCard(locale: Locale, tripId: string, trip: TripRecord 
 
   renderWeatherCardState(locale, tripId, trip, {
     actionable: true,
-    badge: t('weather.card.badgeHistory'),
     body: `
       <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
       <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.viewHistory'))}</p>
@@ -357,7 +350,6 @@ function renderUnavailableForecastCard(locale: Locale, tripId: string, trip: Tri
 
   renderWeatherCardState(locale, tripId, trip, {
     actionable: true,
-    badge: t('weather.card.badgeForecast'),
     body: `
       <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
       <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.availableLater'))}</p>
@@ -384,7 +376,6 @@ function renderWeatherSummaryCard(
 
   renderWeatherCardState(locale, tripId, trip, {
     actionable: true,
-    badge: dates.length > 1 ? t('weather.card.badgeLive') : t('weather.card.badgeForecast'),
     body: `
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -534,7 +525,6 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     weatherRequestId = requestId;
     renderWeatherCardState(locale, tripId, trip, {
       actionable: true,
-      badge: t('weather.card.badgeForecast'),
       body: `
         <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
         <p class="trip-weather-card-helper">${escapeHtml(t('common.loading'))}</p>
@@ -568,7 +558,6 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
       renderWeatherCardState(locale, tripId, trip, {
         actionable: true,
-        badge: t('weather.card.badgeForecast'),
         body: `
           <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
           <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.error'))}</p>
