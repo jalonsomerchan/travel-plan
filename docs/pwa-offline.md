@@ -1,12 +1,15 @@
 # PWA y soporte sin conexión
 
-La app incluye una primera capa PWA para que pueda instalarse y reutilizar datos ya cargados cuando no haya conexión.
+La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya cargados cuando no haya conexión.
 
-## Qué cubre esta fase
+## Qué cubre ahora
 
 - Manifest web mejorado con `id`, `scope`, `start_url`, categorías y modo `standalone`.
 - Metadatos móviles en `BaseLayout.astro`.
-- Service worker mínimo registrado desde el layout base.
+- Service worker registrado desde el layout base.
+- Caché de shell inicial para la home, manifest e iconos básicos.
+- Fallback de navegación a la shell cacheada cuando no hay red.
+- Caché de assets estáticos visitados, como scripts, estilos, imágenes, fuentes y manifest.
 - Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña.
 
 ## Datos sin conexión
@@ -15,15 +18,21 @@ Firestore mantiene en el dispositivo los documentos que ya se han leído en sesi
 
 La caché compartida propia de la app sigue funcionando como valor inicial de UI y se limpia al cambiar usuario o cerrar sesión.
 
+## Estrategia del service worker
+
+- En `install`, precachea la shell mínima con rutas compatibles con `BASE_URL`.
+- En navegación, usa estrategia network-first y vuelve a la caché si falla la red.
+- En assets estáticos, usa cache-first y guarda respuestas válidas para siguientes visitas.
+- Ignora peticiones externas y métodos distintos de `GET`.
+
 ## Límites actuales
 
-- El service worker de esta fase no cachea todavía todas las rutas HTML ni assets generados.
+- El service worker no intenta cachear llamadas externas ni APIs de Firebase.
 - La sincronización offline de cambios pendientes queda para una fase posterior.
 - Las mutaciones offline dependen del soporte de Firestore; no hay aún una cola visual propia en la UI.
 
 ## Siguientes fases recomendadas
 
-1. Añadir caché de shell estático y fallback offline para navegación.
-2. Mostrar estado de conexión en la app.
-3. Añadir cola visible de cambios pendientes si se quiere edición offline más explícita.
-4. Revisar pantallas críticas para asegurar que muestran mensajes útiles cuando la caché no tiene datos previos.
+1. Mostrar estado de conexión en la app.
+2. Añadir cola visible de cambios pendientes si se quiere edición offline más explícita.
+3. Revisar pantallas críticas para asegurar que muestran mensajes útiles cuando la caché no tiene datos previos.
