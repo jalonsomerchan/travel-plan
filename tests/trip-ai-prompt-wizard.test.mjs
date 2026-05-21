@@ -58,6 +58,23 @@ describe('trip AI prompt wizard', () => {
     assert.match(script, /status: 'proposed'/);
   });
 
+  it('keeps AI guides persisted and playable in plan detail', () => {
+    const models = readText('src/lib/app/models.ts');
+    const prompt = readText('src/lib/app/trip-ai-prompt.ts');
+    const plans = readText('src/lib/firebase/plans.ts');
+    const planPage = readText('src/components/pages/PlanPage.astro');
+    const planScript = readText('src/scripts/pages/plan.ts');
+    const editScript = readText('src/scripts/pages/plan-edit.ts');
+
+    assert.match(models, /aiGuide\?: string/);
+    assert.match(prompt, /aiGuide/);
+    assert.match(plans, /aiGuide/);
+    assert.match(planPage, /data-plan-ai-guide-section/);
+    assert.match(planScript, /speechSynthesis/);
+    assert.match(planScript, /SpeechSynthesisUtterance/);
+    assert.match(editScript, /planInput\.aiGuide = currentPlan\.aiGuide/);
+  });
+
   it('keeps wizard translations aligned', () => {
     const es = readJson('src/i18n/feature-translations/trip-ai-prompt/es.json');
     const en = readJson('src/i18n/feature-translations/trip-ai-prompt/en.json');
@@ -65,6 +82,8 @@ describe('trip AI prompt wizard', () => {
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
     assert.equal(es['status.plan.proposed'], 'Propuesto');
     assert.equal(en['status.plan.proposed'], 'Proposed');
+    assert.ok(es['plan.aiGuide.title']);
+    assert.ok(en['plan.aiGuide.title']);
     assert.ok(es['tripAiPrompt.wizard.place']);
     assert.ok(en['tripAiPrompt.wizard.accessMode']);
     assert.ok(es['tripAiPrompt.wizard.planModeItinerary']);
