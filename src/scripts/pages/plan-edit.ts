@@ -22,29 +22,31 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-edit-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  let currentTrip: TripRecord | null = null;
+  let currentPlan: PlanRecord | null = null;
+
   if (!tripId || !planId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
   initLocationPickers();
   initPlanLinksFields(form);
+
+  const syncShell = () => {
+    if (currentTrip && currentPlan) {
+      syncPlanShell(locale, currentTrip, currentPlan);
+      initLocationPickers();
+    } else if (currentTrip) {
+      syncTripShell(locale, currentTrip);
+      initLocationPickers();
+    }
+  };
+
   observeSession((user) => {
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    let currentTrip: TripRecord | null = null;
-    let currentPlan: PlanRecord | null = null;
-
-    const syncShell = () => {
-      if (currentTrip && currentPlan) {
-        syncPlanShell(locale, currentTrip, currentPlan);
-        initLocationPickers();
-      } else if (currentTrip) {
-        syncTripShell(locale, currentTrip);
-        initLocationPickers();
-      }
-    };
 
     subscribeTrip(tripId, (trip) => {
       if (trip) {
