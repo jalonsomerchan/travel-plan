@@ -9,7 +9,7 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('plan pages subscription scope usage', () => {
+describe('plan pages Firebase reads', () => {
   it('uses scopes for plan detail trip, plan and trip POI listeners', () => {
     const plan = readText('src/scripts/pages/plan.ts');
 
@@ -25,16 +25,14 @@ describe('plan pages subscription scope usage', () => {
     assert.match(plan, /subscriptions\.add\(\n\s*subscribeTripPointsOfInterest\(/);
   });
 
-  it('uses a scope for plan edit trip and plan listeners', () => {
+  it('uses cached one-shot reads for the plan edit form', () => {
     const edit = readText('src/scripts/pages/plan-edit.ts');
 
-    assert.match(edit, /createSubscriptionScope/);
-    assert.match(edit, /const subscriptions = createSubscriptionScope/);
-    assert.match(edit, /pagehide/);
-    assert.match(edit, /subscriptions\.clear/);
-    assert.match(edit, /currentTrip = null/);
-    assert.match(edit, /currentPlan = null/);
-    assert.match(edit, /subscriptions\.add\(\n\s*subscribeTrip\(/);
-    assert.match(edit, /subscriptions\.add\(\n\s*subscribePlan\(/);
+    assert.match(edit, /getTripOnce/);
+    assert.match(edit, /getPlanOnce/);
+    assert.match(edit, /Promise\.all\(\[getTripOnce\(tripId\), getPlanOnce\(tripId, planId\)\]\)/);
+    assert.doesNotMatch(edit, /createSubscriptionScope/);
+    assert.doesNotMatch(edit, /subscribeTrip/);
+    assert.doesNotMatch(edit, /subscribePlan/);
   });
 });

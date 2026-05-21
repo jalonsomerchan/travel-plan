@@ -5,10 +5,10 @@ import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-links';
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
-import { subscribePlan, updatePlan } from '../../lib/firebase/plans';
+import { getPlanOnce } from '../../lib/firebase/plan-reads';
+import { updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
-import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip } from '../../lib/firebase/trips';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { initPlanLinksFields, setPlanLinkRows } from './plan-links-fields';
 import { initLocationPickers } from './plan-location-picker';
 import { ensureFirebaseReady, getPageTranslator, syncPlanShell, syncTripNavigation, syncTripShell } from './shared';
@@ -23,7 +23,6 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-edit-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
-  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentPlan: PlanRecord | null = null;
 
@@ -44,10 +43,25 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     }
   };
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  const syncPlanForm = (plan: PlanRecord) => {
+    (form.elements.namedItem('name') as HTMLInputElement).value = plan.name;
+    (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
+    (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;
+    (form.elements.namedItem('status') as HTMLSelectElement).value = plan.status;
+    (form.elements.namedItem('isPaid') as HTMLInputElement).checked = plan.isPaid;
+    (form.elements.namedItem('isBooked') as HTMLInputElement).checked = plan.isBooked;
+    (form.elements.namedItem('isOptional') as HTMLInputElement).checked = plan.isOptional;
+    (form.elements.namedItem('isImportant') as HTMLInputElement).checked = plan.isImportant;
+    (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
+    (form.elements.namedItem('locationLat') as HTMLInputElement).value = plan.locationLat !== undefined ? String(plan.locationLat) : '';
+    (form.elements.namedItem('locationLng') as HTMLInputElement).value = plan.locationLng !== undefined ? String(plan.locationLng) : '';
+    (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
+    (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
+    setPlanLinkRows(form, plan.links);
+    initLocationPickers();
+  };
 
   observeSession((user) => {
-    subscriptions.clear();
     currentTrip = null;
     currentPlan = null;
 
@@ -56,38 +70,19 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    subscriptions.add(
-      subscribeTrip(tripId, (trip) => {
-        if (trip) {
-          currentTrip = trip;
-          syncShell();
-          if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-        }
-      }),
-    );
+    void Promise.all([getTripOnce(tripId), getPlanOnce(tripId, planId)]).then(([trip, plan]) => {
+      if (trip) {
+        currentTrip = trip;
+        syncShell();
+        if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      }
 
-    subscriptions.add(
-      subscribePlan(tripId, planId, (plan) => {
-        if (!plan) return;
+      if (plan) {
         currentPlan = plan;
         syncShell();
-        (form.elements.namedItem('name') as HTMLInputElement).value = plan.name;
-        (form.elements.namedItem('description') as HTMLTextAreaElement).value = plan.description;
-        (form.elements.namedItem('category') as HTMLSelectElement).value = plan.category;
-        (form.elements.namedItem('status') as HTMLSelectElement).value = plan.status;
-        (form.elements.namedItem('isPaid') as HTMLInputElement).checked = plan.isPaid;
-        (form.elements.namedItem('isBooked') as HTMLInputElement).checked = plan.isBooked;
-        (form.elements.namedItem('isOptional') as HTMLInputElement).checked = plan.isOptional;
-        (form.elements.namedItem('isImportant') as HTMLInputElement).checked = plan.isImportant;
-        (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
-        (form.elements.namedItem('locationLat') as HTMLInputElement).value = plan.locationLat !== undefined ? String(plan.locationLat) : '';
-        (form.elements.namedItem('locationLng') as HTMLInputElement).value = plan.locationLng !== undefined ? String(plan.locationLng) : '';
-        (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
-        (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
-        setPlanLinkRows(form, plan.links);
-        initLocationPickers();
-      }),
-    );
+        syncPlanForm(plan);
+      }
+    });
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
