@@ -1,5 +1,9 @@
 {
   "plan.form.sectionBasics": "Main details",
   "plan.form.sectionBasicsHelp": "Define the content, type, status and timing for the plan.",
-  "plan.form.flagsHelp": "Mark useful traits so the plan is easy to recognize at a glance."
+  "plan.form.flagsHelp": "Mark useful traits so the plan is easy to recognize at a glance.",
+  "plan.form.isPaidHint": "Use this when the plan requires tickets, payment or a minimum spend.",
+  "plan.form.isBookedHint": "Mark it when you already have a booking, ticket or confirmation.",
+  "plan.form.isOptionalHint": "Use this for flexible ideas that can be skipped if time is short.",
+  "plan.form.isImportantHint": "Highlight key plans you do not want to miss during the trip."
 }

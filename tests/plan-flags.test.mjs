@@ -32,6 +32,8 @@ describe('plan flags', () => {
 
   it('keeps the plan form usable in desktop columns', () => {
     const form = readText('src/components/app/PlanFormFields.astro');
+    const createPage = readText('src/components/pages/PlanCreatePage.astro');
+    const editPage = readText('src/components/pages/PlanEditPage.astro');
     const ui = readText('src/i18n/ui.ts');
     const es = readJson('src/i18n/feature-translations/plan-form-layout/es.json');
     const en = readJson('src/i18n/feature-translations/plan-form-layout/en.json');
@@ -45,7 +47,13 @@ describe('plan flags', () => {
     assert.match(form, /plan\.form\.flagsHelp/);
     assert.match(form, /PlanLocationFields/);
     assert.match(form, /PlanLinksFields/);
+    assert.match(createPage, /class="mt-6 w-full space-y-4"/);
+    assert.match(editPage, /class="mt-6 w-full space-y-4"/);
+    assert.doesNotMatch(createPage, /max-w-3xl/);
+    assert.doesNotMatch(editPage, /max-w-3xl/);
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+    assert.ok(es['plan.form.isPaidHint']);
+    assert.ok(en['plan.form.isImportantHint']);
     assert.match(ui, /feature-translations\/plan-form-layout\/es\.json/);
     assert.match(ui, /feature-translations\/plan-form-layout\/en\.json/);
   });
