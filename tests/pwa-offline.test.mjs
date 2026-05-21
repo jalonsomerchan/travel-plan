@@ -71,7 +71,7 @@ describe('PWA offline support', () => {
     const docs = readText('docs/pwa-offline.md');
 
     assert.match(docs, /Persistencia offline de Firestore/);
-    assert.match(docs, /fallback de navegación/);
+    assert.match(docs, /[Ff]allback de navegación/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
   });
