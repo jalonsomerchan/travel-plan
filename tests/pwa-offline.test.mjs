@@ -15,6 +15,9 @@ describe('PWA offline support', () => {
       'src/pages/manifest.webmanifest.ts',
       'src/pages/sw.js.ts',
       'src/scripts/pwa/register-service-worker.ts',
+      'src/scripts/pwa/connection-status.ts',
+      'src/components/PwaConnectionStatus.astro',
+      'src/styles/pwa-status.css',
       'docs/pwa-offline.md',
     ].forEach((path) => {
       assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
@@ -62,6 +65,29 @@ describe('PWA offline support', () => {
     assert.match(worker, /isInsideScope/);
   });
 
+  it('shows an accessible localized connection status', () => {
+    const layout = readText('src/layouts/BaseLayout.astro');
+    const component = readText('src/components/PwaConnectionStatus.astro');
+    const script = readText('src/scripts/pwa/connection-status.ts');
+    const styles = readText('src/styles/pwa-status.css');
+    const ui = readText('src/i18n/ui.ts');
+    const es = readText('src/i18n/feature-translations/pwa-status/es.json');
+    const en = readText('src/i18n/feature-translations/pwa-status/en.json');
+
+    assert.match(layout, /PwaConnectionStatus/);
+    assert.match(component, /aria-live="polite"/);
+    assert.match(component, /role="status"/);
+    assert.match(component, /data-pwa-connection-status/);
+    assert.match(script, /navigator\.onLine/);
+    assert.match(script, /addEventListener\('online'/);
+    assert.match(script, /addEventListener\('offline'/);
+    assert.match(styles, /pwa-connection-status/);
+    assert.match(ui, /pwaStatusEs/);
+    assert.match(ui, /pwaStatusEn/);
+    assert.match(es, /pwaStatus\.offline/);
+    assert.match(en, /pwaStatus\.offline/);
+  });
+
   it('enables persistent Firestore local cache', () => {
     const config = readText('src/lib/firebase/config.ts');
 
@@ -76,6 +102,7 @@ describe('PWA offline support', () => {
     assert.match(docs, /Persistencia offline de Firestore/);
     assert.match(docs, /[Ff]allback de navegación/);
     assert.match(docs, /network-first de scripts, estilos y manifest/);
+    assert.match(docs, /Estado de conexión/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
   });
