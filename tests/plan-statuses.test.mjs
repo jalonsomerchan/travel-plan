@@ -34,4 +34,36 @@ describe('plan statuses', () => {
     assert.match(tripPage, /trip\.planCard\.date/);
     assert.match(tripPage, /trip\.planCard\.distance/);
   });
+
+  it('shows and plays AI guides from the trip plan list', () => {
+    const tripPage = readText('src/scripts/pages/trip.ts');
+    const player = readText('src/scripts/pages/plan-ai-guide-player.ts');
+
+    assert.match(tripPage, /renderPlanAiGuideIndicator\(locale, plan\)/);
+    assert.match(tripPage, /renderPlanAiGuideMenuAction\(locale, plan\)/);
+    assert.match(tripPage, /data-plan-ai-guide-action/);
+    assert.match(tripPage, /openPlanAiGuidePlayer\(locale, plan\)/);
+    assert.match(tripPage, /stopPlanAiGuidePlayer\(\)/);
+    assert.match(player, /data-plan-ai-guide-player-modal/);
+    assert.match(player, /SpeechSynthesisUtterance/);
+    assert.match(player, /plan\.aiGuide\.badge/);
+    assert.match(player, /plan\.aiGuide\.play/);
+    assert.match(player, /plan\.aiGuide\.stop/);
+  });
+
+  it('generates missing AI guides from the trip plan list with a reusable modal', () => {
+    const tripPage = readText('src/scripts/pages/trip.ts');
+    const generator = readText('src/scripts/pages/plan-ai-tour-generator.ts');
+
+    assert.match(tripPage, /renderPlanAiTourGenerateMenuAction\(locale, plan\)/);
+    assert.match(tripPage, /data-plan-ai-tour-generate-action/);
+    assert.match(tripPage, /openPlanAiTourGenerator\(locale, currentTrip, plan/);
+    assert.match(tripPage, /await updatePlan\(tripId, plan\.id, \{ \.\.\.plan, aiGuide \}\)/);
+    assert.match(generator, /buildPlanAiTourPrompt/);
+    assert.match(generator, /normalizeAiGuideText/);
+    assert.match(generator, /travelPlan:planAiTourOptions/);
+    assert.match(generator, /data-plan-ai-tour-generator-output/);
+    assert.match(generator, /data-plan-ai-tour-generator-save/);
+    assert.match(generator, /renderPlanAiTourGenerateMenuAction/);
+  });
 });

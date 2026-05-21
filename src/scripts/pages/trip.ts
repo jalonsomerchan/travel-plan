@@ -22,6 +22,17 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import {
+  openPlanAiTourGenerator,
+  renderPlanAiTourGenerateMenuAction,
+} from './plan-ai-tour-generator';
+import {
+  hasPlanAiGuide,
+  openPlanAiGuidePlayer,
+  renderPlanAiGuideIndicator,
+  renderPlanAiGuideMenuAction,
+  stopPlanAiGuidePlayer,
+} from './plan-ai-guide-player';
+import {
   ensureFirebaseReady,
   getCategoryLabel,
   getCategoryOptions,
@@ -196,6 +207,7 @@ function renderPlans(
                 <div class="flex items-center gap-2">
                   <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
                   <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
+                  ${renderPlanAiGuideIndicator(locale, plan)}
                 </div>
               </a>
               ${description ? `<p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(description)}</p>` : ''}
@@ -215,6 +227,8 @@ function renderPlans(
                         </button>`,
                     )
                     .join('')}
+                  ${renderPlanAiGuideMenuAction(locale, plan)}
+                  ${renderPlanAiTourGenerateMenuAction(locale, plan)}
                   <a class="app-actions-menu-link" href="${planEditUrl}">
                     ${escapeHtml(t('common.edit'))}
                   </a>
@@ -340,6 +354,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     geolocation.isLoading = false;
     geolocation.errorKey = null;
     geolocation.location = null;
+    stopPlanAiGuidePlayer();
   };
 
   const updateGeolocation = (nextState: Partial<GeolocationState>) => {
@@ -389,7 +404,10 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     syncPlans();
   });
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  window.addEventListener('pagehide', () => {
+    stopPlanAiGuidePlayer();
+    subscriptions.clear();
+  }, { once: true });
 
   planList?.addEventListener('click', async (event) => {
     const target = event.target;
@@ -413,6 +431,36 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         await updatePlan(tripId, planId, { ...plan, status: nextStatus });
       } catch (error) {
         window.alert(error instanceof Error ? error.message : t('trip.planCard.statusError'));
+      }
+
+      return;
+    }
+
+    const aiGuideButton = target.closest<HTMLElement>('[data-plan-ai-guide-action]');
+
+    if (aiGuideButton) {
+      const planId = aiGuideButton.dataset.planAiGuideAction ?? '';
+      const plan = allPlans.find((item) => item.id === planId);
+
+      if (plan && hasPlanAiGuide(plan)) {
+        openPlanAiGuidePlayer(locale, plan);
+      }
+
+      return;
+    }
+
+    const aiTourGenerateButton = target.closest<HTMLElement>('[data-plan-ai-tour-generate-action]');
+
+    if (aiTourGenerateButton) {
+      const planId = aiTourGenerateButton.dataset.planAiTourGenerateAction ?? '';
+      const plan = allPlans.find((item) => item.id === planId);
+
+      if (plan && currentTrip) {
+        openPlanAiTourGenerator(locale, currentTrip, plan, async (aiGuide) => {
+          await updatePlan(tripId, plan.id, { ...plan, aiGuide });
+          allPlans = allPlans.map((item) => (item.id === plan.id ? { ...item, aiGuide } : item));
+          syncPlans();
+        });
       }
 
       return;

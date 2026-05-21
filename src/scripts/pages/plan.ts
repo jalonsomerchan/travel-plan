@@ -45,6 +45,17 @@ import {
   syncPlanShell,
 } from './shared';
 
+const aiTourOptionsStorageKey = 'travelPlan:planAiTourOptions';
+const aiTourOptionNames = ['planAiTourTone', 'planAiTourLength', 'planAiTourFocus'] as const;
+
+type AiTourOptionName = (typeof aiTourOptionNames)[number];
+
+const aiTourAllowedOptions: Record<AiTourOptionName, readonly string[]> = {
+  planAiTourTone: ['serious', 'fun', 'storyteller'],
+  planAiTourLength: ['short', 'standard', 'detailed'],
+  planAiTourFocus: ['history', 'practical', 'mixed'],
+};
+
 function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElement | null, planLinks: { label: string; url: string }[]) {
   const safeLinks = planLinks.filter((link) => isSafeExternalPlanUrl(link.url));
 
@@ -98,6 +109,56 @@ function playGuideSpeech(text: string, locale: Locale) {
   utterance.lang = locale === 'es' ? 'es-ES' : 'en-US';
   window.speechSynthesis.speak(utterance);
   return true;
+}
+
+function getCheckedAiTourOption(modal: HTMLDialogElement | null, name: AiTourOptionName, fallback: string) {
+  return modal?.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value ?? fallback;
+}
+
+function getStoredAiTourOptions() {
+  try {
+    const storedValue = window.localStorage.getItem(aiTourOptionsStorageKey);
+    const storedOptions: unknown = storedValue ? JSON.parse(storedValue) : null;
+
+    return storedOptions && typeof storedOptions === 'object' ? storedOptions : null;
+  } catch {
+    return null;
+  }
+}
+
+function restoreAiTourOptions(modal: HTMLDialogElement | null) {
+  if (!modal) return;
+
+  const storedOptions = getStoredAiTourOptions();
+  if (!storedOptions) return;
+
+  aiTourOptionNames.forEach((name) => {
+    const value = (storedOptions as Record<string, unknown>)[name];
+
+    if (typeof value !== 'string' || !aiTourAllowedOptions[name].includes(value)) {
+      return;
+    }
+
+    const input = modal.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`);
+    if (input) {
+      input.checked = true;
+    }
+  });
+}
+
+function saveAiTourOptions(modal: HTMLDialogElement | null) {
+  if (!modal) return;
+
+  const options: Partial<Record<AiTourOptionName, string>> = {};
+  aiTourOptionNames.forEach((name) => {
+    options[name] = getCheckedAiTourOption(modal, name, '');
+  });
+
+  try {
+    window.localStorage.setItem(aiTourOptionsStorageKey, JSON.stringify(options));
+  } catch {
+    // Browsers may block localStorage in private contexts. The prompt still works without persistence.
+  }
 }
 
 export function mountPlanPage({ locale }: { locale: Locale }) {
@@ -161,8 +222,17 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   if (editLink) editLink.href = planEditUrl;
   if (visibleEditLink) visibleEditLink.href = planEditUrl;
 
-  const getAiTourFieldValue = (name: string, fallback: string) =>
-    aiTourModal?.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value ?? fallback;
+  const renderCurrentAiGuide = () => {
+    if (aiGuideSection && aiGuideText) {
+      aiGuideSection.hidden = !currentAiGuide;
+      aiGuideText.textContent = currentAiGuide;
+    }
+  };
+
+  const getAiTourFieldValue = (name: AiTourOptionName, fallback: string) =>
+    getCheckedAiTourOption(aiTourModal, name, fallback);
+
+  restoreAiTourOptions(aiTourModal);
 
   const updateAiTourPrompt = () => {
     if (!currentTrip || !currentPlan || !aiTourOutput) {
@@ -202,6 +272,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   });
 
   aiTourModal?.addEventListener('change', () => {
+    saveAiTourOptions(aiTourModal);
     updateAiTourPrompt();
   });
 
@@ -238,7 +309,10 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
     try {
       await updatePlan(tripId, planId, { ...currentPlan, aiGuide });
-      setMessage(aiTourSaveMessage, t('plan.aiTour.savedGuide'), 'success');
+      currentAiGuide = aiGuide;
+      renderCurrentAiGuide();
+      aiTourModal?.close();
+      setMessage(aiGuideMessage, t('plan.aiTour.savedGuide'), 'success');
     } catch (error) {
       setMessage(
         aiTourSaveMessage,
@@ -499,11 +573,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
             syncPlanShell(locale, trip, plan);
             description.textContent = plan.description || t('plan.descriptionEmpty');
             currentAiGuide = plan.aiGuide?.trim() ?? '';
-
-            if (aiGuideSection && aiGuideText) {
-              aiGuideSection.hidden = !currentAiGuide;
-              aiGuideText.textContent = currentAiGuide;
-            }
+            renderCurrentAiGuide();
 
             if (aiTourResultInput && document.activeElement !== aiTourResultInput) {
               aiTourResultInput.value = currentAiGuide;
