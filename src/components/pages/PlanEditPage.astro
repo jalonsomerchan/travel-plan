@@ -33,7 +33,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <h2 class="text-2xl font-black" data-plan-context>{t('plan.detailsTitle')}</h2>
-      <form class="mx-auto mt-6 max-w-3xl space-y-4" id="plan-form">
+      <form class="mt-6 w-full space-y-4" id="plan-form">
         <PlanFormFields locale={locale} prefix="plan-edit" />
         <p class="text-sm text-[var(--color-text-soft)]" id="plan-form-message" role="status" aria-live="polite">{t('plan.form.helper')}</p>
         <div class="flex flex-wrap gap-3">

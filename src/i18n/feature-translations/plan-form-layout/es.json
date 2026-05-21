@@ -1,5 +1,9 @@
 {
   "plan.form.sectionBasics": "Datos principales",
   "plan.form.sectionBasicsHelp": "Define el contenido, tipo, estado y momento del plan.",
-  "plan.form.flagsHelp": "Marca las características útiles para reconocer el plan de un vistazo."
+  "plan.form.flagsHelp": "Marca las características útiles para reconocer el plan de un vistazo.",
+  "plan.form.isPaidHint": "Indica si el plan requiere entrada, pago o consumo obligatorio.",
+  "plan.form.isBookedHint": "Marca si ya tienes reserva, entrada o confirmación previa.",
+  "plan.form.isOptionalHint": "Úsalo para ideas flexibles que pueden descartarse si falta tiempo.",
+  "plan.form.isImportantHint": "Destaca planes clave que no quieres olvidar durante el viaje."
 }
