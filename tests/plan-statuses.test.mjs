@@ -38,18 +38,21 @@ describe('plan statuses', () => {
   it('keeps plan cards mobile-safe with long links in text', () => {
     const tripPage = readText('src/scripts/pages/trip.ts');
     const flags = readText('src/lib/app/plan-flags.ts');
-    const tripPageComponent = readText('src/components/pages/TripPage.astro');
 
     assert.match(tripPage, /app-card-shell min-w-0 overflow-hidden/);
-    assert.match(tripPage, /flex min-w-0 items-start justify-between/);
+    assert.match(tripPage, /grid min-w-0 grid-cols-\[auto_minmax\(0,1fr\)_auto\] items-start gap-3/);
+    assert.match(tripPage, /plan-category-dot mt-2/);
+    assert.match(tripPage, /<h3 class="min-w-0 break-words text-lg font-bold leading-tight/);
+    assert.match(tripPage, /<summary[^>]+>\s*⋮\s*<\/summary>/);
+    assert.match(tripPage, /getPlanFlagsHtml\(plan, t\)/);
+    assert.match(tripPage, /renderPlanAiGuideIndicator\(locale, plan\)/);
+    assert.match(tripPage, /status-pill/);
     assert.match(tripPage, /max-w-full break-words text-sm text-\[var\(--color-text-muted\)\] \[overflow-wrap:anywhere\]/);
-    assert.match(tripPage, /min-w-0 break-words text-lg font-bold/);
-    assert.match(tripPage, /inline-flex max-w-full break-words/);
+    assert.match(tripPage, /flex min-w-0 flex-wrap gap-x-4 gap-y-2/);
+    assert.doesNotMatch(tripPage, /renderFirstPlanLink/);
+    assert.doesNotMatch(tripPage, /getFirstPlanLink/);
     assert.match(flags, /flex min-w-0 flex-wrap items-center gap-2/);
     assert.doesNotMatch(flags, /truncate/);
-    assert.match(tripPageComponent, /flex-wrap: wrap/);
-    assert.match(tripPageComponent, /flex-basis: 100%/);
-    assert.match(tripPageComponent, /justify-content: space-between/);
   });
 
   it('starts app breadcrumbs at dashboard when available', () => {
