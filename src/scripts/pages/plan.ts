@@ -13,6 +13,7 @@ import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { getChatGptPromptUrl } from '../../lib/app/trip-ai-prompt';
+import { shouldShowTripPoiOnMap } from '../../lib/app/trip-pois';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
 import { deletePlan, subscribePlan, subscribeTripPlans, updatePlan } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
@@ -482,7 +483,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     plans.forEach((plan) => renderSecondaryPlan(plan, mapLayers.plans));
 
     currentPoints
-      .filter((point) => visibility.poiTypes[point.type])
+      .filter((point) => shouldShowTripPoiOnMap(point) && visibility.poiTypes[point.type])
       .forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);
 
