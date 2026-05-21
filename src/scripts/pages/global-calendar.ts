@@ -8,6 +8,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
 import type { User } from 'firebase/auth';
 import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getWeekdayLabels } from './shared';
@@ -53,10 +54,11 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
   const gridTarget = document.querySelector<HTMLElement>('[data-global-calendar-grid]');
   const eventsTarget = document.querySelector<HTMLElement>('[data-global-events]');
   const monthLabel = document.querySelector<HTMLElement>('[data-global-month-label]');
+  const subscriptions = createSubscriptionScope();
+  const planSubscriptions = createSubscriptionScope();
   let activeMonth = new URL(window.location.href).searchParams.get('month') ?? getMonthKey(new Date().getFullYear(), new Date().getMonth());
   let trips: TripRecord[] = [];
   let plansByTrip: Record<string, PlanRecord[]> = {};
-  let stopPlans = () => {};
 
   if (!ensureFirebaseReady(locale)) {
     return;
@@ -161,6 +163,12 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
       : `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('calendar.empty'))}</article>`;
   };
 
+  const resetState = () => {
+    trips = [];
+    plansByTrip = {};
+    planSubscriptions.clear();
+  };
+
   const syncMonth = (delta: number) => {
     const cursor = getMonthCursor(activeMonth);
     const nextDate = new Date(cursor.year, cursor.month + delta, 1);
@@ -174,45 +182,51 @@ export function mountGlobalCalendarPage({ locale }: { locale: Locale }) {
   prevButton?.addEventListener('click', () => syncMonth(-1));
   nextButton?.addEventListener('click', () => syncMonth(1));
 
+  const clearSubscriptions = () => {
+    subscriptions.clear();
+    planSubscriptions.clear();
+  };
+
+  window.addEventListener('pagehide', clearSubscriptions, { once: true });
+
   observeSession((user) => {
+    clearSubscriptions();
+    resetState();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscribeUserTrips(
-      user.uid,
-      (items) => {
-        trips = items;
-        stopPlans();
-        plansByTrip = {};
+    subscriptions.add(
+      subscribeUserTrips(
+        user.uid,
+        (items) => {
+          trips = items;
+          planSubscriptions.clear();
+          plansByTrip = {};
 
-        if (trips.length === 0) {
+          if (trips.length === 0) {
+            render({});
+            return;
+          }
+
+          trips.forEach((trip) => {
+            planSubscriptions.add(
+              subscribeTripPlans(trip.id, (plans) => {
+                plansByTrip[trip.id] = plans;
+                render(plansByTrip);
+              }),
+            );
+          });
+        },
+        () => {
+          logTripsPermissionError(user);
+          resetState();
           render({});
-          return;
-        }
-
-        const stopCallbacks: Array<() => void> = [];
-
-        trips.forEach((trip) => {
-          stopCallbacks.push(
-            subscribeTripPlans(trip.id, (plans) => {
-              plansByTrip[trip.id] = plans;
-              render(plansByTrip);
-            }),
-          );
-        });
-
-        stopPlans = () => stopCallbacks.forEach((stop) => stop());
-      },
-      () => {
-        logTripsPermissionError(user);
-        trips = [];
-        stopPlans();
-        plansByTrip = {};
-        render({});
-        renderTripsPermissionError(locale);
-      },
+          renderTripsPermissionError(locale);
+        },
+      ),
     );
   });
 }

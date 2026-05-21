@@ -10,6 +10,7 @@ import {
 import { buildTripAiPromptFromWizard } from '../../lib/app/trip-ai-prompt-builder';
 import { createPlan, subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initTripAiPromptWizard } from './trip-ai-prompt-wizard';
 import {
@@ -106,6 +107,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   const candidatesActions = document.querySelector<HTMLElement>('[data-trip-ai-candidates-actions]');
   const saveSelectedButton = document.querySelector<HTMLButtonElement>('[data-trip-ai-save-selected]');
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let candidates: CandidateEntry[] = [];
@@ -134,6 +136,11 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
       promptChatGptLink.href = getChatGptPromptUrl(prompt);
     }
   }
+
+  const resetSessionState = () => {
+    currentTrip = null;
+    currentPlans = [];
+  };
 
   const renderCandidates = () => {
     const count = candidates.length;
@@ -258,29 +265,38 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
     }
   });
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    resetSessionState();
+
     if (!user) {
       redirectHome(locale);
       return;
     }
 
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
 
-      if (!trip) {
-        setMessage(importMessage, t('trip.notFound'), 'danger');
-        return;
-      }
+        if (!trip) {
+          setMessage(importMessage, t('trip.notFound'), 'danger');
+          return;
+        }
 
-      syncTripShell(locale, trip);
-      wizard.syncTrip(trip);
-      updatePrompt();
-    });
+        syncTripShell(locale, trip);
+        wizard.syncTrip(trip);
+        updatePrompt();
+      }),
+    );
 
-    subscribeTripPlans(tripId, (plans) => {
-      currentPlans = plans;
-      updatePrompt();
-    });
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        currentPlans = plans;
+        updatePrompt();
+      }),
+    );
   });
 
   renderCandidates();
