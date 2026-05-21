@@ -18,9 +18,22 @@ describe('Firebase shared data cache', () => {
     assert.match(cache, /memoryCache/);
     assert.match(cache, /getCachedTrip/);
     assert.match(cache, /setCachedTrip/);
+    assert.match(cache, /clearCachedTrip/);
     assert.match(cache, /getCachedTripPlans/);
     assert.match(cache, /setCachedTripPlans/);
     assert.match(cache, /clearSharedDataCache/);
+  });
+
+  it('uses cached trips as initial values and refreshes them from snapshots', () => {
+    const trips = readText('src/lib/firebase/trips.ts');
+
+    assert.match(trips, /getCachedTrip/);
+    assert.match(trips, /setCachedTrip/);
+    assert.match(trips, /clearCachedTrip/);
+    assert.match(trips, /queueMicrotask\(\(\) => callback\(cachedTrip\)\)/);
+    assert.match(trips, /trips\.forEach\(setCachedTrip\)/);
+    assert.match(trips, /clearCachedTrip\(tripId\)/);
+    assert.match(trips, /clearCachedTrip\(invite\.tripId\)/);
   });
 
   it('uses cached trip plans as initial values and invalidates them on mutations', () => {
@@ -46,6 +59,7 @@ describe('Firebase shared data cache', () => {
     const docs = readText('docs/firebase-shared-cache.md');
 
     assert.match(docs, /shared-data-cache\.ts/);
+    assert.match(docs, /Datos de un viaje/);
     assert.match(docs, /sessionStorage/);
     assert.match(docs, /createSubscriptionScope/);
   });
