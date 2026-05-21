@@ -35,6 +35,16 @@ describe('plan statuses', () => {
     assert.match(tripPage, /trip\.planCard\.distance/);
   });
 
+  it('keeps plan cards mobile-safe with long links in text', () => {
+    const tripPage = readText('src/scripts/pages/trip.ts');
+
+    assert.match(tripPage, /app-card-shell min-w-0 overflow-hidden/);
+    assert.match(tripPage, /flex min-w-0 items-start justify-between/);
+    assert.match(tripPage, /max-w-full break-words text-sm text-\[var\(--color-text-muted\)\] \[overflow-wrap:anywhere\]/);
+    assert.match(tripPage, /min-w-0 break-words text-lg font-bold/);
+    assert.match(tripPage, /inline-flex max-w-full break-words/);
+  });
+
   it('shows and plays AI guides from the trip plan list', () => {
     const tripPage = readText('src/scripts/pages/trip.ts');
     const player = readText('src/scripts/pages/plan-ai-guide-player.ts');
