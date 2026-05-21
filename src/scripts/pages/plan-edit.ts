@@ -22,6 +22,8 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-edit-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  let currentPlan: PlanRecord | null = null;
+
   if (!tripId || !planId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -34,7 +36,6 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       return;
     }
     let currentTrip: TripRecord | null = null;
-    let currentPlan: PlanRecord | null = null;
 
     const syncShell = () => {
       if (currentTrip && currentPlan) {
@@ -84,6 +85,11 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     }
 
     const planInput = withPlanLinksFromForm(form, getPlanInputFromForm(form));
+
+    if (currentPlan?.aiGuide) {
+      planInput.aiGuide = currentPlan.aiGuide;
+    }
+
     const linksValidation = validatePlanLinks(planInput.links ?? []);
 
     if (!linksValidation.valid) {
