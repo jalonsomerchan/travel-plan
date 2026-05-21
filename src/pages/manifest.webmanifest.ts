@@ -6,18 +6,24 @@ export function GET() {
   const t = useTranslations(defaultLocale);
 
   const manifest = {
+    id: getBasePath(),
     name: siteConfig.name,
     short_name: siteConfig.name,
     description: t('site.description'),
     start_url: getBasePath(),
+    scope: getBasePath(),
     display: 'standalone',
+    display_override: ['standalone', 'browser'],
+    orientation: 'portrait-primary',
     background_color: '#ffffff',
     theme_color: '#2563eb',
+    categories: ['travel', 'productivity', 'utilities'],
     icons: [
       {
         src: withBasePath('favicon.svg'),
         sizes: 'any',
         type: 'image/svg+xml',
+        purpose: 'any maskable',
       },
     ],
   };

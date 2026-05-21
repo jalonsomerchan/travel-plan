@@ -1,6 +1,12 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -10,6 +16,8 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
 };
+
+let firebaseDb: Firestore | null = null;
 
 export function getMissingFirebaseConfig() {
   return Object.entries(firebaseConfig)
@@ -38,5 +46,22 @@ export function getFirebaseAuth() {
 }
 
 export function getFirebaseDb() {
-  return getFirestore(getFirebaseApp());
+  if (firebaseDb) {
+    return firebaseDb;
+  }
+
+  const app = getFirebaseApp();
+
+  try {
+    firebaseDb = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch (error) {
+    console.warn('initializeFirestore.offlinePersistence', error);
+    firebaseDb = getFirestore(app);
+  }
+
+  return firebaseDb;
 }
