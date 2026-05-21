@@ -5,6 +5,7 @@ import {
   getAccommodationLocationLabel,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
+import { normalizeAiGuideText } from '../../lib/app/ai-guide-text';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
 import { getGoogleMapsDirectionsUrl, getGoogleMapsPlaceUrl } from '../../lib/app/location-links';
 import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-links';
@@ -170,11 +171,12 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       length: getAiTourFieldValue('planAiTourLength', 'standard') as 'short' | 'standard' | 'detailed',
       focus: getAiTourFieldValue('planAiTourFocus', 'mixed') as 'history' | 'practical' | 'mixed',
     });
+    const finalPrompt = `${prompt}\n\n${t('plan.aiTour.plainNarrationInstruction')}`;
 
-    aiTourOutput.value = prompt;
+    aiTourOutput.value = finalPrompt;
 
     if (aiTourChatGptLink) {
-      aiTourChatGptLink.href = getChatGptPromptUrl(prompt);
+      aiTourChatGptLink.href = getChatGptPromptUrl(finalPrompt);
     }
   };
 
@@ -220,7 +222,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const aiGuide = aiTourResultInput.value.trim();
+    const aiGuide = normalizeAiGuideText(aiTourResultInput.value);
 
     if (!aiGuide) {
       setMessage(aiTourSaveMessage, t('plan.aiTour.saveEmpty'), 'danger');
@@ -228,6 +230,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       return;
     }
 
+    aiTourResultInput.value = aiGuide;
     setButtonBusy(aiTourSaveGuideButton, true, t('plan.aiTour.saveGuide'), t('common.saving'));
 
     try {
