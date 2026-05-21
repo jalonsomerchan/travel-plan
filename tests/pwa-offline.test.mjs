@@ -68,6 +68,9 @@ describe('PWA offline support', () => {
     assert.match(config, /initializeFirestore/);
     assert.match(config, /persistentLocalCache/);
     assert.match(config, /persistentMultipleTabManager/);
+    assert.match(config, /shouldUseSafeFirestoreMode/);
+    assert.match(config, /iPad\|iPhone\|iPod/);
+    assert.match(config, /firebaseDb = getFirestore\(app\)/);
   });
 
   it('documents current offline limits and next phases', () => {

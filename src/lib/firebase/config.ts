@@ -19,6 +19,18 @@ const firebaseConfig = {
 
 let firebaseDb: Firestore | null = null;
 
+function shouldUseSafeFirestoreMode() {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  const userAgent = navigator.userAgent;
+  const isIosWebkit = /iPad|iPhone|iPod/.test(userAgent);
+  const isSafariDesktop = /Safari\//.test(userAgent) && !/Chrome\/|Chromium\/|Edg\/|OPR\//.test(userAgent);
+
+  return isIosWebkit || isSafariDesktop;
+}
+
 export function getMissingFirebaseConfig() {
   return Object.entries(firebaseConfig)
     .filter(([, value]) => !value)
@@ -51,6 +63,11 @@ export function getFirebaseDb() {
   }
 
   const app = getFirebaseApp();
+
+  if (shouldUseSafeFirestoreMode()) {
+    firebaseDb = getFirestore(app);
+    return firebaseDb;
+  }
 
   try {
     firebaseDb = initializeFirestore(app, {
