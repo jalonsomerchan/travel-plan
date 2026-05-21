@@ -1,0 +1,31 @@
+---
+import type { Locale } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div
+  aria-live="polite"
+  class="pwa-connection-status"
+  data-pwa-connection-status
+  data-online-label={t('pwaStatus.online')}
+  data-online-description={t('pwaStatus.onlineDescription')}
+  data-offline-label={t('pwaStatus.offline')}
+  data-offline-description={t('pwaStatus.offlineDescription')}
+  hidden
+  role="status"
+>
+  <span aria-hidden="true" class="pwa-connection-status__dot"></span>
+  <span class="pwa-connection-status__label" data-pwa-connection-label>{t('pwaStatus.online')}</span>
+</div>
+<script>
+  import { initPwaConnectionStatus } from '../scripts/pwa/connection-status';
+
+  initPwaConnectionStatus();
+</script>
