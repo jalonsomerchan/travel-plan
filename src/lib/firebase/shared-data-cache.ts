@@ -1,6 +1,6 @@
 import type { PlanRecord, TripRecord } from '../app/models';
 
-const cachePrefix = 'travel-plan:shared-cache:v1';
+const cachePrefix = 'travel-plan:shared-cache:v2';
 const memoryCache = new Map<string, unknown>();
 
 type CachedValue<T> = {
@@ -14,7 +14,7 @@ function getStorage() {
   }
 
   try {
-    return window.sessionStorage;
+    return window.localStorage;
   } catch {
     return null;
   }

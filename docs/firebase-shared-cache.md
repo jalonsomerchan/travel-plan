@@ -1,6 +1,6 @@
 # Caché compartida de datos Firebase
 
-La app usa una caché pequeña de sesión para reutilizar datos compartidos entre páginas cercanas del mismo viaje.
+La app usa una caché pequeña para reutilizar datos compartidos entre páginas cercanas del mismo viaje.
 
 ## Objetivo
 
@@ -9,7 +9,8 @@ Evitar estados vacíos y trabajo repetido al navegar entre vistas que usan los m
 ## Convención
 
 - La caché vive en `src/lib/firebase/shared-data-cache.ts`.
-- Usa `sessionStorage` cuando está disponible y una caché en memoria como respaldo.
+- Usa `localStorage` cuando está disponible y una caché en memoria como respaldo.
+- El uso de `localStorage` permite conservar viajes y planes ya visitados al cerrar y reabrir la PWA en Safari iOS / iPhone, donde la persistencia avanzada de Firestore se mantiene en modo seguro.
 - Solo guarda datos normalizados que ya se usan en la UI.
 - Se limpia al cambiar de usuario o cerrar sesión.
 - Se invalida al crear, editar o borrar planes.
@@ -19,7 +20,7 @@ Evitar estados vacíos y trabajo repetido al navegar entre vistas que usan los m
 
 ## Límites
 
-La caché no reemplaza permisos ni reglas de Firestore. Tampoco debe usarse para guardar datos sensibles de forma persistente. Si una página necesita tiempo real, debe mantener su listener con `createSubscriptionScope()` y usar la caché solo como valor inicial.
+La caché no reemplaza permisos ni reglas de Firestore. Tampoco debe usarse para guardar datos especialmente sensibles. Si una página necesita tiempo real, debe mantener su listener con `createSubscriptionScope()` y usar la caché solo como valor inicial.
 
 ## Datos cubiertos ahora
 
