@@ -1,13 +1,14 @@
 import L from 'leaflet';
 import type { MapTranslate } from './layers';
 
-export type MapVisibilityKey = 'currentLocation' | 'accommodation' | 'plans' | 'tripPois';
+export type MapVisibilityKey = 'currentLocation' | 'accommodation' | 'proposedPlans' | 'plans' | 'tripPois';
 export type MapVisibilityState = Record<MapVisibilityKey, boolean>;
 
 const storageKey = 'travel-plan.map.visibility';
 const defaultVisibility: MapVisibilityState = {
   currentLocation: true,
   accommodation: true,
+  proposedPlans: true,
   plans: true,
   tripPois: true,
 };
@@ -15,7 +16,8 @@ const defaultVisibility: MapVisibilityState = {
 const visibilityOptions: { key: MapVisibilityKey; labelKey: string }[] = [
   { key: 'currentLocation', labelKey: 'map.location.marker' },
   { key: 'accommodation', labelKey: 'accommodation.breadcrumb' },
-  { key: 'plans', labelKey: 'map.listTitle' },
+  { key: 'proposedPlans', labelKey: 'map.visibility.proposedPlans' },
+  { key: 'plans', labelKey: 'map.visibility.otherPlans' },
   { key: 'tripPois', labelKey: 'tripPois.breadcrumb' },
 ];
 
@@ -26,6 +28,7 @@ export function getMapVisibilityState(): MapVisibilityState {
     return {
       currentLocation: typeof parsed.currentLocation === 'boolean' ? parsed.currentLocation : true,
       accommodation: typeof parsed.accommodation === 'boolean' ? parsed.accommodation : true,
+      proposedPlans: typeof parsed.proposedPlans === 'boolean' ? parsed.proposedPlans : true,
       plans: typeof parsed.plans === 'boolean' ? parsed.plans : true,
       tripPois: typeof parsed.tripPois === 'boolean' ? parsed.tripPois : true,
     };
@@ -38,6 +41,12 @@ function saveMapVisibilityState(state: MapVisibilityState) {
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   } catch {}
+}
+
+export function applyCurrentLocationVisibility(visible: boolean) {
+  document.querySelectorAll<HTMLElement>('.map-user-location-marker').forEach((marker) => {
+    marker.style.display = visible ? '' : 'none';
+  });
 }
 
 export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (state: MapVisibilityState) => void) {
@@ -58,8 +67,8 @@ export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'map-icon-button';
-    trigger.title = t('map.layers.label');
-    trigger.setAttribute('aria-label', t('map.layers.label'));
+    trigger.title = t('map.visibility.title');
+    trigger.setAttribute('aria-label', t('map.visibility.toggleLabel'));
     trigger.setAttribute('aria-expanded', 'false');
     trigger.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8 5.2v3.6M15 10.2v3.6M11 15.2v3.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`;
 
@@ -69,13 +78,13 @@ export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (
 
     const title = document.createElement('p');
     title.className = 'map-tool-title';
-    title.textContent = t('map.layers.label');
+    title.textContent = t('map.visibility.title');
 
     const fieldset = document.createElement('fieldset');
     fieldset.className = 'map-poi-options';
     const legend = document.createElement('legend');
     legend.className = 'sr-only';
-    legend.textContent = t('map.layers.label');
+    legend.textContent = t('map.visibility.toggleLabel');
     fieldset.append(legend);
 
     visibilityOptions.forEach((option) => {
