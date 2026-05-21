@@ -27,6 +27,7 @@ import type {
   TripRecord,
 } from '../app/models';
 import { getFirebaseDb } from './config';
+import { clearCachedTrip, getCachedTrip, setCachedTrip } from './shared-data-cache';
 
 export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
@@ -189,7 +190,11 @@ export function subscribeUserTrips(
 
   return onSnapshot(
     tripsQuery,
-    (snapshot) => callback(snapshot.docs.map(mapTripRecord)),
+    (snapshot) => {
+      const trips = snapshot.docs.map(mapTripRecord);
+      trips.forEach(setCachedTrip);
+      callback(trips);
+    },
     (error) => {
       console.error('subscribeUserTrips', error);
       onError?.(error);
@@ -200,10 +205,25 @@ export function subscribeUserTrips(
 export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null) => void) {
   const db = getFirebaseDb();
   const tripRef = doc(db, 'trips', tripId);
+  const cachedTrip = getCachedTrip(tripId);
+
+  if (cachedTrip) {
+    queueMicrotask(() => callback(cachedTrip));
+  }
 
   return onSnapshot(
     tripRef,
-    (snapshot) => callback(snapshot.exists() ? mapTripRecord(snapshot) : null),
+    (snapshot) => {
+      const trip = snapshot.exists() ? mapTripRecord(snapshot) : null;
+
+      if (trip) {
+        setCachedTrip(trip);
+      } else {
+        clearCachedTrip(tripId);
+      }
+
+      callback(trip);
+    },
     (error) => {
       console.error('subscribeTrip', error);
     },
@@ -265,6 +285,8 @@ export async function createTrip(user: User, input: TripInput) {
     createdAt: serverTimestamp(),
   });
 
+  clearCachedTrip(tripRef.id);
+
   return tripRef.id;
 }
 
@@ -275,6 +297,7 @@ export async function updateTrip(tripId: string, input: TripInput) {
     ...getTripUpdateData(input),
     updatedAt: serverTimestamp(),
   });
+  clearCachedTrip(tripId);
 }
 
 export async function inviteUserToTrip(
@@ -388,4 +411,5 @@ export async function acceptInvite(user: User, invite: TripInviteRecord) {
     getRecipientInviteIndexData(invite.id, acceptedInviteData),
     { merge: true },
   );
+  clearCachedTrip(invite.tripId);
 }
