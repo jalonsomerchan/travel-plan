@@ -59,28 +59,37 @@ function getDateInstruction(options: TripAiPromptWizardOptions, locale: Locale) 
   const selectedDates = options.selectedDates.length > 0 ? options.selectedDates.join(', ') : '';
   const dateScope = selectedDates
     ? locale === 'es'
-      ? `- Usa solo estas fechas del viaje: ${selectedDates}.`
-      : `- Use only these trip dates: ${selectedDates}.`
+      ? `- Puedes usar estas fechas del viaje: ${selectedDates}.`
+      : `- You may use these trip dates: ${selectedDates}.`
     : locale === 'es'
-      ? '- Usa solo fechas válidas dentro del viaje.'
-      : '- Use valid dates within the trip only.';
+      ? '- Puedes usar fechas válidas dentro del viaje si aportan valor.'
+      : '- You may use valid dates within the trip if they add value.';
 
   return [
     dateScope,
     getScheduleModeInstruction(options.scheduleMode, locale),
+    locale === 'es'
+      ? '- Evita duraciones, minutos de visita, bloques horarios rígidos y datos de agenda innecesarios.'
+      : '- Avoid durations, visit minutes, rigid time blocks and unnecessary schedule data.',
   ].join('\n');
 }
 
 function getScheduleModeInstruction(mode: TripAiPromptScheduleMode, locale: Locale) {
   if (mode === 'independent') {
     return locale === 'es'
-      ? '- Aunque uses fechas, cada recomendación debe ser independiente y útil por separado, sin formar un itinerario cerrado.'
-      : '- Even when using dates, each recommendation must stand on its own instead of forming a rigid itinerary.';
+      ? '- Cada recomendación debe ser independiente y útil por separado, con una guía IA interesante del sitio.'
+      : '- Each recommendation must stand on its own, with an interesting AI guide for the place.';
   }
 
   return locale === 'es'
-    ? '- Ordena las recomendaciones como una planificación coherente por días y horas, con un ritmo realista.'
-    : '- Order the recommendations as a coherent plan by days and times, with a realistic pace.';
+    ? '- Puedes ordenar las recomendaciones por días o zonas, pero no escribas una guía de ruta paso a paso.'
+    : '- You may order recommendations by days or areas, but do not write a step-by-step route guide.';
+}
+
+function getContentInstruction(locale: Locale) {
+  return locale === 'es'
+    ? '- En aiGuide quiero que me cuentes cosas del sitio: historia, contexto, curiosidades, qué mirar allí y por qué merece la pena.'
+    : '- In aiGuide, tell me about the place: history, context, curiosities, what to notice there and why it is worth it.';
 }
 
 function getBudgetInstruction(mode: TripAiPromptBudgetMode, locale: Locale) {
@@ -115,16 +124,16 @@ function getBookingInstruction(mode: TripAiPromptBookingMode, locale: Locale) {
 
 function getAccessInstruction(mode: TripAiPromptAccessMode, locale: Locale) {
   const es = {
-    public: '- Explica de forma práctica cómo llegar en transporte público cuando aporte valor.',
-    walking: '- Prioriza lugares cómodos para ir caminando y explica accesos a pie cuando tenga sentido.',
-    car: '- Ten en cuenta desplazamientos en coche y añade notas útiles de acceso o aparcamiento.',
-    mixed: '- Explica cómo llegar con la opción más lógica en cada caso: andando, transporte público o coche.',
+    public: '- Si aporta valor, añade una nota breve de acceso en transporte público, sin convertirlo en una ruta.',
+    walking: '- Si aporta valor, indica si el sitio encaja bien en un paseo, sin guiar paso a paso.',
+    car: '- Si aporta valor, añade una nota breve sobre acceso en coche o aparcamiento.',
+    mixed: '- Si aporta valor, añade una nota breve con la forma de acceso más razonable.',
   };
   const en = {
-    public: '- Explain practical public transport access when it adds value.',
-    walking: '- Prioritize places that are easy to reach on foot and explain walking access when useful.',
-    car: '- Consider car transfers and add useful parking or access notes.',
-    mixed: '- Explain the most sensible way to get there in each case: walking, public transport or car.',
+    public: '- If useful, add a short public transport note, without turning it into a route.',
+    walking: '- If useful, mention whether the place fits well into a walk, without step-by-step guidance.',
+    car: '- If useful, add a short note about car access or parking.',
+    mixed: '- If useful, add a short note with the most reasonable access option.',
   };
 
   return locale === 'es' ? es[mode] : en[mode];
@@ -150,6 +159,7 @@ function getWizardInstructions(options: TripAiPromptWizardOptions, locale: Local
   return [
     locale === 'es' ? 'Preferencias del usuario:' : 'User preferences:',
     getPlaceInstruction(options, locale),
+    getContentInstruction(locale),
     locale === 'es'
       ? `- Tipos de planes a priorizar: ${formatBulletList(getSelectedTypes(options, locale))}.`
       : `- Plan types to prioritize: ${formatBulletList(getSelectedTypes(options, locale))}.`,
