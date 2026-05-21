@@ -9,7 +9,7 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('calendar and AI prompt subscription scope usage', () => {
+describe('calendar and AI prompt Firebase reads', () => {
   it('uses scopes for global calendar trip and nested plan listeners', () => {
     const calendar = readText('src/scripts/pages/global-calendar.ts');
 
@@ -24,15 +24,15 @@ describe('calendar and AI prompt subscription scope usage', () => {
     assert.match(calendar, /planSubscriptions\.add\(\n\s*subscribeTripPlans\(/);
   });
 
-  it('uses a shared scope for the AI prompt trip and plan listeners', () => {
+  it('uses cached one-shot reads for the AI prompt trip and plan data', () => {
     const prompt = readText('src/scripts/pages/trip-ai-prompt.ts');
 
-    assert.match(prompt, /createSubscriptionScope/);
-    assert.match(prompt, /const subscriptions = createSubscriptionScope/);
-    assert.match(prompt, /resetSessionState/);
-    assert.match(prompt, /pagehide/);
-    assert.match(prompt, /subscriptions\.clear/);
-    assert.match(prompt, /subscriptions\.add\(\n\s*subscribeTrip\(/);
-    assert.match(prompt, /subscriptions\.add\(\n\s*subscribeTripPlans\(/);
+    assert.match(prompt, /getTripOnce/);
+    assert.match(prompt, /getTripPlansOnce/);
+    assert.match(prompt, /syncPromptData/);
+    assert.match(prompt, /Promise\.all\(\[getTripOnce\(tripId\), getTripPlansOnce\(tripId\)\]\)/);
+    assert.doesNotMatch(prompt, /createSubscriptionScope/);
+    assert.doesNotMatch(prompt, /subscribeTrip/);
+    assert.doesNotMatch(prompt, /subscribeTripPlans/);
   });
 });
