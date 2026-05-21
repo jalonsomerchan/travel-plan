@@ -126,6 +126,28 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     </div>
   </AppShell>
 
+  <style is:global>
+    @media (max-width: 640px) {
+      [data-plan-list] .app-card-shell > div:first-child {
+        flex-wrap: wrap;
+      }
+
+      [data-plan-list] .app-card-shell > div:first-child > div:first-child {
+        flex-basis: 100%;
+        overflow: visible;
+      }
+
+      [data-plan-list] .app-card-shell > div:first-child > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    [data-plan-list] .app-actions-menu-trigger {
+      letter-spacing: 0.08em;
+    }
+  </style>
+
   <script>
     import { mountTripPage } from '../../scripts/pages/trip';
 
