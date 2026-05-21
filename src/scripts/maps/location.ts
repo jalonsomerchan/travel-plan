@@ -109,7 +109,7 @@ export function addCurrentLocationControl(
   t: MapTranslate,
   options: CurrentLocationOptions = {},
 ) {
-  const control = new L.Control({ position: 'topright' });
+  const control = new L.Control({ position: 'topleft' });
   const userLocation = addUserLocationMarker(map, t, options);
 
   control.onAdd = () => {
@@ -124,8 +124,8 @@ export function addCurrentLocationControl(
     button.setAttribute('aria-label', t('map.location.button'));
     button.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M20.2 3.8 4.1 10.7c-1.3.6-1.2 2.5.2 2.9l5.5 1.5 1.5 5.5c.4 1.4 2.3 1.5 2.9.2l6.9-16.1c.3-.7-.3-1.3-.9-.9Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
-        <path d="m10 14 4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <path d="M12 21s6.5-5.8 6.5-11.1A6.5 6.5 0 0 0 5.5 9.9C5.5 15.2 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+        <circle cx="12" cy="9.8" r="2.35" fill="none" stroke="currentColor" stroke-width="1.9"/>
       </svg>
     `;
 

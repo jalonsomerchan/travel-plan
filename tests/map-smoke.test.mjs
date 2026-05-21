@@ -57,11 +57,14 @@ describe('map smoke checks', () => {
     assert.match(layers, /aria-label/);
     assert.match(location, /button.addEventListener\('click'/);
     assert.match(location, /addUserLocationMarker/);
+    assert.match(location, /position: 'topleft'/);
     assert.match(location, /navigator\.geolocation\.getCurrentPosition/);
     assert.match(location, /PERMISSION_DENIED/);
     assert.match(location, /TIMEOUT/);
     assert.match(location, /map-user-location-marker/);
+    assert.match(location, /circle cx="12" cy="9\.8"/);
     assert.match(pois, /role', 'status'/);
+    assert.match(pois, /M20\.2 3\.8 4\.1 10\.7/);
     assert.match(visibility, /aria-controls/);
     assert.match(visibility, /aria-expanded/);
     assert.match(visibility, /key === 'Escape'/);
