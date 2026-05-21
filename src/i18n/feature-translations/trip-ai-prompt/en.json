@@ -17,6 +17,7 @@
   "plan.aiTour.saveEmpty": "Paste the AI-generated text first.",
   "plan.aiTour.savedGuide": "AI guide saved successfully.",
   "plan.aiTour.saveError": "The AI guide could not be saved.",
+  "plan.aiTour.plainNarrationInstruction": "Required format: return only a plain-text narration, prepared to be listened to aloud. Do not use titles, headings, lists, tables, quotes, notes, sources or bullet-point notes. Write natural paragraphs, as if a tourist guide were speaking directly to the traveller.",
   "trip.goAiPrompt": "AI prompt",
   "tripAiPrompt.metaTitle": "Trip AI prompt",
   "tripAiPrompt.metaDescription": "Generate a prompt with trip data, send it to an AI and paste the JSON to create selected plans.",
