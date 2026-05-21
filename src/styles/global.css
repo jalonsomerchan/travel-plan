@@ -864,9 +864,72 @@ dialog::backdrop {
   align-items: center;
   gap: 0.45rem;
   border-radius: var(--radius-sm);
-  padding: 0.2rem;
-  font-size: 0.86rem;
-  font-weight: 650;
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 12%);
+  padding: 0.6rem 0.7rem;
+  transition:
+    background var(--transition-base, 180ms ease),
+    border-color var(--transition-base, 180ms ease);
+}
+
+.map-poi-option:hover,
+.map-poi-option:focus-within {
+  background: var(--color-surface-raised);
+}
+
+.trip-map-plan-marker {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  transform: translate(-50%, -100%);
+}
+
+.trip-map-plan-marker-badge {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 3px solid var(--plan-marker-border);
+  border-radius: 999px;
+  background: var(--plan-marker-fill);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.18),
+    0 0 0 3px rgba(255, 255, 255, 0.94);
+}
+
+.trip-map-plan-marker-label {
+  display: inline-flex;
+  max-width: 9rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  padding: 0.28rem 0.6rem;
+  color: var(--color-text);
+  box-shadow: var(--shadow-xs);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+.trip-map-plan-marker--emphasized .trip-map-plan-marker-badge {
+  width: 1.3rem;
+  height: 1.3rem;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.2),
+    0 0 0 4px rgba(255, 255, 255, 0.96),
+    0 0 0 8px color-mix(in srgb, var(--color-primary), transparent 82%);
+}
+
+.trip-map-plan-marker--emphasized .trip-map-plan-marker-label {
+  border-color: color-mix(in srgb, var(--color-primary), transparent 35%);
+  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface-raised) 62%);
+}
+
+.trip-map-plan-marker--muted .trip-map-plan-marker-badge,
+.trip-map-plan-marker--muted .trip-map-plan-marker-label {
+  opacity: 0.56;
 }
 
 .map-poi-option input {

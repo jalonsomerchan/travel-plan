@@ -1,0 +1,9 @@
+{
+  "map.visibility.label": "Elementos visibles",
+  "map.visibility.toggleLabel": "Abrir selector de elementos visibles",
+  "map.visibility.currentLocation": "Ver tu ubicación actual",
+  "map.visibility.accommodation": "Ver el alojamiento",
+  "map.visibility.proposedPlans": "Ver planes propuestos",
+  "map.visibility.plans": "Ver los demás planes",
+  "map.visibility.tripPois": "Ver puntos de interés del viaje"
+}

@@ -2,7 +2,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
 import {
-  getAccommodationLocationLabel,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
@@ -10,10 +9,7 @@ import { formatPlanMoment } from '../../lib/app/format';
 import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
 import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
-import {
-  getPlanCategoryColors,
-  getPlanCategoryDotStyle,
-} from '../../lib/app/plan-category-colors';
+import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { hasTripLocationCoordinates } from '../../lib/app/trip-location';
 import { getAppUrl } from '../../lib/app/routes';
@@ -23,9 +19,17 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
+import { splitLocatedPlans } from '../maps/trip-plan-layers';
+import {
+  accommodationMarkerIcon,
+  createPlanMarkerIcon,
+  createTripPoiIcon,
+  getAccommodationMarkerLabel,
+} from '../maps/trip-markers';
 import {
   addMapVisibilityControl,
   getMapVisibilityState,
+  syncCurrentLocationVisibility,
   type MapVisibilityState,
 } from '../maps/visibility';
 import {
@@ -37,52 +41,6 @@ import {
   syncTripNavigation,
   syncTripShell,
 } from './shared';
-
-const accommodationMarkerIcon = L.divIcon({
-  className: 'trip-map-accommodation-marker',
-  html: `
-    <span aria-hidden="true" style="align-items:center;background:#0f766e;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;height:38px;justify-content:center;width:38px;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 11.4 12 4l9 7.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5.5 10.5V20h4.25v-5.5h4.5V20h4.25v-9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-  `,
-  iconAnchor: [19, 38],
-  iconSize: [38, 38],
-  popupAnchor: [0, -38],
-});
-
-function createTripPoiIcon(point: TripPointOfInterestRecord) {
-  return L.divIcon({
-    className: 'trip-map-poi-marker',
-    html: `
-      <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:34px;justify-content:center;width:34px;">
-        ${escapeHtml(resolveTripPoiIcon(point.icon))}
-      </span>
-    `,
-    iconAnchor: [17, 34],
-    iconSize: [34, 34],
-    popupAnchor: [0, -34],
-  });
-}
-
-function createPlanMarkerIcon(plan: PlanRecord, locale: Locale) {
-  const categoryLabel = getCategoryLabel(locale, plan.category);
-  const colors = getPlanCategoryColors(plan.category);
-
-  return L.divIcon({
-    className: 'trip-map-plan-marker',
-    html: `
-      <span class="trip-map-plan-marker-inner" aria-hidden="true" style="background:${colors.fill};border-color:${colors.border};"></span>
-      <span class="trip-map-plan-marker-label">${escapeHtml(plan.name)}</span>
-    `,
-    iconAnchor: [12, 12],
-    iconSize: [140, 44],
-    popupAnchor: [0, -12],
-    title: categoryLabel,
-  });
-}
 
 function fitTripMap(map: L.Map, bounds: L.LatLngBounds) {
   map.invalidateSize();
@@ -169,7 +127,7 @@ function addAccommodationMarker(trip: TripRecord | null, markers: L.LayerGroup, 
     return;
   }
 
-  const label = getAccommodationLocationLabel(accommodation) || accommodation.name;
+  const label = getAccommodationMarkerLabel(accommodation);
   const latLng = L.latLng(accommodation.locationLat, accommodation.locationLng);
   bounds.extend(latLng);
 
@@ -241,18 +199,18 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
   addMapTools(map, t, { currentLocation: { centerOnLocation: false, locateOnLoad: true } });
 
+  const proposedPlanMarkers = L.layerGroup().addTo(map);
   const planMarkers = L.layerGroup().addTo(map);
   const accommodationMarkers = L.layerGroup().addTo(map);
   const poiMarkers = L.layerGroup().addTo(map);
 
   const applyVisibility = (nextVisibility: MapVisibilityState) => {
     visibility = nextVisibility;
+    syncLayerVisibility(map, proposedPlanMarkers, visibility.proposedPlans);
     syncLayerVisibility(map, planMarkers, visibility.plans);
     syncLayerVisibility(map, accommodationMarkers, visibility.accommodation);
     syncLayerVisibility(map, poiMarkers, visibility.tripPois);
-    document.querySelectorAll<HTMLElement>('.map-user-location-marker').forEach((marker) => {
-      marker.style.display = visibility.currentLocation ? '' : 'none';
-    });
+    syncCurrentLocationVisibility(visibility.currentLocation);
   };
 
   addMapVisibilityControl(map, t, applyVisibility);
@@ -264,15 +222,16 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   };
 
   const syncMap = () => {
-    const locatedPlans = currentPlans.filter(hasPlanLocation);
+    const { proposedPlans, plans } = splitLocatedPlans(currentPlans);
     renderPlanList(locale, tripId, currentPlans, currentPoints);
+    proposedPlanMarkers.clearLayers();
     planMarkers.clearLayers();
     accommodationMarkers.clearLayers();
     poiMarkers.clearLayers();
 
     const bounds = L.latLngBounds([]);
 
-    locatedPlans.forEach((plan) => {
+    const renderPlanMarker = (plan: PlanRecord, layer: L.LayerGroup) => {
       if (!hasPlanLocation(plan)) {
         return;
       }
@@ -293,8 +252,11 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
             ${escapeHtml(categoryLabel)}
           `,
         )
-        .addTo(planMarkers);
-    });
+        .addTo(layer);
+    };
+
+    proposedPlans.forEach((plan) => renderPlanMarker(plan, proposedPlanMarkers));
+    plans.forEach((plan) => renderPlanMarker(plan, planMarkers));
 
     addAccommodationMarker(currentTrip, accommodationMarkers, bounds);
     addTripLocationFallback(currentTrip, bounds);

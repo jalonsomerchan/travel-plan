@@ -2,7 +2,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
 import {
-  getAccommodationLocationLabel,
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
 import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
@@ -11,62 +10,37 @@ import { getOpenStreetMapPlaceUrlFromCoordinates } from '../../lib/app/location-
 import { buildPlanAiTourPrompt } from '../../lib/app/plan-ai-tour-prompt';
 import { isSafeExternalPlanUrl } from '../../lib/app/plan-links';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
-import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import { getAppUrl } from '../../lib/app/routes';
 import { getChatGptPromptUrl } from '../../lib/app/trip-ai-prompt';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
-import { deletePlan, subscribePlan, updatePlan } from '../../lib/firebase/plans';
+import { deletePlan, subscribePlan, subscribeTripPlans, updatePlan } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
+import { splitLocatedPlans } from '../maps/trip-plan-layers';
+import {
+  accommodationMarkerIcon,
+  createPlanMarkerIcon,
+  createTripPoiIcon,
+  getAccommodationMarkerLabel,
+} from '../maps/trip-markers';
+import {
+  addMapVisibilityControl,
+  getMapVisibilityState,
+  syncCurrentLocationVisibility,
+  type MapVisibilityState,
+} from '../maps/visibility';
 import { mountNearbyPoiExplorer } from './nearby-poi-explorer';
 import {
   ensureFirebaseReady,
+  getCategoryLabel,
   getPageTranslator,
   redirectTo,
   syncTripNavigation,
   syncPlanShell,
 } from './shared';
-
-const accommodationMarkerIcon = L.divIcon({
-  className: 'plan-map-accommodation-marker',
-  html: `
-    <span aria-hidden="true" style="align-items:center;background:#0f766e;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;height:38px;justify-content:center;width:38px;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 11.4 12 4l9 7.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5.5 10.5V20h4.25v-5.5h4.5V20h4.25v-9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-  `,
-  iconAnchor: [19, 38],
-  iconSize: [38, 38],
-  popupAnchor: [0, -38],
-});
-
-function addTripPoiMarkers(layer: L.LayerGroup, points: TripPointOfInterestRecord[]) {
-  layer.clearLayers();
-  points.forEach((point) => {
-    L.marker([point.locationLat, point.locationLng], {
-      icon: L.divIcon({
-        className: 'plan-map-trip-poi-marker',
-        html: `
-          <span aria-hidden="true" style="align-items:center;background:#2563eb;border:3px solid #ffffff;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.28);color:#ffffff;display:flex;font-weight:900;height:32px;justify-content:center;width:32px;">
-            ${escapeHtml(resolveTripPoiIcon(point.icon))}
-          </span>
-        `,
-        iconAnchor: [16, 32],
-        iconSize: [32, 32],
-        popupAnchor: [0, -32],
-      }),
-      keyboard: true,
-      title: point.name,
-    })
-      .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
-      .addTo(layer);
-  });
-}
 
 function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElement | null, planLinks: { label: string; url: string }[]) {
   const safeLinks = planLinks.filter((link) => isSafeExternalPlanUrl(link.url));
@@ -87,6 +61,38 @@ function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElemen
       `,
     )
     .join('');
+}
+
+function fitPlanMap(map: L.Map, bounds: L.LatLngBounds, center: L.LatLngExpression) {
+  map.invalidateSize();
+
+  if (!bounds.isValid()) {
+    map.setView(center, 15);
+    return;
+  }
+
+  const northEast = bounds.getNorthEast();
+  const southWest = bounds.getSouthWest();
+
+  if (northEast.equals(southWest)) {
+    map.setView(bounds.getCenter(), 15);
+    return;
+  }
+
+  map.fitBounds(bounds.pad(0.2), {
+    maxZoom: 15,
+    padding: [48, 48],
+  });
+}
+
+function syncLayerVisibility(map: L.Map, layer: L.LayerGroup, visible: boolean) {
+  if (visible && !map.hasLayer(layer)) {
+    layer.addTo(map);
+  }
+
+  if (!visible && map.hasLayer(layer)) {
+    layer.removeFrom(map);
+  }
 }
 
 function stopGuideSpeech() {
@@ -144,11 +150,21 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const subscriptions = createSubscriptionScope();
   const planSubscriptions = createSubscriptionScope();
   let map: L.Map | null = null;
-  let poiLayer: L.LayerGroup | null = null;
+  let mapLayers:
+    | {
+        currentPlan: L.LayerGroup;
+        proposedPlans: L.LayerGroup;
+        plans: L.LayerGroup;
+        accommodation: L.LayerGroup;
+        tripPois: L.LayerGroup;
+      }
+    | null = null;
   let currentPoints: TripPointOfInterestRecord[] = [];
   let currentTrip: TripRecord | null = null;
   let currentPlan: PlanRecord | null = null;
+  let currentPlans: PlanRecord[] = [];
   let currentAiGuide = '';
+  let visibility = getMapVisibilityState();
   if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -289,13 +305,139 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     planSubscriptions.clear();
   };
 
+  const applyVisibility = (nextVisibility: MapVisibilityState) => {
+    visibility = nextVisibility;
+
+    if (!map || !mapLayers) {
+      return;
+    }
+
+    syncLayerVisibility(map, mapLayers.proposedPlans, visibility.proposedPlans);
+    syncLayerVisibility(map, mapLayers.plans, visibility.plans);
+    syncLayerVisibility(map, mapLayers.accommodation, visibility.accommodation);
+    syncLayerVisibility(map, mapLayers.tripPois, visibility.tripPois);
+    syncCurrentLocationVisibility(visibility.currentLocation);
+  };
+
+  const syncPlanMap = () => {
+    if (!currentTrip || !currentPlan || !mapSection || !mapTarget) {
+      return;
+    }
+
+    if (!hasPlanLocation(currentPlan)) {
+      mapSection.hidden = true;
+      if (map) {
+        map.remove();
+        map = null;
+        mapLayers = null;
+      }
+      return;
+    }
+
+    mapSection.hidden = false;
+
+    if (!map) {
+      map = L.map(mapTarget, {
+        zoomControl: true,
+        scrollWheelZoom: false,
+      }).setView([currentPlan.locationLat, currentPlan.locationLng], 15);
+
+      addMapTools(map, t);
+      mapLayers = {
+        currentPlan: L.layerGroup().addTo(map),
+        proposedPlans: L.layerGroup().addTo(map),
+        plans: L.layerGroup().addTo(map),
+        accommodation: L.layerGroup().addTo(map),
+        tripPois: L.layerGroup().addTo(map),
+      };
+      addMapVisibilityControl(map, t, applyVisibility);
+    }
+
+    if (!mapLayers) {
+      return;
+    }
+
+    const bounds = L.latLngBounds([]);
+    const currentPlanLatLng = L.latLng(currentPlan.locationLat, currentPlan.locationLng);
+    const { proposedPlans, plans } = splitLocatedPlans(
+      currentPlans.filter((plan) => plan.id !== currentPlan.id),
+    );
+
+    Object.values(mapLayers).forEach((layer) => layer.clearLayers());
+    bounds.extend(currentPlanLatLng);
+
+    L.marker(currentPlanLatLng, {
+      icon: createPlanMarkerIcon(currentPlan, locale, { emphasized: true }),
+      keyboard: true,
+      title: currentPlan.name,
+    })
+      .bindPopup(`<strong>${escapeHtml(currentPlan.name)}</strong><br />${escapeHtml(getPlanLocationLabel(currentPlan))}`)
+      .addTo(mapLayers.currentPlan);
+
+    const renderSecondaryPlan = (plan: PlanRecord, layer: L.LayerGroup) => {
+      if (!hasPlanLocation(plan)) {
+        return;
+      }
+
+      const latLng = L.latLng(plan.locationLat, plan.locationLng);
+      const categoryLabel = getCategoryLabel(locale, plan.category);
+      bounds.extend(latLng);
+
+      L.marker(latLng, {
+        icon: createPlanMarkerIcon(plan, locale, { muted: true }),
+        keyboard: true,
+        title: plan.name,
+      })
+        .bindPopup(
+          `<strong>${escapeHtml(plan.name)}</strong><br />${escapeHtml(getPlanLocationLabel(plan))}<br />${escapeHtml(categoryLabel)}`,
+        )
+        .addTo(layer);
+    };
+
+    proposedPlans.forEach((plan) => renderSecondaryPlan(plan, mapLayers.proposedPlans));
+    plans.forEach((plan) => renderSecondaryPlan(plan, mapLayers.plans));
+
+    currentPoints.forEach((point) => {
+      const latLng = L.latLng(point.locationLat, point.locationLng);
+      bounds.extend(latLng);
+
+      L.marker(latLng, {
+        icon: createTripPoiIcon(point),
+        keyboard: true,
+        title: point.name,
+      })
+        .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
+        .addTo(mapLayers.tripPois);
+    });
+
+    const accommodation = currentTrip.accommodation;
+
+    if (hasAccommodationLocation(accommodation)) {
+      const accommodationLabel = getAccommodationMarkerLabel(accommodation);
+      const accommodationLatLng = L.latLng(accommodation.locationLat, accommodation.locationLng);
+      bounds.extend(accommodationLatLng);
+
+      L.marker(accommodationLatLng, {
+        icon: accommodationMarkerIcon,
+        keyboard: true,
+        title: accommodationLabel,
+      })
+        .bindPopup(escapeHtml(accommodationLabel))
+        .addTo(mapLayers.accommodation);
+    }
+
+    applyVisibility(visibility);
+    requestAnimationFrame(() => fitPlanMap(map, bounds, currentPlanLatLng));
+  };
+
   const resetState = () => {
     stopGuideSpeech();
     currentPoints = [];
     currentTrip = null;
     currentPlan = null;
+    currentPlans = [];
     currentAiGuide = '';
-    poiLayer = null;
+    mapLayers = null;
     if (map) {
       map.remove();
       map = null;
@@ -324,6 +466,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
         if (!trip) return;
         currentTrip = trip;
+        syncPlanMap();
 
         planSubscriptions.add(
           subscribePlan(tripId, planId, (plan) => {
@@ -349,17 +492,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
             renderPlanLinks(linksSection, linksList, plan.links);
 
-            if (map) {
-              map.remove();
-              map = null;
-              poiLayer = null;
-            }
-
             if (hasPlanLocation(plan) && mapTarget) {
-              if (mapSection) {
-                mapSection.hidden = false;
-              }
-
               if (openOsmLink) {
                 openOsmLink.href = getOpenStreetMapPlaceUrlFromCoordinates(plan.locationLat, plan.locationLng);
               }
@@ -371,53 +504,11 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
               if (openDirectionsLink) {
                 openDirectionsLink.href = getGoogleMapsDirectionsUrl(plan.locationLat, plan.locationLng);
               }
-
-              map = L.map(mapTarget, {
-                zoomControl: true,
-                scrollWheelZoom: false,
-              }).setView([plan.locationLat, plan.locationLng], 15);
-
-              addMapTools(map, t);
-              poiLayer = L.layerGroup().addTo(map);
-
-              L.circleMarker([plan.locationLat, plan.locationLng], {
-                radius: 10,
-                color: '#0f766e',
-                fillColor: '#34d399',
-                fillOpacity: 0.92,
-                weight: 3,
-              })
-                .bindPopup(escapeHtml(plan.name))
-                .addTo(map);
-
-              addTripPoiMarkers(poiLayer, currentPoints);
-
-              const accommodation = trip.accommodation;
-
-              if (hasAccommodationLocation(accommodation)) {
-                const accommodationLabel = getAccommodationLocationLabel(accommodation);
-                const accommodationLat = accommodation.locationLat;
-                const accommodationLng = accommodation.locationLng;
-
-                L.marker([accommodationLat, accommodationLng], {
-                  icon: accommodationMarkerIcon,
-                  keyboard: true,
-                  title: accommodationLabel || accommodation.name,
-                })
-                  .bindPopup(escapeHtml(accommodationLabel || accommodation.name))
-                  .addTo(map);
-
-                map.fitBounds(
-                  L.latLngBounds([
-                    [plan.locationLat, plan.locationLng],
-                    [accommodationLat, accommodationLng],
-                  ]),
-                  { maxZoom: 15, padding: [48, 48] },
-                );
-              }
             } else if (mapSection) {
               mapSection.hidden = true;
             }
+
+            syncPlanMap();
 
             if (hasPlanLocation(plan)) {
               nearbyPoiExplorer.setSource({
@@ -446,9 +537,14 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     subscriptions.add(
       subscribeTripPointsOfInterest(tripId, (points) => {
         currentPoints = points;
-        if (poiLayer) {
-          addTripPoiMarkers(poiLayer, currentPoints);
-        }
+        syncPlanMap();
+      }),
+    );
+
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        currentPlans = plans;
+        syncPlanMap();
       }),
     );
   });

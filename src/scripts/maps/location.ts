@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import { escapeHtml } from '../../lib/app/dom';
 import type { MapTranslate } from './layers';
-import { getMapVisibilityState } from './visibility';
+import { getMapVisibilityState, syncCurrentLocationVisibility } from './visibility';
 
 interface CurrentLocationOptions {
   centerOnLocation?: boolean;
@@ -12,7 +12,7 @@ function syncMarkerVisibility(marker: L.Marker) {
   const element = marker.getElement();
 
   if (element) {
-    element.style.display = getMapVisibilityState().currentLocation ? '' : 'none';
+    syncCurrentLocationVisibility(getMapVisibilityState().currentLocation);
   }
 }
 

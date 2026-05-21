@@ -45,6 +45,7 @@ describe('map smoke checks', () => {
     const layers = readText('src/scripts/maps/layers.ts');
     const location = readText('src/scripts/maps/location.ts');
     const pois = readText('src/scripts/maps/pois.ts');
+    const visibility = readText('src/scripts/maps/visibility.ts');
     const tripMap = readText('src/components/pages/TripMapPage.astro');
     const tripMapScript = readText('src/scripts/pages/trip-map.ts');
     const planPage = readText('src/scripts/pages/plan.ts');
@@ -58,23 +59,32 @@ describe('map smoke checks', () => {
     assert.match(location, /TIMEOUT/);
     assert.match(location, /map-user-location-marker/);
     assert.match(pois, /role', 'status'/);
+    assert.match(visibility, /aria-controls/);
+    assert.match(visibility, /aria-expanded/);
+    assert.match(visibility, /key === 'Escape'/);
     assert.match(pois, /mapPoiLimit/);
     assert.match(locationPicker, /addMapTools\(map, getPageTranslator\(locale\)\)/);
     assert.match(locationPicker, /refreshPickerMap/);
     assert.match(tripMap, /aria-label=\{t\('map\.canvasTitle'\)\}/);
     assert.match(tripMapScript, /centerOnLocation: false/);
-    assert.match(planPage, /addMapTools\(map, t\)/);
+    assert.match(tripMapScript, /proposedPlans/);
+    assert.match(planPage, /addMapVisibilityControl\(map, t, applyVisibility\)/);
   });
 
   it('keeps map feature translations aligned', () => {
     const es = readJson('src/i18n/feature-translations/map/es.json');
     const en = readJson('src/i18n/feature-translations/map/en.json');
+    const visibilityEs = readJson('src/i18n/feature-translations/map-visibility/es.json');
+    const visibilityEn = readJson('src/i18n/feature-translations/map-visibility/en.json');
     const ui = readText('src/i18n/ui.ts');
 
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+    assert.deepEqual(Object.keys(visibilityEn).sort(), Object.keys(visibilityEs).sort());
     assert.ok(es['map.layers.label']);
     assert.ok(en['map.location.denied']);
     assert.match(ui, /feature-translations\/map\/es\.json/);
     assert.match(ui, /feature-translations\/map\/en\.json/);
+    assert.match(ui, /feature-translations\/map-visibility\/es\.json/);
+    assert.match(ui, /feature-translations\/map-visibility\/en\.json/);
   });
 });

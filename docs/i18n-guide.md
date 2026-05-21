@@ -27,6 +27,10 @@ Esto significa:
 
 ```text
 src/i18n/
+├── feature-translations/
+│   └── <feature>/
+│       ├── es.json
+│       └── en.json
 ├── translations/
 │   ├── es.json
 │   └── en.json
@@ -40,6 +44,15 @@ src/i18n/
 - `getAlternateLocales(currentLocale)`
 - `getLocaleFromUrl(pathname)`
 - `isLocale(locale)`
+
+Cuando una funcionalidad tiene bastante copy propio, se puede crear un bloque en
+`src/i18n/feature-translations/<feature>/`.
+
+Reglas:
+
+- Mantén las mismas claves en `es.json` y `en.json`.
+- Registra ambos JSON en `src/i18n/ui.ts`.
+- Evita duplicar claves ya existentes en `translations/` si la clave es realmente compartida.
 
 ## Regla principal
 
