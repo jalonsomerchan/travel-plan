@@ -13,6 +13,8 @@ interface Props { locale: Locale; }
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardUrl = getLocalizedPath('/app/', locale);
+const generateGuideLabel = locale === 'es' ? 'Generar guía' : 'Generate guide';
+const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / listen to guide';
 ---
 
 <BaseLayout title={t('plan.metaTitle')} description={t('plan.metaDescription')} locale={locale}>
@@ -43,7 +45,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
           {t('plan.goEdit')}
         </a>
         <button class="app-card-link" data-plan-ai-tour-open data-variant="secondary" type="button">
-          {t('plan.aiTour.open')}
+          {generateGuideLabel}
+        </button>
+        <button class="app-card-link" data-plan-ai-guide-open-player data-variant="primary" type="button" hidden>
+          {viewListenGuideLabel}
         </button>
         <button class="app-card-link" data-plan-delete-button data-variant="danger" type="button">
           {t('plan.delete')}
@@ -65,7 +70,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
             <div class="flex flex-wrap items-start justify-between gap-4 pr-14">
               <div>
-                <span class="eyebrow">{t('plan.aiTour.eyebrow')}</span>
+                <span class="eyebrow">{generateGuideLabel}</span>
                 <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{t('plan.aiTour.title')}</h2>
                 <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('plan.aiTour.helper')}</p>
               </div>
@@ -243,7 +248,46 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   </AppShell>
   <script>
     import { mountPlanPage } from '../../scripts/pages/plan';
+    import { openPlanAiGuidePlayer } from '../../scripts/pages/plan-ai-guide-player';
 
     mountPlanPage({ locale: document.documentElement.lang });
+
+    const guideButton = document.querySelector('[data-plan-ai-guide-open-player]');
+    const guideSection = document.querySelector('[data-plan-ai-guide-section]');
+    const guideText = document.querySelector('[data-plan-ai-guide-text]');
+    const getLocale = () => (document.documentElement.lang === 'en' ? 'en' : 'es');
+    const getGuideText = () => guideText?.textContent?.trim() ?? '';
+    const syncGuideButton = () => {
+      if (guideButton instanceof HTMLButtonElement) {
+        guideButton.hidden = !getGuideText();
+      }
+    };
+
+    guideButton?.addEventListener('click', () => {
+      const aiGuide = getGuideText();
+
+      if (!aiGuide) return;
+
+      openPlanAiGuidePlayer(getLocale(), {
+        id: 'current-plan',
+        name: document.querySelector('[data-app-title]')?.textContent?.trim() || document.title,
+        description: '',
+        category: 'visit',
+        isPaid: false,
+        isBooked: false,
+        isOptional: false,
+        isImportant: false,
+        status: 'pending',
+        links: [],
+        aiGuide,
+      });
+    });
+
+    if (guideSection || guideText) {
+      const observer = new MutationObserver(syncGuideButton);
+      if (guideSection) observer.observe(guideSection, { attributes: true, attributeFilter: ['hidden'] });
+      if (guideText) observer.observe(guideText, { childList: true, characterData: true, subtree: true });
+    }
+    syncGuideButton();
   </script>
 </BaseLayout>
