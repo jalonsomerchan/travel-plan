@@ -71,7 +71,8 @@ Return a JSON object with this exact structure:
   "plans": [
     {
       "name": "Short plain-text place or plan title",
-      "description": "Tell me interesting things about this place: what it is, why it matters, a bit of history or context, curiosities, what to notice there and practical notes. Put sources or reference links here, never in name.",
+      "description": "Short summary and practical notes. Put sources or reference links here, never in name.",
+      "aiGuide": "Longer audio-guide text about the place: what it is, why it matters, history, context, curiosities and what to notice there.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -92,8 +93,8 @@ Rules:
 - Create between 8 and 18 useful proposals, avoiding duplicates with saved plans.
 - Use only these categories: ${categories}.
 - Use only these statuses: ${statuses}. Usually use "pending".
-- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in the description.
-- Focus each description on what the place is like and what makes it interesting, not on guiding me step by step through the area.
+- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in the description or aiGuide.
+- Focus aiGuide on what the place is like and what makes it interesting, not on guiding me step by step through the area.
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
 - Do not invent bookings. If something is only a recommendation, keep isBooked as false.
@@ -116,7 +117,8 @@ Devuelve un objeto JSON con esta estructura exacta:
   "plans": [
     {
       "name": "Título corto y limpio del sitio o plan",
-      "description": "Cuéntame cosas interesantes del sitio: qué es, por qué merece la pena, algo de historia o contexto, curiosidades, en qué fijarme allí y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
+      "description": "Resumen corto y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
+      "aiGuide": "Texto más largo de audioguía sobre el sitio: qué es, por qué merece la pena, historia, contexto, curiosidades y en qué fijarme allí.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -137,8 +139,8 @@ Reglas:
 - Crea entre 8 y 18 propuestas útiles, evitando duplicados con los planes guardados.
 - Usa solo estas categorías: ${categories}.
 - Usa solo estos estados: ${statuses}. Normalmente usa "pending".
-- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en la descripción.
-- Centra cada descripción en cómo es el sitio y por qué es interesante, no en guiarme paso a paso por la zona.
+- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en description ni en aiGuide.
+- Centra aiGuide en cómo es el sitio y por qué es interesante, no en guiarme paso a paso por la zona.
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
 - No inventes reservas. Si algo es solo una recomendación, deja isBooked como false.
@@ -234,6 +236,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
     sourceIndex: index,
     name,
     description: getDescriptionWithTitleSources(getString(record, ['description', 'notes', 'reason']), rawName),
+    aiGuide: getString(record, ['aiGuide', 'guide', 'audioGuide']) || undefined,
     category: normalizeCategory(getString(record, ['category', 'type'])),
     date: getString(record, ['date']) || undefined,
     time: getString(record, ['time']) || undefined,
