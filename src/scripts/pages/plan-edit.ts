@@ -99,6 +99,11 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     }
 
     const planInput = withPlanLinksFromForm(form, getPlanInputFromForm(form));
+
+    if (currentPlan?.aiGuide) {
+      planInput.aiGuide = currentPlan.aiGuide;
+    }
+
     const linksValidation = validatePlanLinks(planInput.links ?? []);
 
     if (!linksValidation.valid) {
