@@ -15,7 +15,7 @@ import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import { getAppUrl } from '../../lib/app/routes';
 import { getChatGptPromptUrl } from '../../lib/app/trip-ai-prompt';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
-import { deletePlan, subscribePlan } from '../../lib/firebase/plans';
+import { deletePlan, subscribePlan, updatePlan } from '../../lib/firebase/plans';
 import { subscribeTripPointsOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
@@ -131,6 +131,9 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const aiTourCopyButton = document.querySelector<HTMLButtonElement>('[data-plan-ai-tour-copy]');
   const aiTourChatGptLink = document.querySelector<HTMLAnchorElement>('[data-plan-ai-tour-chatgpt]');
   const aiTourMessage = document.querySelector<HTMLElement>('[data-plan-ai-tour-message]');
+  const aiTourResultInput = document.querySelector<HTMLTextAreaElement>('[data-plan-ai-tour-result]');
+  const aiTourSaveGuideButton = document.querySelector<HTMLButtonElement>('[data-plan-ai-tour-save-guide]');
+  const aiTourSaveMessage = document.querySelector<HTMLElement>('[data-plan-ai-tour-save-message]');
   const deleteButton = document.querySelector<HTMLButtonElement>('[data-plan-delete-button]');
   const deleteMessage = document.querySelector<HTMLElement>('[data-plan-delete-message]');
   const openOsmLink = document.querySelector<HTMLAnchorElement>('[data-plan-open-osm]');
@@ -177,6 +180,9 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
   aiTourOpenButton?.addEventListener('click', () => {
     updateAiTourPrompt();
+    if (aiTourResultInput) {
+      aiTourResultInput.value = currentAiGuide;
+    }
     aiTourModal?.showModal();
   });
 
@@ -206,6 +212,35 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       aiTourOutput.focus();
       aiTourOutput.select();
       setMessage(aiTourMessage, t('plan.aiTour.copyFallback'), 'danger');
+    }
+  });
+
+  aiTourSaveGuideButton?.addEventListener('click', async () => {
+    if (!currentPlan || !aiTourResultInput) {
+      return;
+    }
+
+    const aiGuide = aiTourResultInput.value.trim();
+
+    if (!aiGuide) {
+      setMessage(aiTourSaveMessage, t('plan.aiTour.saveEmpty'), 'danger');
+      aiTourResultInput.focus();
+      return;
+    }
+
+    setButtonBusy(aiTourSaveGuideButton, true, t('plan.aiTour.saveGuide'), t('common.saving'));
+
+    try {
+      await updatePlan(tripId, planId, { ...currentPlan, aiGuide });
+      setMessage(aiTourSaveMessage, t('plan.aiTour.savedGuide'), 'success');
+    } catch (error) {
+      setMessage(
+        aiTourSaveMessage,
+        error instanceof Error ? error.message : t('plan.aiTour.saveError'),
+        'danger',
+      );
+    } finally {
+      setButtonBusy(aiTourSaveGuideButton, false, t('plan.aiTour.saveGuide'), t('common.saving'));
     }
   });
 
@@ -302,6 +337,10 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
             if (aiGuideSection && aiGuideText) {
               aiGuideSection.hidden = !currentAiGuide;
               aiGuideText.textContent = currentAiGuide;
+            }
+
+            if (aiTourResultInput && document.activeElement !== aiTourResultInput) {
+              aiTourResultInput.value = currentAiGuide;
             }
 
             if (!currentAiGuide) {
