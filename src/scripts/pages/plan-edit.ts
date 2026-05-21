@@ -6,7 +6,7 @@ import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-lin
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { getPlanOnce } from '../../lib/firebase/plan-reads';
-import { updatePlan } from '../../lib/firebase/plans';
+import { queueUpdatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { initPlanLinksFields, setPlanLinkRows } from './plan-links-fields';
@@ -84,7 +84,7 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       }
     });
   });
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     const locationValidationKey = getPlanLocationValidationKey(form);
 
@@ -107,14 +107,8 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     }
 
     setButtonBusy(button, true, t('plan.form.save'), t('common.saving'));
-    try {
-      await updatePlan(tripId, planId, planInput);
-      window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
-      return;
-    } catch (error) {
-      setMessage(message, error instanceof Error ? error.message : t('plan.form.error'), 'danger');
-    } finally {
-      setButtonBusy(button, false, t('plan.form.save'), t('common.saving'));
-    }
+    queueUpdatePlan(tripId, planId, planInput);
+    setMessage(message, t('plan.form.saved'), 'success');
+    window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
   });
 }
