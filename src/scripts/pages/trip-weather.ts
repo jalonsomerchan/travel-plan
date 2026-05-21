@@ -299,7 +299,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const subscriptions = createSubscriptionScope();
   const yearCache = new Map<number, WeatherYearViewModel>();
-  const selectedDayByYear = new Map<number, string>();
   let currentTrip: TripRecord | null = null;
   let activeYear = 0;
   let requestToken = 0;
@@ -321,12 +320,10 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
       return false;
     }
 
-    const activeDate = selectedDayByYear.get(year) ?? model.days[0]?.date ?? '';
-    selectedDayByYear.set(year, activeDate);
     renderWeatherDays(
       locale,
       model,
-      activeDate,
+      '',
       t('weather.hoursUnavailable'),
       t('weather.card.availableLater'),
       t,
@@ -378,7 +375,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
 
       const model = buildWeatherYearViewModel(range.dates, dataset, t);
       yearCache.set(year, model);
-      selectedDayByYear.set(year, model.days.find((day) => day.mode === 'available')?.date ?? model.days[0]?.date ?? '');
       renderFromCache(year);
     } catch {
       if (token !== requestToken) {
@@ -424,7 +420,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
       }
     });
 
-    selectedDayByYear.set(activeYear, date);
   });
 
   document.addEventListener('click', (event) => {
@@ -460,7 +455,6 @@ export function mountTripWeatherPage({ locale }: { locale: Locale }) {
     subscriptions.add(
       subscribeTrip(tripId, (trip) => {
         yearCache.clear();
-        selectedDayByYear.clear();
         currentTrip = trip;
 
         if (!trip) {
