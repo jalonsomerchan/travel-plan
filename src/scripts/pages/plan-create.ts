@@ -5,9 +5,8 @@ import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-lin
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { createPlan } from '../../lib/firebase/plans';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { observeSession } from '../../lib/firebase/session';
-import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip } from '../../lib/firebase/trips';
 import { initPlanLinksFields } from './plan-links-fields';
 import { initLocationPickers } from './plan-location-picker';
 import { ensureFirebaseReady, getPageTranslator, syncTripNavigation, syncTripShell } from './shared';
@@ -20,7 +19,6 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-create-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
-  const subscriptions = createSubscriptionScope();
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -28,25 +26,18 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   initLocationPickers();
   initPlanLinksFields(form);
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
-
   observeSession((user) => {
-    subscriptions.clear();
-
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscriptions.add(
-      subscribeTrip(tripId, (trip) => {
-        if (trip) {
-          syncTripShell(locale, trip);
-          initLocationPickers();
-          if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-        }
-      }),
-    );
+    void getTripOnce(tripId).then((trip) => {
+      if (!trip) return;
+      syncTripShell(locale, trip);
+      initLocationPickers();
+      if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+    });
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

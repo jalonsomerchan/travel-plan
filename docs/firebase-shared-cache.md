@@ -15,6 +15,7 @@ Evitar estados vacíos y trabajo repetido al navegar entre vistas que usan los m
 - Se invalida al crear, editar o borrar planes.
 - Se invalida al crear, editar o aceptar invitaciones que cambian datos de viaje.
 - Las suscripciones pueden emitir primero el valor cacheado y después actualizarlo con el snapshot de Firestore.
+- Las páginas que solo necesitan contexto inicial pueden usar lecturas puntuales cacheadas en lugar de listeners permanentes.
 
 ## Límites
 
@@ -23,6 +24,7 @@ La caché no reemplaza permisos ni reglas de Firestore. Tampoco debe usarse para
 ## Datos cubiertos ahora
 
 - Datos de un viaje mediante `subscribeTrip(...)`.
+- Lectura puntual de viaje mediante `getTripOnce(...)`.
 - Datos de viajes listados mediante `subscribeUserTrips(...)`.
 - Planes de un viaje mediante `subscribeTripPlans(...)`.
 - Plan individual mediante la lista de planes cacheada como valor inicial.
