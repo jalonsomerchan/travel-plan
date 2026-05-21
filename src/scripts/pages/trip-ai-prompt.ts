@@ -8,10 +8,10 @@ import {
   type TripAiPromptCandidate,
 } from '../../lib/app/trip-ai-prompt';
 import { buildTripAiPromptFromWizard } from '../../lib/app/trip-ai-prompt-builder';
-import { createPlan, subscribeTripPlans } from '../../lib/firebase/plans';
+import { getTripPlansOnce } from '../../lib/firebase/plan-reads';
+import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
-import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip } from '../../lib/firebase/trips';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { initTripAiPromptWizard } from './trip-ai-prompt-wizard';
 import {
   ensureFirebaseReady,
@@ -108,7 +108,6 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   const candidatesActions = document.querySelector<HTMLElement>('[data-trip-ai-candidates-actions]');
   const saveSelectedButton = document.querySelector<HTMLButtonElement>('[data-trip-ai-save-selected]');
   const t = getPageTranslator(locale);
-  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let candidates: CandidateEntry[] = [];
@@ -141,6 +140,14 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
   const resetSessionState = () => {
     currentTrip = null;
     currentPlans = [];
+  };
+
+  const syncPromptData = (trip: TripRecord, plans: PlanRecord[]) => {
+    currentTrip = trip;
+    currentPlans = plans;
+    syncTripShell(locale, trip);
+    wizard.syncTrip(trip);
+    updatePrompt();
   };
 
   const renderCandidates = () => {
@@ -266,10 +273,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
     }
   });
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
-
   observeSession((user) => {
-    subscriptions.clear();
     resetSessionState();
 
     if (!user) {
@@ -277,27 +281,14 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    subscriptions.add(
-      subscribeTrip(tripId, (trip) => {
-        currentTrip = trip;
+    void Promise.all([getTripOnce(tripId), getTripPlansOnce(tripId)]).then(([trip, plans]) => {
+      if (!trip) {
+        setMessage(importMessage, t('trip.notFound'), 'danger');
+        return;
+      }
 
-        if (!trip) {
-          setMessage(importMessage, t('trip.notFound'), 'danger');
-          return;
-        }
-
-        syncTripShell(locale, trip);
-        wizard.syncTrip(trip);
-        updatePrompt();
-      }),
-    );
-
-    subscriptions.add(
-      subscribeTripPlans(tripId, (plans) => {
-        currentPlans = plans;
-        updatePrompt();
-      }),
-    );
+      syncPromptData(trip, plans);
+    });
   });
 
   renderCandidates();
