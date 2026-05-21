@@ -7,6 +7,7 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 - Manifest web mejorado con `id`, `scope`, `start_url`, categorías y modo `standalone`.
 - Metadatos móviles en `BaseLayout.astro`.
 - Service worker registrado desde el layout base.
+- Indicador accesible de conexión para avisar cuando la app está offline o vuelve a estar online.
 - Caché de shell inicial para la home, manifest e iconos básicos.
 - Fallback de navegación a la shell cacheada cuando no hay red.
 - Caché de assets estáticos visitados, como imágenes y fuentes.
@@ -18,6 +19,10 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 Firestore mantiene en el dispositivo los documentos que ya se han leído en sesiones anteriores. Esto permite abrir vistas con datos visitados previamente incluso si la red falla, siempre que Firebase haya podido guardarlos en la caché local del navegador.
 
 La caché compartida propia de la app sigue funcionando como valor inicial de UI y se limpia al cambiar usuario o cerrar sesión.
+
+## Estado de conexión
+
+`PwaConnectionStatus.astro` muestra un aviso discreto cuando el navegador pasa a modo offline. También muestra durante unos segundos que la conexión ha vuelto. El aviso usa `aria-live="polite"`, textos i18n y estilos compatibles con modo claro y oscuro.
 
 ## Estrategia del service worker
 
@@ -35,6 +40,5 @@ La caché compartida propia de la app sigue funcionando como valor inicial de UI
 
 ## Siguientes fases recomendadas
 
-1. Mostrar estado de conexión en la app.
-2. Añadir cola visible de cambios pendientes si se quiere edición offline más explícita.
-3. Revisar pantallas críticas para asegurar que muestran mensajes útiles cuando la caché no tiene datos previos.
+1. Añadir cola visible de cambios pendientes si se quiere edición offline más explícita.
+2. Revisar pantallas críticas para asegurar que muestran mensajes útiles cuando la caché no tiene datos previos.
