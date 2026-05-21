@@ -69,7 +69,9 @@ describe('map smoke checks', () => {
     assert.match(visibility, /aria-expanded/);
     assert.match(visibility, /key === 'Escape'/);
     assert.match(visibility, /map\.visibility\.planTypes/);
+    assert.match(visibility, /map\.visibility\.poiTypes/);
     assert.match(visibility, /category\.\$\{category\}/);
+    assert.match(visibility, /tripPois\.type\.\$\{type\}/);
     assert.match(visibility, /map-plan-category-swatch/);
     assert.match(focus, /map\.planAccommodationFocus/);
     assert.match(focus, /fitBounds/);
@@ -82,7 +84,9 @@ describe('map smoke checks', () => {
     assert.match(tripMap, /aria-label=\{t\('map\.canvasTitle'\)\}/);
     assert.match(tripMapScript, /centerOnLocation: false/);
     assert.match(tripMapScript, /proposedPlans/);
+    assert.match(tripMapScript, /visibility\.poiTypes\[point\.type\]/);
     assert.match(planPage, /addMapVisibilityControl\(map, t, \(nextVisibility\) =>/);
+    assert.match(planPage, /visibility\.poiTypes\[point\.type\]/);
     assert.match(planPage, /addPlanAccommodationFocusControl/);
   });
 

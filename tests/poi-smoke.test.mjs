@@ -86,6 +86,7 @@ describe('poi smoke checks', () => {
     assert.match(helperModel, /shouldShowTripPoiOnMap/);
     assert.match(helper, /resolveTripPoiIcon/);
     assert.match(helper, /presetPoiIcons/);
+    assert.match(page, /visibility\.poiTypes\[point\.type\]/);
     assert.match(pageComponent, /data-trip-poi-open-create/);
     assert.match(pageComponent, /data-trip-poi-snackbar/);
     assert.match(dialog, /data-trip-poi-dialog/);
@@ -110,8 +111,8 @@ describe('poi smoke checks', () => {
     assert.match(map, /subscribeTripPointsOfInterest/);
     assert.match(map, /createTripPoiIcon/);
     assert.match(map, /shouldShowTripPoiOnMap/);
-    assert.match(map, /point\.color/);
-    assert.match(markers, /point\.color/);
+    assert.match(map, /visibility\.poiTypes\[point\.type\]/);
+    assert.doesNotMatch(markers, /background:\$\{escapeHtml\(point\.color\)\}/);
     assert.match(map, /locateOnLoad: true/);
     assert.match(map, /centerOnLocation: false/);
     assert.match(rules, /match \/pointsOfInterest\/{pointId}/);
