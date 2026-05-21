@@ -28,6 +28,7 @@ La caché no reemplaza permisos ni reglas de Firestore. Tampoco debe usarse para
 - Datos de viajes listados mediante `subscribeUserTrips(...)`.
 - Planes de un viaje mediante `subscribeTripPlans(...)`.
 - Plan individual mediante la lista de planes cacheada como valor inicial.
+- Lectura puntual de plan mediante `getPlanOnce(...)`.
 
 ## Cuándo ampliar
 
