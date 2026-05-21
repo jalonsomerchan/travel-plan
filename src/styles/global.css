@@ -666,6 +666,10 @@ dialog::backdrop {
   position: relative;
 }
 
+.map-mobile-tools-toggle {
+  display: none;
+}
+
 .map-icon-button {
   display: inline-flex;
   width: 3.15rem;
@@ -1101,7 +1105,7 @@ dialog::backdrop {
   .leaflet-top.leaflet-right {
     position: absolute;
     display: grid;
-    gap: 0.5rem;
+    gap: 0.35rem;
     padding: 0;
     pointer-events: none;
   }
@@ -1120,6 +1124,34 @@ dialog::backdrop {
     float: none;
     margin: 0;
     pointer-events: auto;
+  }
+
+  .map-mobile-tools-toggle {
+    display: block;
+  }
+
+  .leaflet-top.leaflet-right .leaflet-control {
+    transition:
+      opacity var(--transition-base, 180ms ease),
+      transform var(--transition-base, 180ms ease);
+  }
+
+  .leaflet-top.leaflet-right .leaflet-control:not(.map-mobile-tools-toggle) {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+    pointer-events: none;
+  }
+
+  .leaflet-container.map-mobile-tools-open .leaflet-top.leaflet-right .leaflet-control:not(.map-mobile-tools-toggle) {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .map-icon-button {
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 1rem;
   }
 
   .leaflet-bottom.leaflet-right {

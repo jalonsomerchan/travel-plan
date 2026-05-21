@@ -45,6 +45,8 @@ describe('map smoke checks', () => {
     const layers = readText('src/scripts/maps/layers.ts');
     const location = readText('src/scripts/maps/location.ts');
     const focus = readText('src/scripts/maps/plan-focus.ts');
+    const tools = readText('src/scripts/maps/leaflet-map-tools.ts');
+    const mobileControls = readText('src/scripts/maps/mobile-controls.ts');
     const pois = readText('src/scripts/maps/pois.ts');
     const visibility = readText('src/scripts/maps/visibility.ts');
     const tripMap = readText('src/components/pages/TripMapPage.astro');
@@ -68,6 +70,9 @@ describe('map smoke checks', () => {
     assert.match(visibility, /map-plan-category-swatch/);
     assert.match(focus, /map\.planAccommodationFocus/);
     assert.match(focus, /fitBounds/);
+    assert.match(tools, /addMobileMapControlsToggle/);
+    assert.match(mobileControls, /map-mobile-tools-toggle/);
+    assert.match(mobileControls, /map\.mobileControls/);
     assert.match(pois, /mapPoiLimit/);
     assert.match(locationPicker, /addMapTools\(map, getPageTranslator\(locale\)\)/);
     assert.match(locationPicker, /refreshPickerMap/);

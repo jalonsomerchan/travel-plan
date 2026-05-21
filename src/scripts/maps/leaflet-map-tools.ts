@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { addMapLayerSelector } from './layers';
+import { addMobileMapControlsToggle } from './mobile-controls';
 import { addOpenInGoogleMapsControl } from './google';
 import { addCurrentLocationControl } from './location';
 import { addPoiControl } from './pois';
@@ -13,6 +14,7 @@ interface MapToolsOptions {
 }
 
 export function addMapTools(map: L.Map, t: MapTranslate, options: MapToolsOptions = {}) {
+  addMobileMapControlsToggle(map, t);
   addMapLayerSelector(map, t);
   addCurrentLocationControl(map, t, options.currentLocation);
   addOpenInGoogleMapsControl(map, t);

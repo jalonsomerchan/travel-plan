@@ -27,6 +27,7 @@ describe('map visibility selector', () => {
     const planPage = readText('src/scripts/pages/plan.ts');
     const markers = readText('src/scripts/maps/trip-markers.ts');
     const focus = readText('src/scripts/maps/plan-focus.ts');
+    const mobileControls = readText('src/scripts/maps/mobile-controls.ts');
 
     assert.match(visibility, /travel-plan\.map\.visibility/);
     assert.match(visibility, /legacyPlans/);
@@ -47,6 +48,8 @@ describe('map visibility selector', () => {
     assert.match(markers, /class="map-popup-link"/);
     assert.match(focus, /map\.planAccommodationFocus/);
     assert.match(focus, /fitBounds/);
+    assert.match(mobileControls, /map-mobile-tools-toggle/);
+    assert.match(mobileControls, /aria-expanded/);
     assert.match(planPage, /createPlanMarkerIcon\(currentPlan, locale, \{ emphasized: true \}\)/);
     assert.match(planPage, /createPlanMarkerIcon\(plan, locale, \{ muted: true \}\)/);
     assert.match(planPage, /planAccommodationFocusControl/);
