@@ -17,6 +17,7 @@
   "plan.aiTour.saveEmpty": "Pega primero el texto generado por la IA.",
   "plan.aiTour.savedGuide": "Guía IA guardada correctamente.",
   "plan.aiTour.saveError": "No se ha podido guardar la guía IA.",
+  "plan.aiTour.plainNarrationInstruction": "Formato obligatorio: devuelve solo una narración en texto plano, preparada para escucharse en voz alta. No uses títulos, encabezados, listas, tablas, citas, notas, fuentes ni apuntes. Escribe párrafos naturales, como si un guía turístico hablara directamente al viajero.",
   "trip.goAiPrompt": "Promp IA",
   "tripAiPrompt.metaTitle": "Promp IA del viaje",
   "tripAiPrompt.metaDescription": "Genera un prompt con los datos del viaje, pásalo a una IA y pega el JSON para crear planes seleccionados.",
