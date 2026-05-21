@@ -299,7 +299,7 @@
   "tripEdit.breadcrumb": "Edit trip",
   "tripEdit.deleteAction": "Delete trip",
   "tripEdit.deleteBusy": "Deleting...",
-  "tripEdit.deleteConfirm": "Are you sure you want to delete this trip? Its plans, checklist, luggage, invited people and saved places will also be removed.",
+  "tripEdit.deleteConfirm": "Are you sure you want to delete this trip? It will be hidden from the app and its pending invites will be cancelled, but its data will remain stored.",
   "tripEdit.deleteError": "The trip could not be deleted.",
   "tripMembers.metaTitle": "Trip people",
   "tripMembers.metaDescription": "Invite people and review collaboration permissions in a separate view.",

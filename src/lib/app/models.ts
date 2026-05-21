@@ -71,7 +71,7 @@ export interface TripInviteRecord {
   email: string;
   emailLower: string;
   role: TripMemberRole;
-  status: 'pending' | 'accepted';
+  status: 'pending' | 'accepted' | 'deleted';
 }
 
 export interface PlanLinkRecord {

@@ -3,7 +3,6 @@ import {
   addDoc,
   arrayUnion,
   collection,
-  deleteDoc,
   deleteField,
   doc,
   getDocs,
@@ -103,6 +102,10 @@ function getTripUpdateData(input: TripInput) {
   return data;
 }
 
+function isTripDeletedData(data: Record<string, unknown>) {
+  return Boolean(data.deletedAt);
+}
+
 function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripRecord {
   const data = snapshot.data();
 
@@ -167,29 +170,6 @@ function getRecipientInviteIndexData(inviteId: string, inviteData: Record<string
   };
 }
 
-async function deleteSnapshotsInBatches(
-  snapshots: Array<{ ref: unknown }>,
-  extendBatch?: (batch: ReturnType<typeof writeBatch>, chunk: Array<{ ref: unknown }>) => void,
-) {
-  if (snapshots.length === 0) {
-    return;
-  }
-
-  const db = getFirebaseDb();
-
-  for (let index = 0; index < snapshots.length; index += 400) {
-    const batch = writeBatch(db);
-    const chunk = snapshots.slice(index, index + 400);
-
-    chunk.forEach((snapshot) => {
-      batch.delete(snapshot.ref as Parameters<typeof batch.delete>[0]);
-    });
-
-    extendBatch?.(batch, chunk);
-    await batch.commit();
-  }
-}
-
 function mapRecipientInviteIndex(data: Record<string, unknown>) {
   const invites = data.invites;
 
@@ -217,7 +197,9 @@ export function subscribeUserTrips(
   return onSnapshot(
     tripsQuery,
     (snapshot) => {
-      const trips = snapshot.docs.map(mapTripRecord);
+      const trips = snapshot.docs
+        .filter((item) => !isTripDeletedData(item.data()))
+        .map(mapTripRecord);
       trips.forEach(setCachedTrip);
       callback(trips);
     },
@@ -240,7 +222,8 @@ export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null
   return onSnapshot(
     tripRef,
     (snapshot) => {
-      const trip = snapshot.exists() ? mapTripRecord(snapshot) : null;
+      const trip =
+        snapshot.exists() && !isTripDeletedData(snapshot.data()) ? mapTripRecord(snapshot) : null;
 
       if (trip) {
         setCachedTrip(trip);
@@ -328,38 +311,55 @@ export async function updateTrip(tripId: string, input: TripInput) {
 
 export async function deleteTrip(tripId: string) {
   const db = getFirebaseDb();
-  const snapshots = await Promise.all([
-    getDocs(collection(db, 'trips', tripId, 'plans')),
-    getDocs(collection(db, 'trips', tripId, 'checklistItems')),
-    getDocs(collection(db, 'trips', tripId, 'luggageItems')),
-    getDocs(collection(db, 'trips', tripId, 'pointsOfInterest')),
-    getDocs(collection(db, 'trips', tripId, 'members')),
-  ]);
   const invitesSnapshot = await getDocs(query(collection(db, 'tripInvites'), where('tripId', '==', tripId)));
 
-  for (const snapshot of snapshots) {
-    await deleteSnapshotsInBatches(snapshot.docs);
-  }
+  for (let index = 0; index < invitesSnapshot.docs.length; index += 400) {
+    const batch = writeBatch(db);
+    const chunk = invitesSnapshot.docs.slice(index, index + 400);
 
-  await deleteSnapshotsInBatches(invitesSnapshot.docs, (batch, chunk) => {
     chunk.forEach((inviteSnapshot) => {
       const invite = mapInviteRecord(inviteSnapshot);
 
-      batch.delete(getRecipientInviteRef(invite.emailLower, invite.id));
+      if (invite.status !== 'pending') {
+        return;
+      }
+
+      const deletedInviteData = {
+        ...invite,
+        status: 'deleted' as const,
+        deletedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      batch.update(inviteSnapshot.ref, {
+        status: 'deleted',
+        deletedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      batch.set(
+        getRecipientInviteRef(invite.emailLower, invite.id),
+        deletedInviteData,
+        { merge: true },
+      );
       batch.set(
         getRecipientInviteIndexRef(invite.emailLower),
         {
           invites: {
-            [getRecipientInviteKey(invite.id)]: deleteField(),
+            [getRecipientInviteKey(invite.id)]: deletedInviteData,
           },
           updatedAt: serverTimestamp(),
         },
         { merge: true },
       );
     });
-  });
 
-  await deleteDoc(doc(db, 'trips', tripId));
+    await batch.commit();
+  }
+
+  await updateDoc(doc(db, 'trips', tripId), {
+    deletedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
   clearTripSharedCache(tripId);
 }
 

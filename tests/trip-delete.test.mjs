@@ -19,10 +19,9 @@ describe('trip delete flow', () => {
     assert.match(tripEditScript, /window\.confirm\(t\('tripEdit\.deleteConfirm'\)\)/);
     assert.match(tripEditScript, /await deleteTrip\(tripId\)/);
     assert.match(tripsService, /export async function deleteTrip/);
-    assert.match(tripsService, /checklistItems/);
-    assert.match(tripsService, /luggageItems/);
-    assert.match(tripsService, /pointsOfInterest/);
+    assert.match(tripsService, /deletedAt: serverTimestamp\(\)/);
+    assert.match(tripsService, /status: 'deleted'/);
     assert.match(tripsService, /tripInvites/);
-    assert.match(tripsService, /members/);
+    assert.match(tripsService, /isTripDeletedData/);
   });
 });

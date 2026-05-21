@@ -1,7 +1,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 import type { TripAccommodationRecord, TripRecord } from '../app/models';
 import { getFirebaseDb } from './config';
-import { getCachedTrip, setCachedTrip } from './shared-data-cache';
+import { clearCachedTrip, getCachedTrip, setCachedTrip } from './shared-data-cache';
 
 function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | undefined {
   if (!value || typeof value !== 'object') {
@@ -42,6 +42,10 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
   };
 }
 
+function isTripDeletedData(data: Record<string, unknown>) {
+  return Boolean(data.deletedAt);
+}
+
 export async function getTripOnce(tripId: string) {
   const cachedTrip = getCachedTrip(tripId);
 
@@ -52,6 +56,11 @@ export async function getTripOnce(tripId: string) {
   const snapshot = await getDoc(doc(getFirebaseDb(), 'trips', tripId));
 
   if (!snapshot.exists()) {
+    return null;
+  }
+
+  if (isTripDeletedData(snapshot.data())) {
+    clearCachedTrip(tripId);
     return null;
   }
 
