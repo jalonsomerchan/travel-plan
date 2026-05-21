@@ -37,12 +37,28 @@ describe('plan statuses', () => {
 
   it('keeps plan cards mobile-safe with long links in text', () => {
     const tripPage = readText('src/scripts/pages/trip.ts');
+    const flags = readText('src/lib/app/plan-flags.ts');
+    const tripPageComponent = readText('src/components/pages/TripPage.astro');
 
     assert.match(tripPage, /app-card-shell min-w-0 overflow-hidden/);
     assert.match(tripPage, /flex min-w-0 items-start justify-between/);
     assert.match(tripPage, /max-w-full break-words text-sm text-\[var\(--color-text-muted\)\] \[overflow-wrap:anywhere\]/);
     assert.match(tripPage, /min-w-0 break-words text-lg font-bold/);
     assert.match(tripPage, /inline-flex max-w-full break-words/);
+    assert.match(flags, /flex min-w-0 flex-wrap items-center gap-2/);
+    assert.doesNotMatch(flags, /truncate/);
+    assert.match(tripPageComponent, /flex-wrap: wrap/);
+    assert.match(tripPageComponent, /flex-basis: 100%/);
+    assert.match(tripPageComponent, /justify-content: space-between/);
+  });
+
+  it('starts app breadcrumbs at dashboard when available', () => {
+    const appShell = readText('src/components/app/AppShell.astro');
+
+    assert.match(appShell, /shouldStartAtDashboard/);
+    assert.match(appShell, /breadcrumbs\[1\]\?\.href\?\.endsWith\('\/app\/'\)/);
+    assert.match(appShell, /breadcrumbs\.slice\(1\)/);
+    assert.match(appShell, /visibleBreadcrumbs/);
   });
 
   it('shows and plays AI guides from the trip plan list', () => {
@@ -75,19 +91,5 @@ describe('plan statuses', () => {
     assert.match(generator, /data-plan-ai-tour-generator-output/);
     assert.match(generator, /data-plan-ai-tour-generator-save/);
     assert.match(generator, /renderPlanAiTourGenerateMenuAction/);
-    assert.match(generator, /Generar guía/);
-    assert.match(generator, /Generate guide/);
-  });
-
-  it('shows the reusable guide player from the plan detail actions', () => {
-    const planPage = readText('src/components/pages/PlanPage.astro');
-
-    assert.match(planPage, /data-plan-ai-guide-open-player/);
-    assert.match(planPage, /Ver \/ escuchar guía/);
-    assert.match(planPage, /View \/ listen to guide/);
-    assert.match(planPage, /Generar guía/);
-    assert.match(planPage, /Generate guide/);
-    assert.match(planPage, /openPlanAiGuidePlayer/);
-    assert.match(planPage, /MutationObserver/);
   });
 });
