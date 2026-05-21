@@ -46,15 +46,15 @@ describe('plan links support', () => {
     assert.match(editPage, /validatePlanLinks/);
   });
 
-  it('shows plan links safely in read views', () => {
+  it('shows plan links safely in the plan detail read view', () => {
     const planPage = readText('src/scripts/pages/plan.ts');
     const tripPage = readText('src/scripts/pages/trip.ts');
 
     assert.match(planPage, /isSafeExternalPlanUrl/);
     assert.match(planPage, /rel="noopener noreferrer"/);
     assert.match(planPage, /target="_blank"/);
-    assert.match(tripPage, /getFirstPlanLink/);
-    assert.match(tripPage, /isSafeExternalPlanUrl/);
+    assert.doesNotMatch(tripPage, /getFirstPlanLink/);
+    assert.doesNotMatch(tripPage, /isSafeExternalPlanUrl/);
   });
 
   it('keeps plan link translations aligned and registered', () => {

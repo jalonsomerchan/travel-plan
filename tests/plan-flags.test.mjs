@@ -36,12 +36,14 @@ describe('plan flags', () => {
     const en = readText('src/i18n/translations/en.json');
 
     assert.match(helper, /getPlanNameWithFlagsHtml/);
+    assert.match(helper, /getPlanFlagsHtml/);
     assert.match(helper, /plan\.flag\.paid/);
     assert.match(helper, />\$</);
     assert.match(helper, />✓</);
     assert.match(helper, />\?</);
     assert.match(helper, />!</);
-    assert.match(trip, /getPlanNameWithFlagsHtml\(plan, t\)/);
+    assert.match(trip, /getPlanFlagsHtml\(plan, t\)/);
+    assert.doesNotMatch(trip, /getPlanNameWithFlagsHtml\(plan, t\)/);
     assert.match(tripCalendar, /getPlanNameWithFlagsHtml\(plan, t\)/);
     assert.match(globalCalendar, /getPlanNameWithFlagsHtml\(plan, t\)/);
     assert.match(map, /getPlanNameWithFlagsHtml\(plan, t\)/);
