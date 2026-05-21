@@ -7,6 +7,9 @@ import {
 } from 'firebase/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './config';
+import { clearSharedDataCache } from './shared-data-cache';
+
+let currentUserId: string | null = null;
 
 async function syncUserProfile(user: User) {
   const db = getFirebaseDb();
@@ -34,10 +37,21 @@ async function trySyncUserProfile(user: User) {
   }
 }
 
+function syncCacheOwner(user: User | null) {
+  const nextUserId = user?.uid ?? null;
+
+  if (currentUserId !== nextUserId) {
+    clearSharedDataCache();
+    currentUserId = nextUserId;
+  }
+}
+
 export function observeSession(callback: (user: User | null) => void) {
   const auth = getFirebaseAuth();
 
   return onAuthStateChanged(auth, async (user) => {
+    syncCacheOwner(user);
+
     if (user) {
       await trySyncUserProfile(user);
     }
@@ -54,11 +68,14 @@ export async function signInWithGoogle() {
   });
   const credential = await signInWithPopup(auth, provider);
 
+  syncCacheOwner(credential.user);
   await trySyncUserProfile(credential.user);
 
   return credential.user;
 }
 
-export function signOutSession() {
-  return signOut(getFirebaseAuth());
+export async function signOutSession() {
+  clearSharedDataCache();
+  currentUserId = null;
+  await signOut(getFirebaseAuth());
 }
