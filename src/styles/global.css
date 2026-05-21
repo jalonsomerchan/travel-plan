@@ -149,6 +149,44 @@ dialog::backdrop {
   color: var(--color-text);
 }
 
+.app-snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: var(--z-toast);
+  min-width: min(22rem, calc(100vw - 1.5rem));
+  max-width: min(32rem, calc(100vw - 1.5rem));
+  transform: translate(-50%, 1rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-raised) 92%, var(--color-bg) 8%);
+  box-shadow: var(--shadow-lg);
+  padding: 0.9rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0;
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
+  backdrop-filter: blur(20px);
+}
+
+.app-snackbar[data-open='true'] {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.app-snackbar[data-tone='success'] {
+  border-color: color-mix(in srgb, var(--color-success), transparent 55%);
+  background: color-mix(in srgb, var(--color-success-soft) 78%, var(--color-surface-raised) 22%);
+}
+
+.app-snackbar[data-tone='danger'] {
+  border-color: color-mix(in srgb, var(--color-danger), transparent 55%);
+  background: color-mix(in srgb, var(--color-danger-soft) 80%, var(--color-surface-raised) 20%);
+}
+
 .surface-panel {
   border: 1px solid var(--color-border);
   background: var(--color-surface);

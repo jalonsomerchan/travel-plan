@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
-import LocationPickerFields from '../app/LocationPickerFields.astro';
+import TripPoiFormDialog from '../app/TripPoiFormDialog.astro';
 import TripActionsMenu from '../app/TripActionsMenu.astro';
 import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
 import TripSectionNav from '../app/TripSectionNav.astro';
@@ -35,65 +35,22 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
-      <form class="grid gap-5" id="trip-poi-form">
-        <input name="pointId" type="hidden" />
-        <div class="grid gap-4 md:grid-cols-[1fr_12rem]">
-          <label class="grid gap-2">
-            <span class="field-label">{t('tripPois.form.name')}</span>
-            <input class="field-input" name="name" required />
-          </label>
-          <label class="grid gap-2">
-            <span class="field-label">{t('tripPois.form.icon')}</span>
-            <input
-              class="field-input"
-              list="trip-poi-icon-suggestions"
-              maxlength="16"
-              name="icon"
-              placeholder={t('tripPois.form.iconPlaceholder')}
-              value="pin"
-            />
-          </label>
-        </div>
-        <datalist id="trip-poi-icon-suggestions">
-          <option value="star">{t('tripPois.icon.star')}</option>
-          <option value="camera">{t('tripPois.icon.camera')}</option>
-          <option value="food">{t('tripPois.icon.food')}</option>
-          <option value="view">{t('tripPois.icon.view')}</option>
-          <option value="pin">{t('tripPois.icon.pin')}</option>
-          <option value="📍">{t('tripPois.icon.pin')}</option>
-          <option value="📷">{t('tripPois.icon.camera')}</option>
-          <option value="🍽️">{t('tripPois.icon.food')}</option>
-          <option value="🌄">{t('tripPois.icon.view')}</option>
-          <option value="⭐">{t('tripPois.icon.star')}</option>
-        </datalist>
-        <p class="text-sm text-[var(--color-text-soft)]">{t('tripPois.form.iconHelper')}</p>
-        <LocationPickerFields
-          clearButtonName={t('plan.location.clear')}
-          helperKey="tripPois.form.locationHelper"
-          latFieldName="locationLat"
-          locale={locale}
-          lngFieldName="locationLng"
-          nameFieldName="locationName"
-          prefix="trip-poi"
-          queryFieldLabel={t('tripPois.form.location')}
-          queryFieldName="locationQuery"
-          searchButtonName={t('plan.location.search')}
-        />
-        <p class="text-sm text-[var(--color-text-soft)]" id="trip-poi-message" role="status" aria-live="polite">
-          {t('tripPois.form.helper')}
-        </p>
-        <div class="flex flex-wrap gap-3">
-          <Button type="submit">{t('tripPois.form.save')}</Button>
-          <Button data-trip-poi-cancel-edit hidden type="button" variant="secondary">{t('common.cancel')}</Button>
-        </div>
-      </form>
-      <div class="mt-8 border-t border-[var(--color-border)] pt-8">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-5">
+        <div class="min-w-0">
           <h2 class="text-2xl font-black">{t('tripPois.listTitle')}</h2>
-          <span class="status-pill" data-tone="primary" data-trip-poi-count>0</span>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripPois.listDescription')}</p>
         </div>
-        <div class="mt-6 grid gap-4" data-trip-poi-list></div>
+        <div class="flex items-center gap-3">
+          <span class="status-pill" data-tone="primary" data-trip-poi-count>0</span>
+          <Button data-trip-poi-open-create type="button">{t('tripPois.createAction')}</Button>
+        </div>
       </div>
+      <p class="mt-4 text-sm text-[var(--color-text-soft)]" id="trip-poi-page-message" role="status" aria-live="polite">
+        {t('tripPois.form.helper')}
+      </p>
+      <div class="mt-6 grid gap-4" data-trip-poi-list></div>
+      <div class="app-snackbar" aria-live="polite" data-trip-poi-snackbar hidden></div>
+      <TripPoiFormDialog locale={locale} />
     </div>
   </AppShell>
 

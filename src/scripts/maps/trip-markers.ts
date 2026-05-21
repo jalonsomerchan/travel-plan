@@ -36,8 +36,8 @@ export function createTripPoiIcon(point: TripPointOfInterestRecord) {
   return L.divIcon({
     className: 'trip-map-poi-marker',
     html: `
-      <span aria-hidden="true" style="align-items:center;background:rgba(37,99,235,.42);border:none;border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.18);color:#ffffff;display:flex;font-weight:900;height:34px;justify-content:center;width:34px;">
-        ${escapeHtml(resolveTripPoiIcon(point.icon))}
+      <span aria-hidden="true" style="align-items:center;background:${escapeHtml(point.color)};border:2px solid rgba(255,255,255,.92);border-radius:999px;box-shadow:0 10px 24px rgba(15,23,42,.18);color:#ffffff;display:flex;font-weight:900;height:34px;justify-content:center;width:34px;">
+        ${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}
       </span>
     `,
     iconAnchor: [17, 34],

@@ -8,6 +8,7 @@ import { escapeHtml } from '../../lib/app/dom';
 import { formatPlanMoment } from '../../lib/app/format';
 import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
 import type { PlanRecord, TripPointOfInterestRecord, TripRecord } from '../../lib/app/models';
+import { shouldShowTripPoiOnMap } from '../../lib/app/trip-pois';
 import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
@@ -75,28 +76,31 @@ function renderPlanList(
   const target = document.querySelector<HTMLElement>('[data-map-plan-list]');
   const count = document.querySelector<HTMLElement>('[data-map-count]');
   const locatedPlans = plans.filter(hasPlanLocation);
+  const visiblePoints = points.filter(shouldShowTripPoiOnMap);
 
   if (count) {
-    count.textContent = String(locatedPlans.length + points.length);
+    count.textContent = String(locatedPlans.length + visiblePoints.length);
   }
 
   if (!target) {
     return;
   }
 
-  if (locatedPlans.length === 0 && points.length === 0) {
+  if (locatedPlans.length === 0 && visiblePoints.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('map.empty'))}</article>`;
     return;
   }
 
   target.innerHTML = [
-    ...points.map(
+    ...visiblePoints.map(
       (point) => `
         <article class="app-card-shell">
           <div class="flex items-center gap-2">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]">${escapeHtml(resolveTripPoiIcon(point.icon))}</span>
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black text-white" style="background:${escapeHtml(point.color)};">${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}</span>
             <h3 class="text-lg font-bold">${escapeHtml(point.name)}</h3>
           </div>
+          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]">${escapeHtml(t(`tripPois.type.${point.type}`))}</p>
+          ${point.description ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(point.description)}</p>` : ''}
           <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(point.locationName)}</p>
           <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]">${escapeHtml(t('tripPois.breadcrumb'))}</p>
         </article>
@@ -258,7 +262,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     addAccommodationMarker(currentTrip, accommodationMarkers, bounds);
     addTripLocationFallback(currentTrip, bounds);
 
-    currentPoints.forEach((point) => {
+    currentPoints.filter(shouldShowTripPoiOnMap).forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);
       bounds.extend(latLng);
       L.marker(latLng, {
@@ -266,7 +270,9 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         keyboard: true,
         title: point.name,
       })
-        .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
+        .bindPopup(
+          `<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(t(`tripPois.type.${point.type}`))}<br />${escapeHtml(point.locationName)}${point.description ? `<br />${escapeHtml(point.description)}` : ''}`,
+        )
         .addTo(poiMarkers);
     });
 

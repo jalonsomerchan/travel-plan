@@ -1,0 +1,133 @@
+---
+import { tripPoiTypeValues } from '../../config/trip-pois';
+import type { Locale } from '../../config/site';
+import { getTripPoiDefaultColor } from '../../lib/app/trip-pois';
+import { useTranslations } from '../../i18n/ui';
+import Button from '../Button.astro';
+import LocationPickerFields from './LocationPickerFields.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<dialog
+  class="w-[min(100%-1rem,46rem)] max-w-none overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-0 text-[var(--color-text)] shadow-[var(--shadow-lg)]"
+  data-trip-poi-dialog
+>
+  <form class="grid gap-5 p-4 sm:p-6" id="trip-poi-form" method="dialog">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h2 class="text-2xl font-black tracking-[-0.03em]" data-trip-poi-modal-title>{t('tripPois.modal.createTitle')}</h2>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-trip-poi-modal-description>{t('tripPois.modal.createDescription')}</p>
+      </div>
+      <button
+        aria-label={t('tripPois.modal.close')}
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-lg font-bold text-[var(--color-text)] transition hover:bg-[var(--color-surface-soft)]"
+        data-trip-poi-close
+        type="button"
+      >
+        ×
+      </button>
+    </div>
+
+    <input name="pointId" type="hidden" />
+
+    <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]">
+      <label class="grid gap-2">
+        <span class="field-label">{t('tripPois.form.name')}</span>
+        <input class="field-input" name="name" required />
+      </label>
+
+      <label class="grid gap-2">
+        <span class="field-label">{t('tripPois.form.type')}</span>
+        <select class="field-input" name="type">
+          {tripPoiTypeValues.map((type) => (
+            <option value={type}>{t(`tripPois.type.${type}`)}</option>
+          ))}
+        </select>
+      </label>
+    </div>
+
+    <label class="grid gap-2">
+      <span class="field-label">{t('tripPois.form.description')}</span>
+      <textarea class="field-input min-h-24 resize-y" maxlength="280" name="description" placeholder={t('tripPois.form.descriptionPlaceholder')}></textarea>
+    </label>
+
+    <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
+      <label class="grid gap-2">
+        <span class="field-label">{t('tripPois.form.icon')}</span>
+        <input
+          class="field-input"
+          list="trip-poi-icon-suggestions"
+          maxlength="16"
+          name="icon"
+          placeholder={t('tripPois.form.iconPlaceholder')}
+          value="pin"
+        />
+      </label>
+
+      <label class="grid gap-2">
+        <span class="field-label">{t('tripPois.form.color')}</span>
+        <input
+          class="h-12 w-full cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1"
+          data-trip-poi-color-input
+          name="color"
+          type="color"
+          value={getTripPoiDefaultColor('other')}
+        />
+      </label>
+    </div>
+
+    <datalist id="trip-poi-icon-suggestions">
+      <option value="star">{t('tripPois.icon.star')}</option>
+      <option value="camera">{t('tripPois.icon.camera')}</option>
+      <option value="food">{t('tripPois.icon.food')}</option>
+      <option value="coffee">{t('tripPois.icon.cafe')}</option>
+      <option value="view">{t('tripPois.icon.view')}</option>
+      <option value="metro">{t('tripPois.icon.metro')}</option>
+      <option value="train">{t('tripPois.icon.train')}</option>
+      <option value="bus">{t('tripPois.icon.bus')}</option>
+      <option value="airport">{t('tripPois.icon.airport')}</option>
+      <option value="fountain">{t('tripPois.icon.fountain')}</option>
+      <option value="bar">{t('tripPois.icon.bar')}</option>
+      <option value="wc">{t('tripPois.icon.public_toilet')}</option>
+      <option value="pin">{t('tripPois.icon.pin')}</option>
+    </datalist>
+
+    <p class="text-sm text-[var(--color-text-soft)]">{t('tripPois.form.iconHelper')}</p>
+
+    <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
+      <input class="mt-1 h-4 w-4 shrink-0 accent-[var(--color-primary)]" checked name="isVisible" type="checkbox" />
+      <span class="min-w-0">
+        <span class="block font-semibold text-[var(--color-text)]">{t('tripPois.form.visible')}</span>
+        <span class="mt-1 block text-sm text-[var(--color-text-soft)]">{t('tripPois.form.visibleHelper')}</span>
+      </span>
+    </label>
+
+    <LocationPickerFields
+      clearButtonName={t('plan.location.clear')}
+      helperKey="tripPois.form.locationHelper"
+      latFieldName="locationLat"
+      locale={locale}
+      lngFieldName="locationLng"
+      nameFieldName="locationName"
+      prefix="trip-poi"
+      queryFieldLabel={t('tripPois.form.location')}
+      queryFieldName="locationQuery"
+      searchButtonName={t('plan.location.search')}
+    />
+
+    <p class="text-sm text-[var(--color-text-soft)]" id="trip-poi-message" role="status" aria-live="polite">
+      {t('tripPois.form.helper')}
+    </p>
+
+    <div class="flex flex-wrap justify-end gap-3">
+      <Button data-trip-poi-close type="button" variant="secondary">{t('common.cancel')}</Button>
+      <Button type="submit">{t('tripPois.form.save')}</Button>
+    </div>
+  </form>
+</dialog>

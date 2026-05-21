@@ -98,7 +98,11 @@ Documento por punto en `trips/{tripId}/pointsOfInterest/{pointId}`:
 ```json
 {
   "name": "Mirador",
+  "description": "Buena vista al atardecer",
+  "type": "landmark",
   "icon": "view",
+  "color": "#f59e0b",
+  "isVisible": true,
   "locationName": "Mirador del río",
   "locationLat": 40.4168,
   "locationLng": -3.7038
@@ -108,7 +112,11 @@ Documento por punto en `trips/{tripId}/pointsOfInterest/{pointId}`:
 Campos esperados:
 
 - `name`: nombre visible del punto.
+- `description`: nota opcional breve para recordar el contexto del lugar.
+- `type`: tipo corto controlado por la UI, por ejemplo `restaurant`, `cafe`, `public_toilet` o `airport`.
 - `icon`: identificador corto de icono controlado por la UI.
+- `color`: color hexadecimal corto usado para diferenciar el marcador en el mapa.
+- `isVisible`: booleano para decidir si ese punto debe aparecer o no en el mapa del viaje.
 - `locationName`: etiqueta de localización seleccionada o marcada en el mapa.
 - `locationLat` y `locationLng`: coordenadas numéricas obligatorias.
 

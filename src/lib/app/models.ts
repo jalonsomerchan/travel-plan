@@ -1,3 +1,5 @@
+import type { TripPoiType } from '../../config/trip-pois';
+
 export const tripStatusValues = ['idea', 'planned', 'booked', 'visited'] as const;
 export const tripMemberRoles = ['viewer', 'editor'] as const;
 export const planCategoryValues = [
@@ -130,7 +132,11 @@ export interface ChecklistItemInput {
 export interface TripPointOfInterestRecord {
   id: string;
   name: string;
+  description: string;
   icon: string;
+  type: TripPoiType;
+  color: string;
+  isVisible: boolean;
   locationName: string;
   locationLat: number;
   locationLng: number;
@@ -138,7 +144,11 @@ export interface TripPointOfInterestRecord {
 
 export interface TripPointOfInterestInput {
   name: string;
+  description: string;
   icon: string;
+  type: TripPoiType;
+  color: string;
+  isVisible: boolean;
   locationName: string;
   locationLat: number;
   locationLng: number;

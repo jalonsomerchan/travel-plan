@@ -8,12 +8,23 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import type { TripPointOfInterestInput, TripPointOfInterestRecord } from '../app/models';
+import {
+  getTripPoiDefaultIcon,
+  normalizeTripPoiColor,
+  normalizeTripPoiType,
+} from '../app/trip-pois';
 import { getFirebaseDb } from './config';
 
 function getPoiWriteData(input: TripPointOfInterestInput) {
+  const type = normalizeTripPoiType(input.type);
+
   return {
     name: input.name.trim(),
-    icon: input.icon.trim(),
+    description: input.description.trim(),
+    icon: input.icon.trim() || getTripPoiDefaultIcon(type),
+    type,
+    color: normalizeTripPoiColor(input.color, type),
+    isVisible: input.isVisible,
     locationName: input.locationName.trim(),
     locationLat: input.locationLat,
     locationLng: input.locationLng,
@@ -26,7 +37,11 @@ function mapPoiRecord(snapshot: { id: string; data: () => Record<string, unknown
   return {
     id: snapshot.id,
     name: String(data.name ?? ''),
+    description: String(data.description ?? ''),
     icon: String(data.icon ?? 'pin'),
+    type: normalizeTripPoiType(typeof data.type === 'string' ? data.type : undefined),
+    color: normalizeTripPoiColor(typeof data.color === 'string' ? data.color : undefined, String(data.type ?? '')),
+    isVisible: data.isVisible !== false,
     locationName: String(data.locationName ?? ''),
     locationLat: typeof data.locationLat === 'number' ? data.locationLat : Number.NaN,
     locationLng: typeof data.locationLng === 'number' ? data.locationLng : Number.NaN,
