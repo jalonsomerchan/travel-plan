@@ -481,7 +481,9 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     proposedPlans.forEach((plan) => renderSecondaryPlan(plan, mapLayers.proposedPlans));
     plans.forEach((plan) => renderSecondaryPlan(plan, mapLayers.plans));
 
-    currentPoints.forEach((point) => {
+    currentPoints
+      .filter((point) => visibility.poiTypes[point.type])
+      .forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);
 
       L.marker(latLng, {
@@ -491,7 +493,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
       })
         .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
         .addTo(mapLayers.tripPois);
-    });
+      });
 
     const accommodation = currentTrip.accommodation;
     planAccommodationFocusControl?.setVisible(hasAccommodationLocation(accommodation));
