@@ -20,6 +20,8 @@ import planLinksEn from './feature-translations/plan-links/en.json';
 import planLinksEs from './feature-translations/plan-links/es.json';
 import poiEn from './feature-translations/poi/en.json';
 import poiEs from './feature-translations/poi/es.json';
+import pwaStatusEn from './feature-translations/pwa-status/en.json';
+import pwaStatusEs from './feature-translations/pwa-status/es.json';
 import tripAiPromptEn from './feature-translations/trip-ai-prompt/en.json';
 import tripAiPromptEs from './feature-translations/trip-ai-prompt/es.json';
 import tripFormLayoutEn from './feature-translations/trip-form-layout/en.json';
@@ -40,6 +42,7 @@ export type TranslationKey =
   | keyof typeof planFormLayoutEs
   | keyof typeof planLinksEs
   | keyof typeof poiEs
+  | keyof typeof pwaStatusEs
   | keyof typeof tripAiPromptEs
   | keyof typeof tripFormLayoutEs
   | keyof typeof tripPoisAiPromptEs
@@ -59,6 +62,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...planFormLayoutEs,
     ...planLinksEs,
     ...poiEs,
+    ...pwaStatusEs,
     ...tripAiPromptEs,
     ...tripFormLayoutEs,
     ...tripPoisAiPromptEs,
@@ -75,6 +79,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...planFormLayoutEn,
     ...planLinksEn,
     ...poiEn,
+    ...pwaStatusEn,
     ...tripAiPromptEn,
     ...tripFormLayoutEn,
     ...tripPoisAiPromptEn,
