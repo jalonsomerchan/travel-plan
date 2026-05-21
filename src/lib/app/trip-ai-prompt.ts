@@ -64,7 +64,7 @@ export function buildTripAiPrompt(trip: TripRecord, plans: PlanRecord[], locale:
   const existingPlans = formatExistingPlans(plans, locale);
 
   if (locale === 'en') {
-    return `You are an expert travel planner. Create a useful itinerary for this trip and return only valid JSON, without markdown fences or extra comments.
+    return `You are an expert local travel curator. Create useful place proposals for this trip and return only valid JSON, without markdown fences or extra comments.
 
 Trip data:
 - Trip name: ${trip.name}
@@ -77,8 +77,9 @@ Return a JSON object with this exact structure:
 {
   "plans": [
     {
-      "name": "Short plan title",
-      "description": "Why it is worth it and practical notes. Put sources or reference links here, never in name.",
+      "name": "Short plain-text place or plan title",
+      "description": "Short summary and practical notes. Put sources or reference links here, never in name.",
+      "aiGuide": "Longer audio-guide text about the place: what it is, why it matters, history, context, curiosities and what to notice there.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -94,10 +95,12 @@ Return a JSON object with this exact structure:
 }
 
 Rules:
-- Create between 8 and 18 plans, distributed realistically across the trip dates.
+- Create between 8 and 18 useful proposals, avoiding duplicates with saved plans.
 - Use only these categories: ${categories}.
 - status is optional. If you include it, use "proposed". If you omit it, TravelPlan will save it as proposed.
 - Use dates within the trip range only.
+- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in description or aiGuide.
+- Focus aiGuide on what the place is like and what makes it interesting, not on guiding me step by step through the area.
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
 - isBooked means the place or plan requires a reservation or booking in advance.
@@ -108,7 +111,7 @@ Rules:
 - Return only JSON.`;
   }
 
-  return `Actúa como una IA experta en planificación de viajes. Crea una planificación útil para este viaje y devuelve solo JSON válido, sin bloques markdown ni comentarios extra.
+  return `Actúa como una IA experta en viajes y cultura local. Crea propuestas útiles de sitios o planes para este viaje y devuelve solo JSON válido, sin bloques markdown ni comentarios extra.
 
 Datos del viaje:
 - Nombre del viaje: ${trip.name}
@@ -121,8 +124,9 @@ Devuelve un objeto JSON con esta estructura exacta:
 {
   "plans": [
     {
-      "name": "Título corto del plan",
-      "description": "Por qué merece la pena y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
+      "name": "Título corto y limpio del sitio o plan",
+      "description": "Resumen corto y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
+      "aiGuide": "Texto más largo de audioguía sobre el sitio: qué es, por qué merece la pena, historia, contexto, curiosidades y en qué fijarme allí.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -138,10 +142,12 @@ Devuelve un objeto JSON con esta estructura exacta:
 }
 
 Reglas:
-- Crea entre 8 y 18 planes, repartidos de forma realista entre los días del viaje.
+- Crea entre 8 y 18 propuestas útiles, evitando duplicados con los planes guardados.
 - Usa solo estas categorías: ${categories}.
 - status es opcional. Si lo incluyes, usa "proposed". Si lo omites, TravelPlan lo guardará como propuesto.
 - Usa únicamente fechas dentro del rango del viaje.
+- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en description ni en aiGuide.
+- Centra aiGuide en cómo es el sitio y por qué es interesante, no en guiarme paso a paso por la zona.
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
 - isBooked significa que el sitio o plan requiere reserva previa.
@@ -236,6 +242,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
     sourceIndex: index,
     name,
     description: getDescriptionWithTitleSources(getString(record, ['description', 'notes', 'reason']), rawName),
+    aiGuide: getString(record, ['aiGuide', 'guide', 'audioGuide']) || undefined,
     category: normalizeCategory(getString(record, ['category', 'type'])),
     date: getString(record, ['date']) || undefined,
     time: getString(record, ['time']) || undefined,
