@@ -13,6 +13,7 @@ export type AppView =
   | 'trip-weather'
   | 'trip-accommodation'
   | 'trip-pois'
+  | 'trip-pois-ai'
   | 'trip-members'
   | 'trip-invites'
   | 'plan'
@@ -34,6 +35,7 @@ const appPaths: Record<AppView, string> = {
   'trip-weather': 'app/trip-weather',
   'trip-accommodation': 'app/trip-accommodation',
   'trip-pois': 'app/trip-pois',
+  'trip-pois-ai': 'app/trip-pois-ai',
   'trip-members': 'app/trip-members',
   'trip-invites': 'app/trip-invites',
   plan: 'app/plan',

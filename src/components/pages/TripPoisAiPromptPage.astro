@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppShell from '../app/AppShell.astro';
+import TripActionsMenu from '../app/TripActionsMenu.astro';
+import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
+import TripPoisAiPromptBody from '../app/TripPoisAiPromptBody.astro';
+import TripSectionNav from '../app/TripSectionNav.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('tripPoisAiPrompt.metaTitle')} description={t('tripPoisAiPrompt.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('tripPoisAiPrompt.eyebrow')}
+    title={t('tripPoisAiPrompt.title')}
+    description={t('tripPoisAiPrompt.description')}
+    loading
+    loadingLabel={t('common.loading')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('trip.breadcrumb'), key: 'trip' },
+      { label: t('tripPois.breadcrumb'), key: 'trip-pois' },
+      { label: t('tripPoisAiPrompt.breadcrumb') },
+    ]}
+  >
+    <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
+
+    <TripPoisAiPromptBody slot="body" locale={locale} />
+  </AppShell>
+
+  <script>
+    import { mountTripPoisAiPromptPage } from '../../scripts/pages/trip-pois-ai-prompt';
+
+    mountTripPoisAiPromptPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

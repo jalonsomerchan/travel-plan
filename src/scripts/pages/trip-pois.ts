@@ -248,6 +248,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
   const pageMessage = document.querySelector<HTMLElement>('#trip-poi-page-message');
   const list = document.querySelector<HTMLElement>('[data-trip-poi-list]');
   const snackbar = document.querySelector<HTMLElement>('[data-trip-poi-snackbar]');
+  const aiLink = document.querySelector<HTMLAnchorElement>('[data-trip-poi-ai-link]');
   const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const createButton = document.querySelector<HTMLButtonElement>('[data-trip-poi-open-create]');
   const t = getPageTranslator(locale);
@@ -263,6 +264,9 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
   }
 
   syncTripNavigation(locale, tripId);
+  if (aiLink) {
+    aiLink.href = getAppUrl(locale, 'trip-pois-ai', { trip: tripId });
+  }
   resetForm(form);
   syncModalCopy(locale, form);
 

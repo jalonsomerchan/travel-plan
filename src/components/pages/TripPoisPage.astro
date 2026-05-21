@@ -42,6 +42,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
         </div>
         <div class="flex items-center gap-3">
           <span class="status-pill" data-tone="primary" data-trip-poi-count>0</span>
+          <Button data-trip-poi-ai-link href={dashboardUrl} variant="secondary" type="button">{t('tripPois.createAiAction')}</Button>
           <Button data-trip-poi-open-create type="button">{t('tripPois.createAction')}</Button>
         </div>
       </div>

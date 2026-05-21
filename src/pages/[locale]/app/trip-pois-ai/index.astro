@@ -1,0 +1,14 @@
+---
+import TripPoisAiPromptPage from '../../../../components/pages/TripPoisAiPromptPage.astro';
+import { defaultLocale, locales, type Locale } from '../../../../config/site';
+
+export function getStaticPaths() {
+  return locales
+    .filter((locale) => locale !== defaultLocale)
+    .map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+---
+
+<TripPoisAiPromptPage locale={locale} />
