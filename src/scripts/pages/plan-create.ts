@@ -6,6 +6,7 @@ import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/ap
 import { getAppUrl } from '../../lib/app/routes';
 import { createPlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initPlanLinksFields } from './plan-links-fields';
 import { initLocationPickers } from './plan-location-picker';
@@ -19,24 +20,33 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-create-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   initLocationPickers();
   initPlanLinksFields(form);
+
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
-    subscribeTrip(tripId, (trip) => {
-      if (trip) {
-        syncTripShell(locale, trip);
-        initLocationPickers();
-        if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-      }
-    });
+
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        if (trip) {
+          syncTripShell(locale, trip);
+          initLocationPickers();
+          if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+        }
+      }),
+    );
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
