@@ -99,6 +99,10 @@ describe('trip AI prompt wizard', () => {
     assert.match(planScript, /normalizeAiGuideText\(aiTourResultInput\.value\)/);
     assert.match(planScript, /aiTourResultInput\.value = aiGuide/);
     assert.match(planScript, /await updatePlan\(tripId, planId, \{ \.\.\.currentPlan, aiGuide \}\)/);
+    assert.match(planScript, /currentAiGuide = aiGuide/);
+    assert.match(planScript, /renderCurrentAiGuide\(\)/);
+    assert.match(planScript, /aiTourModal\?\.close\(\)/);
+    assert.match(planScript, /setMessage\(aiGuideMessage, t\('plan\.aiTour\.savedGuide'\), 'success'\)/);
   });
 
   it('uses the final plain narration instruction in the plan AI tour prompt', () => {
@@ -113,6 +117,17 @@ describe('trip AI prompt wizard', () => {
     assert.match(planScript, /const finalPrompt = `\$\{prompt\}\\n\\n\$\{t\('plan\.aiTour\.plainNarrationInstruction'\)\}`/);
     assert.match(planScript, /aiTourOutput\.value = finalPrompt/);
     assert.match(planScript, /getChatGptPromptUrl\(finalPrompt\)/);
+  });
+
+  it('remembers plan AI tour prompt options locally', () => {
+    const planScript = readText('src/scripts/pages/plan.ts');
+
+    assert.match(planScript, /travelPlan:planAiTourOptions/);
+    assert.match(planScript, /window\.localStorage\.getItem\(aiTourOptionsStorageKey\)/);
+    assert.match(planScript, /window\.localStorage\.setItem\(aiTourOptionsStorageKey, JSON\.stringify\(options\)\)/);
+    assert.match(planScript, /restoreAiTourOptions\(aiTourModal\)/);
+    assert.match(planScript, /saveAiTourOptions\(aiTourModal\)/);
+    assert.match(planScript, /aiTourAllowedOptions\[name\]\.includes\(value\)/);
   });
 
   it('normalizes basic Markdown from saved AI guide text', () => {
