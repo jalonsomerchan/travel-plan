@@ -25,12 +25,13 @@ import {
   createPlanMarkerIcon,
   createTripPoiIcon,
   getAccommodationMarkerLabel,
+  getPlanPopupHtml,
 } from '../maps/trip-markers';
 import {
   addMapVisibilityControl,
   getMapVisibilityState,
+  type MapVisibilityPreferences,
   syncCurrentLocationVisibility,
-  type MapVisibilityState,
 } from '../maps/visibility';
 import { mountNearbyPoiExplorer } from './nearby-poi-explorer';
 import {
@@ -63,26 +64,9 @@ function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElemen
     .join('');
 }
 
-function fitPlanMap(map: L.Map, bounds: L.LatLngBounds, center: L.LatLngExpression) {
+function focusPlanMap(map: L.Map, center: L.LatLngExpression) {
   map.invalidateSize();
-
-  if (!bounds.isValid()) {
-    map.setView(center, 15);
-    return;
-  }
-
-  const northEast = bounds.getNorthEast();
-  const southWest = bounds.getSouthWest();
-
-  if (northEast.equals(southWest)) {
-    map.setView(bounds.getCenter(), 15);
-    return;
-  }
-
-  map.fitBounds(bounds.pad(0.2), {
-    maxZoom: 15,
-    padding: [48, 48],
-  });
+  map.setView(center, Math.max(map.getZoom(), 15));
 }
 
 function syncLayerVisibility(map: L.Map, layer: L.LayerGroup, visible: boolean) {
@@ -165,6 +149,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   let currentPlans: PlanRecord[] = [];
   let currentAiGuide = '';
   let visibility = getMapVisibilityState();
+  let hasVisibilityControl = false;
   if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -305,7 +290,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     planSubscriptions.clear();
   };
 
-  const applyVisibility = (nextVisibility: MapVisibilityState) => {
+  const applyVisibility = (nextVisibility: MapVisibilityPreferences) => {
     visibility = nextVisibility;
 
     if (!map || !mapLayers) {
@@ -350,28 +335,35 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         accommodation: L.layerGroup().addTo(map),
         tripPois: L.layerGroup().addTo(map),
       };
-      addMapVisibilityControl(map, t, applyVisibility);
+      ensureMapVisibilityControl();
     }
 
     if (!mapLayers) {
       return;
     }
 
-    const bounds = L.latLngBounds([]);
     const currentPlanLatLng = L.latLng(currentPlan.locationLat, currentPlan.locationLng);
     const { proposedPlans, plans } = splitLocatedPlans(
       currentPlans.filter((plan) => plan.id !== currentPlan.id),
     );
 
     Object.values(mapLayers).forEach((layer) => layer.clearLayers());
-    bounds.extend(currentPlanLatLng);
 
     L.marker(currentPlanLatLng, {
       icon: createPlanMarkerIcon(currentPlan, locale, { emphasized: true }),
       keyboard: true,
       title: currentPlan.name,
     })
-      .bindPopup(`<strong>${escapeHtml(currentPlan.name)}</strong><br />${escapeHtml(getPlanLocationLabel(currentPlan))}`)
+      .bindPopup(
+        getPlanPopupHtml(
+          locale,
+          tripId,
+          currentPlan,
+          getCategoryLabel(locale, currentPlan.category),
+          getPlanLocationLabel(currentPlan),
+          t,
+        ),
+      )
       .addTo(mapLayers.currentPlan);
 
     const renderSecondaryPlan = (plan: PlanRecord, layer: L.LayerGroup) => {
@@ -379,18 +371,19 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         return;
       }
 
-      const latLng = L.latLng(plan.locationLat, plan.locationLng);
+      if (!visibility.categories[plan.category]) {
+        return;
+      }
+
       const categoryLabel = getCategoryLabel(locale, plan.category);
-      bounds.extend(latLng);
+      const latLng = L.latLng(plan.locationLat, plan.locationLng);
 
       L.marker(latLng, {
         icon: createPlanMarkerIcon(plan, locale, { muted: true }),
         keyboard: true,
         title: plan.name,
       })
-        .bindPopup(
-          `<strong>${escapeHtml(plan.name)}</strong><br />${escapeHtml(getPlanLocationLabel(plan))}<br />${escapeHtml(categoryLabel)}`,
-        )
+        .bindPopup(getPlanPopupHtml(locale, tripId, plan, categoryLabel, getPlanLocationLabel(plan), t))
         .addTo(layer);
     };
 
@@ -399,7 +392,6 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
 
     currentPoints.forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);
-      bounds.extend(latLng);
 
       L.marker(latLng, {
         icon: createTripPoiIcon(point),
@@ -415,7 +407,6 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     if (hasAccommodationLocation(accommodation)) {
       const accommodationLabel = getAccommodationMarkerLabel(accommodation);
       const accommodationLatLng = L.latLng(accommodation.locationLat, accommodation.locationLng);
-      bounds.extend(accommodationLatLng);
 
       L.marker(accommodationLatLng, {
         icon: accommodationMarkerIcon,
@@ -427,7 +418,19 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     }
 
     applyVisibility(visibility);
-    requestAnimationFrame(() => fitPlanMap(map, bounds, currentPlanLatLng));
+    requestAnimationFrame(() => focusPlanMap(map, currentPlanLatLng));
+  };
+
+  const ensureMapVisibilityControl = () => {
+    if (!map || hasVisibilityControl) {
+      return;
+    }
+
+    addMapVisibilityControl(map, t, (nextVisibility) => {
+      visibility = nextVisibility;
+      syncPlanMap();
+    });
+    hasVisibilityControl = true;
   };
 
   const resetState = () => {
@@ -438,6 +441,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     currentPlans = [];
     currentAiGuide = '';
     mapLayers = null;
+    hasVisibilityControl = false;
     if (map) {
       map.remove();
       map = null;

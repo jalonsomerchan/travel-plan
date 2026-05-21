@@ -5,5 +5,7 @@
   "map.visibility.accommodation": "Show accommodation",
   "map.visibility.proposedPlans": "Show proposed plans",
   "map.visibility.plans": "Show other plans",
-  "map.visibility.tripPois": "Show trip points of interest"
+  "map.visibility.tripPois": "Show trip points of interest",
+  "map.visibility.planTypes": "Plan types",
+  "map.visibility.goToPlan": "Go to plan"
 }

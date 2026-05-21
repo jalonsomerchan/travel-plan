@@ -62,13 +62,15 @@ describe('map smoke checks', () => {
     assert.match(visibility, /aria-controls/);
     assert.match(visibility, /aria-expanded/);
     assert.match(visibility, /key === 'Escape'/);
+    assert.match(visibility, /map\.visibility\.planTypes/);
+    assert.match(visibility, /category\.\$\{category\}/);
     assert.match(pois, /mapPoiLimit/);
     assert.match(locationPicker, /addMapTools\(map, getPageTranslator\(locale\)\)/);
     assert.match(locationPicker, /refreshPickerMap/);
     assert.match(tripMap, /aria-label=\{t\('map\.canvasTitle'\)\}/);
     assert.match(tripMapScript, /centerOnLocation: false/);
     assert.match(tripMapScript, /proposedPlans/);
-    assert.match(planPage, /addMapVisibilityControl\(map, t, applyVisibility\)/);
+    assert.match(planPage, /addMapVisibilityControl\(map, t, \(nextVisibility\) =>/);
   });
 
   it('keeps map feature translations aligned', () => {

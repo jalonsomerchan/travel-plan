@@ -9,6 +9,7 @@ import type {
 } from '../../lib/app/models';
 import { getPlanCategoryColors } from '../../lib/app/plan-category-colors';
 import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
+import { getAppUrl } from '../../lib/app/routes';
 import { getCategoryLabel } from '../pages/shared';
 
 interface PlanMarkerOptions {
@@ -71,4 +72,22 @@ export function createPlanMarkerIcon(plan: PlanRecord, locale: Locale, options: 
 
 export function getAccommodationMarkerLabel(accommodation: TripAccommodationRecord) {
   return getAccommodationLocationLabel(accommodation) || accommodation.name;
+}
+
+export function getPlanPopupHtml(
+  locale: Locale,
+  tripId: string,
+  plan: PlanRecord,
+  categoryLabel: string,
+  locationLabel: string,
+  t: (key: string) => string,
+) {
+  return `
+    <strong>${escapeHtml(plan.name)}</strong><br />
+    ${escapeHtml(locationLabel)}<br />
+    ${escapeHtml(categoryLabel)}<br />
+    <a class="map-popup-link" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+      ${escapeHtml(t('map.visibility.goToPlan'))}
+    </a>
+  `;
 }

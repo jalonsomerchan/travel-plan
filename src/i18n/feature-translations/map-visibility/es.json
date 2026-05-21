@@ -5,5 +5,7 @@
   "map.visibility.accommodation": "Ver el alojamiento",
   "map.visibility.proposedPlans": "Ver planes propuestos",
   "map.visibility.plans": "Ver los demás planes",
-  "map.visibility.tripPois": "Ver puntos de interés del viaje"
+  "map.visibility.tripPois": "Ver puntos de interés del viaje",
+  "map.visibility.planTypes": "Tipos de plan",
+  "map.visibility.goToPlan": "Ir al plan"
 }

@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { planCategoryValues, type PlanCategory } from '../../lib/app/models';
 import type { MapTranslate } from './layers';
 
 export type MapVisibilityKey =
@@ -8,8 +9,13 @@ export type MapVisibilityKey =
   | 'plans'
   | 'tripPois';
 export type MapVisibilityState = Record<MapVisibilityKey, boolean>;
+export type MapCategoryVisibilityState = Record<PlanCategory, boolean>;
+export interface MapVisibilityPreferences extends MapVisibilityState {
+  categories: MapCategoryVisibilityState;
+}
 
 type StoredVisibilityState = Partial<Record<MapVisibilityKey | 'tripPois', unknown>> & {
+  categories?: Partial<Record<PlanCategory, unknown>>;
   plans?: unknown;
 };
 
@@ -21,6 +27,9 @@ const defaultVisibility: MapVisibilityState = {
   plans: true,
   tripPois: true,
 };
+const defaultCategoryVisibility: MapCategoryVisibilityState = Object.fromEntries(
+  planCategoryValues.map((category) => [category, true]),
+) as MapCategoryVisibilityState;
 
 const visibilityOptions: { key: MapVisibilityKey; labelKey: string }[] = [
   { key: 'currentLocation', labelKey: 'map.visibility.currentLocation' },
@@ -79,17 +88,29 @@ function normalizeMapVisibilityState(parsed: StoredVisibilityState | null | unde
   };
 }
 
-export function getMapVisibilityState(): MapVisibilityState {
+function normalizeMapCategoryVisibilityState(
+  parsed: Partial<Record<PlanCategory, unknown>> | null | undefined,
+) {
+  return planCategoryValues.reduce<MapCategoryVisibilityState>((result, category) => {
+    result[category] = isStoredBoolean(parsed?.[category]) ? parsed[category] : true;
+    return result;
+  }, { ...defaultCategoryVisibility });
+}
+
+export function getMapVisibilityState(): MapVisibilityPreferences {
   try {
     const stored = window.localStorage.getItem(storageKey);
     const parsed = stored ? (JSON.parse(stored) as StoredVisibilityState) : undefined;
-    return normalizeMapVisibilityState(parsed);
+    return {
+      ...normalizeMapVisibilityState(parsed),
+      categories: normalizeMapCategoryVisibilityState(parsed?.categories),
+    };
   } catch {
-    return { ...defaultVisibility };
+    return { ...defaultVisibility, categories: { ...defaultCategoryVisibility } };
   }
 }
 
-function saveMapVisibilityState(state: MapVisibilityState) {
+function saveMapVisibilityState(state: MapVisibilityPreferences) {
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   } catch {}
@@ -104,13 +125,13 @@ export function syncCurrentLocationVisibility(visible: boolean) {
 export function addMapVisibilityControl(
   map: L.Map,
   t: MapTranslate,
-  onChange: (state: MapVisibilityState) => void,
+  onChange: (state: MapVisibilityPreferences) => void,
 ) {
   const control = new L.Control({ position: 'topright' });
   let state = getMapVisibilityState();
   let portalPanel: HTMLElement | null = null;
 
-  const syncState = (nextState: MapVisibilityState) => {
+  const syncState = (nextState: MapVisibilityPreferences) => {
     state = nextState;
     saveMapVisibilityState(state);
     onChange(state);
@@ -164,6 +185,39 @@ export function addMapVisibilityControl(
       inputs.push(input);
     });
 
+    const categoriesTitle = document.createElement('p');
+    categoriesTitle.className = 'map-tool-title';
+    categoriesTitle.textContent = t('map.visibility.planTypes');
+
+    const categoriesFieldset = document.createElement('fieldset');
+    categoriesFieldset.className = 'map-poi-options';
+
+    const categoriesLegend = document.createElement('legend');
+    categoriesLegend.className = 'sr-only';
+    categoriesLegend.textContent = t('map.visibility.planTypes');
+    categoriesFieldset.append(categoriesLegend);
+
+    planCategoryValues.forEach((category) => {
+      const label = document.createElement('label');
+      label.className = 'map-poi-option';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = state.categories[category];
+      input.addEventListener('change', () =>
+        syncState({
+          ...state,
+          categories: {
+            ...state.categories,
+            [category]: input.checked,
+          },
+        }));
+      const text = document.createElement('span');
+      text.textContent = t(`category.${category}`);
+      label.append(input, text);
+      categoriesFieldset.append(label);
+      inputs.push(input);
+    });
+
     const setPanelState = (open: boolean) => {
       panel.hidden = !open;
       trigger.setAttribute('aria-expanded', String(open));
@@ -213,7 +267,7 @@ export function addMapVisibilityControl(
     window.addEventListener('scroll', syncPanelPosition, { passive: true });
     map.on('resize move zoom', syncPanelPosition);
 
-    panel.append(title, fieldset);
+    panel.append(title, fieldset, categoriesTitle, categoriesFieldset);
     document.body.append(panel);
     portalPanel = panel;
     container.append(trigger);

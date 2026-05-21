@@ -622,6 +622,27 @@ dialog::backdrop {
   color: var(--color-text);
 }
 
+.map-popup-link {
+  display: inline-flex;
+  margin-top: 0.55rem;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  padding: 0.35rem 0.7rem;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  transition:
+    background var(--transition-base, 180ms ease),
+    color var(--transition-base, 180ms ease);
+}
+
+.map-popup-link:hover,
+.map-popup-link:focus-visible {
+  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface-raised) 18%);
+  color: var(--color-primary-hover);
+}
+
 .leaflet-control-attribution {
   max-width: min(34rem, calc(100vw - 1rem));
   border-radius: 999px 0 0 0;

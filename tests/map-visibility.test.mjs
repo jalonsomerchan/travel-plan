@@ -25,14 +25,23 @@ describe('map visibility selector', () => {
     const visibility = readText('src/scripts/maps/visibility.ts');
     const tripMap = readText('src/scripts/pages/trip-map.ts');
     const planPage = readText('src/scripts/pages/plan.ts');
+    const markers = readText('src/scripts/maps/trip-markers.ts');
 
     assert.match(visibility, /travel-plan\.map\.visibility/);
     assert.match(visibility, /legacyPlans/);
     assert.match(visibility, /proposedPlans/);
+    assert.match(visibility, /categories/);
+    assert.match(visibility, /planCategoryValues/);
     assert.match(visibility, /map\.visibility\.proposedPlans/);
     assert.match(visibility, /map\.visibility\.plans/);
+    assert.match(visibility, /map\.visibility\.planTypes/);
     assert.match(tripMap, /splitLocatedPlans/);
+    assert.match(tripMap, /visibility\.categories\[plan\.category\]/);
     assert.match(planPage, /splitLocatedPlans/);
+    assert.match(planPage, /visibility\.categories\[plan\.category\]/);
+    assert.match(planPage, /focusPlanMap/);
+    assert.match(markers, /map\.visibility\.goToPlan/);
+    assert.match(markers, /class="map-popup-link"/);
     assert.match(planPage, /createPlanMarkerIcon\(currentPlan, locale, \{ emphasized: true \}\)/);
     assert.match(planPage, /createPlanMarkerIcon\(plan, locale, \{ muted: true \}\)/);
   });

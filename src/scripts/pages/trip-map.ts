@@ -25,12 +25,13 @@ import {
   createPlanMarkerIcon,
   createTripPoiIcon,
   getAccommodationMarkerLabel,
+  getPlanPopupHtml,
 } from '../maps/trip-markers';
 import {
   addMapVisibilityControl,
   getMapVisibilityState,
+  type MapVisibilityPreferences,
   syncCurrentLocationVisibility,
-  type MapVisibilityState,
 } from '../maps/visibility';
 import {
   ensureFirebaseReady,
@@ -204,7 +205,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   const accommodationMarkers = L.layerGroup().addTo(map);
   const poiMarkers = L.layerGroup().addTo(map);
 
-  const applyVisibility = (nextVisibility: MapVisibilityState) => {
+  const applyVisibility = (nextVisibility: MapVisibilityPreferences) => {
     visibility = nextVisibility;
     syncLayerVisibility(map, proposedPlanMarkers, visibility.proposedPlans);
     syncLayerVisibility(map, planMarkers, visibility.plans);
@@ -212,8 +213,6 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     syncLayerVisibility(map, poiMarkers, visibility.tripPois);
     syncCurrentLocationVisibility(visibility.currentLocation);
   };
-
-  addMapVisibilityControl(map, t, applyVisibility);
 
   const resetState = () => {
     currentTrip = null;
@@ -236,6 +235,10 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         return;
       }
 
+      if (!visibility.categories[plan.category]) {
+        return;
+      }
+
       const categoryLabel = getCategoryLabel(locale, plan.category);
       const latLng = L.latLng(plan.locationLat, plan.locationLng);
       bounds.extend(latLng);
@@ -245,13 +248,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         keyboard: true,
         title: plan.name,
       })
-        .bindPopup(
-          `
-            <strong>${escapeHtml(plan.name)}</strong><br />
-            ${escapeHtml(getPlanLocationLabel(plan))}<br />
-            ${escapeHtml(categoryLabel)}
-          `,
-        )
+        .bindPopup(getPlanPopupHtml(locale, tripId, plan, categoryLabel, getPlanLocationLabel(plan), t))
         .addTo(layer);
     };
 
@@ -276,6 +273,11 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     applyVisibility(visibility);
     requestAnimationFrame(() => fitTripMap(map, bounds));
   };
+
+  addMapVisibilityControl(map, t, (nextVisibility) => {
+    visibility = nextVisibility;
+    syncMap();
+  });
 
   window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
 
