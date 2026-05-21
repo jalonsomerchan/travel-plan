@@ -312,7 +312,6 @@ function renderWeatherCardState(
     `
       <div class="trip-weather-card-inner">
         <div class="trip-weather-card-copy">
-          <p class="trip-weather-card-location">${escapeHtml(trip.location)}</p>
           ${state.body}
         </div>
         <span class="trip-weather-card-arrow" aria-hidden="true">${state.actionable ? '›' : ''}</span>
@@ -390,17 +389,17 @@ function renderWeatherSummaryCard(
           .map((day) => {
             const label = t(getWeatherLabelKeyForCode(day.weatherCode));
             return `
-              <article class="trip-weather-day-card">
-                <div>
+              <article class="trip-weather-day-row">
+                <div class="trip-weather-day-icon">
+                  ${getWeatherIconSvg(day.weatherCode, true, label)}
+                </div>
+                <div class="trip-weather-day-copy">
                   <p class="trip-weather-day-label">${escapeHtml(formatFriendlyDate(day.date, locale))}</p>
                   <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
                 </div>
-                <div class="trip-weather-day-main">
-                  ${getWeatherIconSvg(day.weatherCode, true, label)}
-                  <div class="trip-weather-day-temperatures">
-                    <strong>${escapeHtml(formatTemperature(day.temperatureMax, dataset.temperatureUnit))}</strong>
-                    <span>${escapeHtml(formatTemperature(day.temperatureMin, dataset.temperatureUnit))}</span>
-                  </div>
+                <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
+                  <strong>${escapeHtml(formatTemperature(day.temperatureMax, dataset.temperatureUnit))}</strong>
+                  <span>${escapeHtml(formatTemperature(day.temperatureMin, dataset.temperatureUnit))}</span>
                 </div>
               </article>
             `;
