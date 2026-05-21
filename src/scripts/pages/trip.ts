@@ -59,6 +59,11 @@ interface PlanFilters {
   search: string;
   category: string;
   status: string;
+  paid: 'all' | 'yes' | 'no';
+  booked: 'all' | 'yes' | 'no';
+  date: 'all' | 'today' | 'no-date';
+  important: 'all' | 'yes' | 'no';
+  guide: 'all' | 'yes' | 'no';
 }
 
 interface UserLocation {
@@ -78,11 +83,27 @@ function renderPlanStatusIndicator(locale: Locale, status: PlanStatus) {
   const label = getPlanStatusLabel(locale, status);
   const tooltip = getPageTranslator(locale)('trip.planCard.statusTooltip').replace('{status}', label);
 
-  return `<span aria-label="${escapeHtml(tooltip)}" class="status-pill inline-flex h-8 shrink-0 items-center px-3" data-tone="${getPlanStatusTone(status)}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
+  return `<span aria-label="${escapeHtml(tooltip)}" class="status-pill inline-flex h-7 shrink-0 items-center px-3 text-xs" data-tone="${getPlanStatusTone(status)}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
+}
+
+function matchesBooleanFilter(value: boolean, filter: PlanFilters['paid']) {
+  if (filter === 'all') {
+    return true;
+  }
+
+  return filter === 'yes' ? value : !value;
+}
+
+function getLocalTodayIsoDate() {
+  const now = new Date();
+  const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+  return localTime.toISOString().slice(0, 10);
 }
 
 function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
   const query = filters.search.trim().toLowerCase();
+  const today = getLocalTodayIsoDate();
 
   return plans.filter((plan) => {
     const matchesQuery =
@@ -92,8 +113,25 @@ function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
         .some((value) => value?.toLowerCase().includes(query));
     const matchesCategory = filters.category === 'all' || plan.category === filters.category;
     const matchesStatus = filters.status === 'all' || plan.status === filters.status;
+    const matchesPaid = matchesBooleanFilter(plan.isPaid, filters.paid);
+    const matchesBooked = matchesBooleanFilter(plan.isBooked, filters.booked);
+    const matchesImportant = matchesBooleanFilter(plan.isImportant, filters.important);
+    const matchesGuide = matchesBooleanFilter(hasPlanAiGuide(plan), filters.guide);
+    const matchesDate =
+      filters.date === 'all' ||
+      (filters.date === 'today' && plan.date === today) ||
+      (filters.date === 'no-date' && !plan.date);
 
-    return matchesQuery && matchesCategory && matchesStatus;
+    return (
+      matchesQuery &&
+      matchesCategory &&
+      matchesStatus &&
+      matchesPaid &&
+      matchesBooked &&
+      matchesImportant &&
+      matchesGuide &&
+      matchesDate
+    );
   });
 }
 
@@ -235,12 +273,15 @@ function renderPlans(
               </div>
             </details>
           </div>
-          ${(flags || aiGuideIndicator || plan.status)
-            ? `<div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}${renderPlanStatusIndicator(locale, plan.status)}</div>`
+          <div class="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <p class="min-w-0 break-words text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(t('trip.planCard.type'))} · ${escapeHtml(categoryLabel)}</p>
+            ${renderPlanStatusIndicator(locale, plan.status)}
+          </div>
+          ${(flags || aiGuideIndicator)
+            ? `<div class="mt-2 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}</div>`
             : ''}
           ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
-          <div class="mt-4 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--color-text-soft)]">
-            <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>
+          <div class="mt-3 grid min-w-0 gap-x-4 gap-y-1 text-sm text-[var(--color-text-soft)] sm:grid-cols-2">
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
           </div>
@@ -438,6 +479,11 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-category]');
   const statusSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-status]');
+  const paidSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-paid]');
+  const bookedSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-booked]');
+  const dateSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-date]');
+  const importantSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-important]');
+  const guideSelect = document.querySelector<HTMLSelectElement>('[data-plan-filter-guide]');
   const filtersToggle = document.querySelector<HTMLButtonElement>('[data-plan-filters-toggle]');
   const filtersForm = document.querySelector<HTMLFormElement>('[data-plan-filters]');
   const t = getPageTranslator(locale);
@@ -446,7 +492,16 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   let currentTrip: TripRecord | null = null;
   let weatherRequestId = 0;
   const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
-  const filters: PlanFilters = { search: '', category: 'all', status: 'all' };
+  const filters: PlanFilters = {
+    search: '',
+    category: 'all',
+    status: 'all',
+    paid: 'all',
+    booked: 'all',
+    date: 'all',
+    important: 'all',
+    guide: 'all',
+  };
   if (!tripId) {
     setAppShellTitle(t('trip.missingId'));
     setAppShellDescription('');
@@ -618,6 +673,26 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   });
   statusSelect?.addEventListener('change', () => {
     filters.status = statusSelect.value;
+    syncPlans();
+  });
+  paidSelect?.addEventListener('change', () => {
+    filters.paid = paidSelect.value as PlanFilters['paid'];
+    syncPlans();
+  });
+  bookedSelect?.addEventListener('change', () => {
+    filters.booked = bookedSelect.value as PlanFilters['booked'];
+    syncPlans();
+  });
+  dateSelect?.addEventListener('change', () => {
+    filters.date = dateSelect.value as PlanFilters['date'];
+    syncPlans();
+  });
+  importantSelect?.addEventListener('change', () => {
+    filters.important = importantSelect.value as PlanFilters['important'];
+    syncPlans();
+  });
+  guideSelect?.addEventListener('change', () => {
+    filters.guide = guideSelect.value as PlanFilters['guide'];
     syncPlans();
   });
 

@@ -91,11 +91,15 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           <span aria-hidden="true">▾</span>
           <span>{t('trip.filters.toggle')}</span>
         </button>
-        <form class="mt-3 hidden gap-3 sm:grid sm:grid-cols-3" data-plan-filters id="trip-plan-filters">
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+        <form
+          class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+          data-plan-filters
+          id="trip-plan-filters"
+        >
+          <label class="col-span-full grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>{t('trip.filters.search')}</span>
             <input
-              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
               data-plan-filter-search
               name="search"
               type="search"
@@ -104,7 +108,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>{t('trip.filters.category')}</span>
             <select
-              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
               data-plan-filter-category
               name="category"
             >
@@ -114,11 +118,71 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>{t('trip.filters.status')}</span>
             <select
-              class="min-h-11 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-[var(--color-text)]"
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
               data-plan-filter-status
               name="status"
             >
               <option value="all">{t('trip.filters.allStatuses')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.price')}</span>
+            <select
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+              data-plan-filter-paid
+              name="paid"
+            >
+              <option value="all">{t('trip.filters.allPrices')}</option>
+              <option value="yes">{t('trip.filters.paidOnly')}</option>
+              <option value="no">{t('trip.filters.freeOnly')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.booking')}</span>
+            <select
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+              data-plan-filter-booked
+              name="booked"
+            >
+              <option value="all">{t('trip.filters.allBookingOptions')}</option>
+              <option value="yes">{t('trip.filters.bookedOnly')}</option>
+              <option value="no">{t('trip.filters.notBookedOnly')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.dateMode')}</span>
+            <select
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+              data-plan-filter-date
+              name="date"
+            >
+              <option value="all">{t('trip.filters.allDates')}</option>
+              <option value="today">{t('trip.filters.todayOnly')}</option>
+              <option value="no-date">{t('trip.filters.noDateOnly')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.importance')}</span>
+            <select
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+              data-plan-filter-important
+              name="important"
+            >
+              <option value="all">{t('trip.filters.allImportance')}</option>
+              <option value="yes">{t('trip.filters.importantOnly')}</option>
+              <option value="no">{t('trip.filters.notImportantOnly')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>{t('trip.filters.guide')}</span>
+            <select
+              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+              data-plan-filter-guide
+              name="guide"
+            >
+              <option value="all">{t('trip.filters.allGuides')}</option>
+              <option value="yes">{t('trip.filters.withGuide')}</option>
+              <option value="no">{t('trip.filters.withoutGuide')}</option>
             </select>
           </label>
         </form>

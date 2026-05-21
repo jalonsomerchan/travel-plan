@@ -50,9 +50,11 @@ describe('plan statuses', () => {
     assert.match(tripPage, /<summary[^>]+>\s*⋮\s*<\/summary>/);
     assert.match(tripPage, /getPlanFlagsHtml\(plan, t\)/);
     assert.match(tripPage, /renderPlanAiGuideIndicator\(locale, plan\)/);
-    assert.match(tripPage, /status-pill/);
+    assert.match(tripPage, /justify-between gap-2/);
+    assert.match(tripPage, /escapeHtml\(t\('trip\.planCard\.type'\)\)/);
+    assert.match(tripPage, /status-pill inline-flex h-7/);
     assert.match(tripPage, /max-w-full break-words text-sm text-\[var\(--color-text-muted\)\] \[overflow-wrap:anywhere\]/);
-    assert.match(tripPage, /flex min-w-0 flex-wrap gap-x-4 gap-y-2/);
+    assert.match(tripPage, /grid min-w-0 gap-x-4 gap-y-1 text-sm text-\[var\(--color-text-soft\)\] sm:grid-cols-2/);
     assert.doesNotMatch(tripPage, /renderFirstPlanLink/);
     assert.doesNotMatch(tripPage, /getFirstPlanLink/);
     assert.match(flags, /flex min-w-0 flex-wrap items-center gap-2/);
