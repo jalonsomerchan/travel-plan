@@ -14,6 +14,8 @@ import mapEn from './feature-translations/map/en.json';
 import mapEs from './feature-translations/map/es.json';
 import mapVisibilityEn from './feature-translations/map-visibility/en.json';
 import mapVisibilityEs from './feature-translations/map-visibility/es.json';
+import planFormLayoutEn from './feature-translations/plan-form-layout/en.json';
+import planFormLayoutEs from './feature-translations/plan-form-layout/es.json';
 import planLinksEn from './feature-translations/plan-links/en.json';
 import planLinksEs from './feature-translations/plan-links/es.json';
 import poiEn from './feature-translations/poi/en.json';
@@ -31,6 +33,7 @@ export type TranslationKey =
   | keyof typeof invitesEs
   | keyof typeof mapEs
   | keyof typeof mapVisibilityEs
+  | keyof typeof planFormLayoutEs
   | keyof typeof planLinksEs
   | keyof typeof poiEs
   | keyof typeof tripAiPromptEs
@@ -47,6 +50,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...invitesEs,
     ...mapEs,
     ...mapVisibilityEs,
+    ...planFormLayoutEs,
     ...planLinksEs,
     ...poiEs,
     ...tripAiPromptEs,
@@ -60,6 +64,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...invitesEn,
     ...mapEn,
     ...mapVisibilityEn,
+    ...planFormLayoutEn,
     ...planLinksEn,
     ...poiEn,
     ...tripAiPromptEn,

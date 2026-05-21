@@ -9,6 +9,10 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
+function readJson(path) {
+  return JSON.parse(readFileSync(join(root, path), 'utf8'));
+}
+
 describe('plan flags', () => {
   it('keeps plan flags in the model, form and firestore mapping', () => {
     const models = readText('src/lib/app/models.ts');
@@ -24,6 +28,26 @@ describe('plan flags', () => {
       assert.match(form, new RegExp(`name="${field}"`));
       assert.match(edit, new RegExp(`namedItem\\('${field}'\\).*checked = plan\\.${field}`));
     });
+  });
+
+  it('keeps the plan form usable in desktop columns', () => {
+    const form = readText('src/components/app/PlanFormFields.astro');
+    const ui = readText('src/i18n/ui.ts');
+    const es = readJson('src/i18n/feature-translations/plan-form-layout/es.json');
+    const en = readJson('src/i18n/feature-translations/plan-form-layout/en.json');
+
+    assert.match(form, /data-plan-form-layout/);
+    assert.match(form, /xl:grid-cols-\[minmax\(0,1\.1fr\)_minmax\(22rem,0\.9fr\)\]/);
+    assert.match(form, /data-plan-form-sidebar/);
+    assert.match(form, /xl:sticky xl:top-24/);
+    assert.match(form, /plan\.form\.sectionBasics/);
+    assert.match(form, /plan\.form\.sectionBasicsHelp/);
+    assert.match(form, /plan\.form\.flagsHelp/);
+    assert.match(form, /PlanLocationFields/);
+    assert.match(form, /PlanLinksFields/);
+    assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+    assert.match(ui, /feature-translations\/plan-form-layout\/es\.json/);
+    assert.match(ui, /feature-translations\/plan-form-layout\/en\.json/);
   });
 
   it('reuses plan flag indicators across trip lists, calendars and maps', () => {
