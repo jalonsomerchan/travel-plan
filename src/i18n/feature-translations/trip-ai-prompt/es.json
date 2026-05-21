@@ -45,6 +45,7 @@
   "tripAiPrompt.wizard.typesHelper": "Elige qué clase de recomendaciones quieres priorizar en este prompt.",
   "tripAiPrompt.wizard.types": "Tipo de planes",
   "tripAiPrompt.wizard.type.must-see": "Los sitios imprescindibles",
+  "tripAiPrompt.wizard.type.viewpoints": "Miradores y vistas panorámicas",
   "tripAiPrompt.wizard.type.museums": "Museos y zonas de interés",
   "tripAiPrompt.wizard.type.walks": "Lugares por donde pasear",
   "tripAiPrompt.wizard.type.shopping": "Tiendas y zonas de compra",

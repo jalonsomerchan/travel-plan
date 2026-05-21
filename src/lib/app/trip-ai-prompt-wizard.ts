@@ -5,6 +5,7 @@ export const tripAiPromptBookingModeValues = ['both', 'no-booking', 'booking-req
 export const tripAiPromptAccessModeValues = ['public', 'walking', 'car', 'mixed'] as const;
 export const tripAiPromptTypeValues = [
   'must-see',
+  'viewpoints',
   'museums',
   'walks',
   'shopping',

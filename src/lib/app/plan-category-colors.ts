@@ -14,6 +14,11 @@ const planCategoryColors: Record<PlanCategory, PlanCategoryColors> = {
     fill: '#60a5fa',
     soft: 'rgba(96, 165, 250, 0.16)',
   },
+  viewpoint: {
+    border: '#0f766e',
+    fill: '#34d399',
+    soft: 'rgba(52, 211, 153, 0.16)',
+  },
   food: {
     border: '#ea580c',
     fill: '#fb923c',

@@ -175,7 +175,7 @@ function isBudgetMode(value: FormDataEntryValue | null): value is TripSuggestion
 }
 
 function isPlanCategory(value: string): value is PlanCategory {
-  return ['visit', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other'].includes(value);
+  return ['visit', 'viewpoint', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other'].includes(value);
 }
 
 function isIsoDate(value: string) {

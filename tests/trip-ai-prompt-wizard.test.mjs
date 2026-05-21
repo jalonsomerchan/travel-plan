@@ -149,10 +149,16 @@ describe('trip AI prompt wizard', () => {
   it('keeps wizard translations aligned', () => {
     const es = readJson('src/i18n/feature-translations/trip-ai-prompt/es.json');
     const en = readJson('src/i18n/feature-translations/trip-ai-prompt/en.json');
+    const models = readText('src/lib/app/models.ts');
+    const wizardConfig = readText('src/lib/app/trip-ai-prompt-wizard.ts');
 
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
     assert.equal(es['status.plan.proposed'], 'Propuesto');
     assert.equal(en['status.plan.proposed'], 'Proposed');
+    assert.match(models, /'viewpoint'/);
+    assert.match(wizardConfig, /'viewpoints'/);
+    assert.equal(es['tripAiPrompt.wizard.type.viewpoints'], 'Miradores y vistas panorámicas');
+    assert.equal(en['tripAiPrompt.wizard.type.viewpoints'], 'Viewpoints and scenic views');
     assert.ok(es['plan.aiGuide.title']);
     assert.ok(en['plan.aiGuide.title']);
     assert.ok(es['plan.aiTour.resultLabel']);

@@ -72,7 +72,7 @@ function getTripPlanSuggestionsSchema(trip: TripRecord) {
   const planSchema = z.object({
     title: z.string().trim().min(2).max(120),
     description: z.string().trim().min(8).max(420),
-    type: z.enum(['visit', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other']),
+    type: z.enum(['visit', 'viewpoint', 'food', 'stay', 'transport', 'museum', 'shop', 'bathroom', 'other']),
     latitude: z.number().finite().min(-90).max(90),
     longitude: z.number().finite().min(-180).max(180),
   });
@@ -91,7 +91,7 @@ function buildTripPlanSuggestionsSystemPrompt(locale: string, trip: TripRecord) 
     'Task: suggest realistic candidate plans for an existing shared travel itinerary.',
     'Only return concise, practical suggestions that fit the trip dates, destination and transport constraints.',
     'Do not invent impossible routes, contradictory schedules or duplicate existing plans.',
-    'The response must be valid JSON with shape {"plans":[{"title":"...","type":"visit|food|stay|transport|museum|shop|bathroom|other","description":"...","latitude":0,"longitude":0}]}.',
+    'The response must be valid JSON with shape {"plans":[{"title":"...","type":"visit|viewpoint|food|stay|transport|museum|shop|bathroom|other","description":"...","latitude":0,"longitude":0}]}.',
     `The trip runs from ${trip.startDate} to ${trip.endDate}. Use that range only as context for relevance, but do not return date fields.`,
     'Every suggestion must include reliable latitude and longitude coordinates.',
   ]);

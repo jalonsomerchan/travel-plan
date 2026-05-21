@@ -18,6 +18,7 @@ function getTypeLabels(locale: Locale): Record<TripAiPromptType, string> {
   return locale === 'es'
     ? {
         'must-see': 'sitios imprescindibles',
+        viewpoints: 'miradores y puntos panoramicos',
         museums: 'museos y zonas de interés',
         walks: 'lugares por donde pasear',
         shopping: 'tiendas y zonas de compra',
@@ -31,6 +32,7 @@ function getTypeLabels(locale: Locale): Record<TripAiPromptType, string> {
       }
     : {
         'must-see': 'must-see places',
+        viewpoints: 'viewpoints and scenic spots',
         museums: 'museums and points of interest',
         walks: 'places to walk around',
         shopping: 'shopping areas and stores',

@@ -4,6 +4,7 @@ export const tripStatusValues = ['idea', 'planned', 'booked', 'visited'] as cons
 export const tripMemberRoles = ['viewer', 'editor'] as const;
 export const planCategoryValues = [
   'visit',
+  'viewpoint',
   'food',
   'stay',
   'transport',
