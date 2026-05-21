@@ -64,84 +64,105 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
             </button>
 
             <div class="flex flex-wrap items-start justify-between gap-4 pr-14">
+              <div>
+                <span class="eyebrow">{t('plan.aiTour.eyebrow')}</span>
+                <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{t('plan.aiTour.title')}</h2>
+                <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('plan.aiTour.helper')}</p>
+              </div>
+            </div>
+
+            <div class="grid gap-4 xl:grid-cols-3">
+              <fieldset class="space-y-3">
+                <legend class="field-label">{t('plan.aiTour.tone')}</legend>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input checked name="planAiTourTone" type="radio" value="serious" />
+                  <span>{t('plan.aiTour.tone.serious')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourTone" type="radio" value="fun" />
+                  <span>{t('plan.aiTour.tone.fun')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourTone" type="radio" value="storyteller" />
+                  <span>{t('plan.aiTour.tone.storyteller')}</span>
+                </label>
+              </fieldset>
+
+              <fieldset class="space-y-3">
+                <legend class="field-label">{t('plan.aiTour.length')}</legend>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input checked name="planAiTourLength" type="radio" value="standard" />
+                  <span>{t('plan.aiTour.length.standard')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourLength" type="radio" value="short" />
+                  <span>{t('plan.aiTour.length.short')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourLength" type="radio" value="detailed" />
+                  <span>{t('plan.aiTour.length.detailed')}</span>
+                </label>
+              </fieldset>
+
+              <fieldset class="space-y-3">
+                <legend class="field-label">{t('plan.aiTour.focus')}</legend>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input checked name="planAiTourFocus" type="radio" value="mixed" />
+                  <span>{t('plan.aiTour.focus.mixed')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourFocus" type="radio" value="history" />
+                  <span>{t('plan.aiTour.focus.history')}</span>
+                </label>
+                <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+                  <input name="planAiTourFocus" type="radio" value="practical" />
+                  <span>{t('plan.aiTour.focus.practical')}</span>
+                </label>
+              </fieldset>
+            </div>
+
             <div>
-              <span class="eyebrow">{t('plan.aiTour.eyebrow')}</span>
-              <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">{t('plan.aiTour.title')}</h2>
-              <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('plan.aiTour.helper')}</p>
+              <label class="field-label" for="plan-ai-tour-prompt-output">{t('plan.aiTour.promptLabel')}</label>
+              <textarea
+                class="field-textarea min-h-80 font-mono text-xs leading-relaxed"
+                data-plan-ai-tour-output
+                id="plan-ai-tour-prompt-output"
+                readonly
+                spellcheck="false"
+              >{t('common.loading')}</textarea>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+              <button class="app-card-link" data-plan-ai-tour-copy data-variant="primary" type="button">
+                {t('plan.aiTour.copy')}
+              </button>
+              <a class="app-card-link" data-plan-ai-tour-chatgpt data-variant="secondary" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">
+                {t('plan.aiTour.openChatGpt')}
+              </a>
+            </div>
+
+            <p class="text-sm text-[var(--color-text-soft)]" data-plan-ai-tour-message>{t('plan.aiTour.copyHelper')}</p>
+
+            <div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4">
+              <label class="field-label" for="plan-ai-tour-result-input">{t('plan.aiTour.resultLabel')}</label>
+              <p class="mb-3 text-sm text-[var(--color-text-soft)]">{t('plan.aiTour.resultHelper')}</p>
+              <textarea
+                class="field-textarea min-h-52 text-sm leading-relaxed"
+                data-plan-ai-tour-result
+                id="plan-ai-tour-result-input"
+                placeholder={t('plan.aiTour.resultPlaceholder')}
+                spellcheck="true"
+              ></textarea>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button class="app-card-link" data-plan-ai-tour-save-guide data-variant="primary" type="button">
+                  {t('plan.aiTour.saveGuide')}
+                </button>
+              </div>
+              <p class="mt-3 text-sm text-[var(--color-text-soft)]" data-plan-ai-tour-save-message>
+                {t('plan.aiTour.saveHelper')}
+              </p>
             </div>
           </div>
-
-          <div class="grid gap-4 xl:grid-cols-3">
-            <fieldset class="space-y-3">
-              <legend class="field-label">{t('plan.aiTour.tone')}</legend>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input checked name="planAiTourTone" type="radio" value="serious" />
-                <span>{t('plan.aiTour.tone.serious')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourTone" type="radio" value="fun" />
-                <span>{t('plan.aiTour.tone.fun')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourTone" type="radio" value="storyteller" />
-                <span>{t('plan.aiTour.tone.storyteller')}</span>
-              </label>
-            </fieldset>
-
-            <fieldset class="space-y-3">
-              <legend class="field-label">{t('plan.aiTour.length')}</legend>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input checked name="planAiTourLength" type="radio" value="standard" />
-                <span>{t('plan.aiTour.length.standard')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourLength" type="radio" value="short" />
-                <span>{t('plan.aiTour.length.short')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourLength" type="radio" value="detailed" />
-                <span>{t('plan.aiTour.length.detailed')}</span>
-              </label>
-            </fieldset>
-
-            <fieldset class="space-y-3">
-              <legend class="field-label">{t('plan.aiTour.focus')}</legend>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input checked name="planAiTourFocus" type="radio" value="mixed" />
-                <span>{t('plan.aiTour.focus.mixed')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourFocus" type="radio" value="history" />
-                <span>{t('plan.aiTour.focus.history')}</span>
-              </label>
-              <label class="flex gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
-                <input name="planAiTourFocus" type="radio" value="practical" />
-                <span>{t('plan.aiTour.focus.practical')}</span>
-              </label>
-            </fieldset>
-          </div>
-
-          <div>
-            <label class="field-label" for="plan-ai-tour-prompt-output">{t('plan.aiTour.promptLabel')}</label>
-            <textarea
-              class="field-textarea min-h-80 font-mono text-xs leading-relaxed"
-              data-plan-ai-tour-output
-              id="plan-ai-tour-prompt-output"
-              readonly
-              spellcheck="false"
-            >{t('common.loading')}</textarea>
-          </div>
-
-          <div class="flex flex-wrap gap-3">
-            <button class="app-card-link" data-plan-ai-tour-copy data-variant="primary" type="button">
-              {t('plan.aiTour.copy')}
-            </button>
-            <a class="app-card-link" data-plan-ai-tour-chatgpt data-variant="secondary" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">
-              {t('plan.aiTour.openChatGpt')}
-            </a>
-          </div>
-
-          <p class="text-sm text-[var(--color-text-soft)]" data-plan-ai-tour-message>{t('plan.aiTour.copyHelper')}</p>
         </div>
       </dialog>
 
