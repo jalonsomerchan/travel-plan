@@ -46,7 +46,7 @@ describe('PWA offline support', () => {
     assert.match(worker, /joinPathSegments\(basePath\)/);
   });
 
-  it('caches shell, navigation fallbacks and static assets', () => {
+  it('caches shell, navigation fallbacks and static assets safely', () => {
     const worker = readText('src/pages/sw.js.ts');
 
     assert.match(worker, /CACHE_NAME/);
@@ -55,7 +55,10 @@ describe('PWA offline support', () => {
     assert.match(worker, /request\.mode === 'navigate'/);
     assert.match(worker, /cache\.match\(SHELL_URLS\[0\]\)/);
     assert.match(worker, /request\.destination/);
-    assert.match(worker, /script', 'style', 'image', 'font', 'manifest/);
+    assert.match(worker, /script', 'style', 'manifest/);
+    assert.match(worker, /image', 'font/);
+    assert.match(worker, /networkFirst\(request\)/);
+    assert.match(worker, /cacheFirst\(request\)/);
     assert.match(worker, /isInsideScope/);
   });
 
@@ -72,6 +75,7 @@ describe('PWA offline support', () => {
 
     assert.match(docs, /Persistencia offline de Firestore/);
     assert.match(docs, /[Ff]allback de navegación/);
+    assert.match(docs, /network-first de scripts, estilos y manifest/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
   });
