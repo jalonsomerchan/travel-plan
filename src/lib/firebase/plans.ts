@@ -11,6 +11,11 @@ import {
 import type { PlanInput, PlanRecord } from '../app/models';
 import { normalizePlanLinks } from '../app/plan-links';
 import { getFirebaseDb } from './config';
+import {
+  clearCachedTripPlans,
+  getCachedTripPlans,
+  setCachedTripPlans,
+} from './shared-data-cache';
 
 const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time', 'aiGuide'] as const;
 
@@ -53,22 +58,30 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
   };
 }
 
+function sortPlans(plans: PlanRecord[]) {
+  return [...plans].sort((left, right) =>
+    `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
+      `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
+    ),
+  );
+}
+
 export function subscribeTripPlans(tripId: string, callback: (plans: PlanRecord[]) => void) {
   const db = getFirebaseDb();
   const plansRef = collection(db, 'trips', tripId, 'plans');
+  const cachedPlans = getCachedTripPlans(tripId);
+
+  if (cachedPlans) {
+    queueMicrotask(() => callback(cachedPlans));
+  }
 
   return onSnapshot(
     plansRef,
-    (snapshot) =>
-      callback(
-        snapshot.docs
-          .map(mapPlanRecord)
-          .sort((left, right) =>
-            `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
-              `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
-            ),
-          ),
-      ),
+    (snapshot) => {
+      const plans = sortPlans(snapshot.docs.map(mapPlanRecord));
+      setCachedTripPlans(tripId, plans);
+      callback(plans);
+    },
     (error) => {
       console.error('subscribeTripPlans', error);
     },
@@ -80,6 +93,13 @@ export function subscribePlan(
   planId: string,
   callback: (plan: PlanRecord | null) => void,
 ) {
+  const cachedPlans = getCachedTripPlans(tripId);
+  const cachedPlan = cachedPlans?.find((plan) => plan.id === planId) ?? null;
+
+  if (cachedPlan) {
+    queueMicrotask(() => callback(cachedPlan));
+  }
+
   const db = getFirebaseDb();
 
   return onSnapshot(
@@ -99,6 +119,8 @@ export async function createPlan(tripId: string, input: PlanInput) {
     updatedAt: serverTimestamp(),
   });
 
+  clearCachedTripPlans(tripId);
+
   return planRef.id;
 }
 
@@ -109,10 +131,12 @@ export async function updatePlan(tripId: string, planId: string, input: PlanInpu
     ...getPlanUpdateData(input),
     updatedAt: serverTimestamp(),
   });
+  clearCachedTripPlans(tripId);
 }
 
 export async function deletePlan(tripId: string, planId: string) {
   const db = getFirebaseDb();
 
   await deleteDoc(doc(db, 'trips', tripId, 'plans', planId));
+  clearCachedTripPlans(tripId);
 }
