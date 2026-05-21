@@ -49,11 +49,11 @@ function syncCacheOwner(user: User | null) {
 export function observeSession(callback: (user: User | null) => void) {
   const auth = getFirebaseAuth();
 
-  return onAuthStateChanged(auth, async (user) => {
+  return onAuthStateChanged(auth, (user) => {
     syncCacheOwner(user);
 
     if (user) {
-      await trySyncUserProfile(user);
+      void trySyncUserProfile(user);
     }
 
     callback(user);
