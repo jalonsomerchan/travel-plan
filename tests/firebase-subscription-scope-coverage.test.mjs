@@ -5,11 +5,7 @@ import { describe, it } from 'node:test';
 
 const root = process.cwd();
 const pagesDir = join(root, 'src/scripts/pages');
-const pendingScopeMigration = new Set([
-  'global-calendar.ts',
-  'trip-ai-prompt.ts',
-  'trip-plan-suggestions.ts',
-]);
+const pendingScopeMigration = new Set(['trip-plan-suggestions.ts']);
 
 function readText(path) {
   return readFileSync(path, 'utf8');
