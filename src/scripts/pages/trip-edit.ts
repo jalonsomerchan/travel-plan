@@ -10,7 +10,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
-import { updateTrip } from '../../lib/firebase/trips';
+import { deleteTrip, updateTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
   formatTripDateRange,
@@ -27,6 +27,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   const context = document.querySelector<HTMLElement>('[data-trip-context]');
   const backLink = document.querySelector<HTMLAnchorElement>('#trip-edit-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
+  const deleteButton = document.querySelector<HTMLButtonElement>('[data-trip-delete-button]');
   const t = getPageTranslator(locale);
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
@@ -109,6 +110,24 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
       setMessage(message, error instanceof Error ? error.message : t('trip.form.error'), 'danger');
     } finally {
       setButtonBusy(button, false, t('trip.form.save'), t('common.saving'));
+    }
+  });
+
+  deleteButton?.addEventListener('click', async () => {
+    if (!window.confirm(t('tripEdit.deleteConfirm'))) {
+      return;
+    }
+
+    setButtonBusy(deleteButton, true, t('tripEdit.deleteAction'), t('tripEdit.deleteBusy'));
+
+    try {
+      await deleteTrip(tripId);
+      window.location.href = getAppUrl(locale, 'dashboard');
+      return;
+    } catch (error) {
+      setMessage(message, error instanceof Error ? error.message : t('tripEdit.deleteError'), 'danger');
+    } finally {
+      setButtonBusy(deleteButton, false, t('tripEdit.deleteAction'), t('tripEdit.deleteBusy'));
     }
   });
 }

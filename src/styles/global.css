@@ -474,6 +474,17 @@ dialog::backdrop {
   background: var(--color-surface-raised);
 }
 
+.app-card-link[data-variant="danger"] {
+  border: 1px solid color-mix(in srgb, var(--color-danger), transparent 55%);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.app-card-link[data-variant="danger"]:hover {
+  border-color: color-mix(in srgb, var(--color-danger), transparent 25%);
+  background: color-mix(in srgb, var(--color-danger-soft), var(--color-surface-raised) 20%);
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
