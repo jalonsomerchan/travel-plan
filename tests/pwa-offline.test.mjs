@@ -46,6 +46,19 @@ describe('PWA offline support', () => {
     assert.match(worker, /joinPathSegments\(basePath\)/);
   });
 
+  it('caches shell, navigation fallbacks and static assets', () => {
+    const worker = readText('src/pages/sw.js.ts');
+
+    assert.match(worker, /CACHE_NAME/);
+    assert.match(worker, /SHELL_URLS/);
+    assert.match(worker, /cache\.addAll\(SHELL_URLS\)/);
+    assert.match(worker, /request\.mode === 'navigate'/);
+    assert.match(worker, /cache\.match\(SHELL_URLS\[0\]\)/);
+    assert.match(worker, /request\.destination/);
+    assert.match(worker, /script', 'style', 'image', 'font', 'manifest/);
+    assert.match(worker, /isInsideScope/);
+  });
+
   it('enables persistent Firestore local cache', () => {
     const config = readText('src/lib/firebase/config.ts');
 
@@ -58,6 +71,7 @@ describe('PWA offline support', () => {
     const docs = readText('docs/pwa-offline.md');
 
     assert.match(docs, /Persistencia offline de Firestore/);
+    assert.match(docs, /[Ff]allback de navegación/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
   });
