@@ -93,11 +93,35 @@ function renderPlanLinks(linksSection: HTMLElement | null, linksList: HTMLElemen
     .join('');
 }
 
+function stopGuideSpeech() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function playGuideSpeech(text: string, locale: Locale) {
+  stopGuideSpeech();
+
+  if (!('speechSynthesis' in window)) {
+    return false;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = locale === 'es' ? 'es-ES' : 'en-US';
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+
 export function mountPlanPage({ locale }: { locale: Locale }) {
   const params = new URL(window.location.href).searchParams;
   const tripId = params.get('trip') ?? '';
   const planId = params.get('plan') ?? '';
   const description = document.querySelector<HTMLElement>('[data-plan-description]');
+  const aiGuideSection = document.querySelector<HTMLElement>('[data-plan-ai-guide-section]');
+  const aiGuideText = document.querySelector<HTMLElement>('[data-plan-ai-guide-text]');
+  const aiGuidePlayButton = document.querySelector<HTMLButtonElement>('[data-plan-ai-guide-play]');
+  const aiGuideStopButton = document.querySelector<HTMLButtonElement>('[data-plan-ai-guide-stop]');
+  const aiGuideMessage = document.querySelector<HTMLElement>('[data-plan-ai-guide-message]');
   const mapSection = document.querySelector<HTMLElement>('[data-plan-map-section]');
   const mapTarget = document.querySelector<HTMLElement>('[data-plan-map]');
   const linksSection = document.querySelector<HTMLElement>('[data-plan-links-section]');
@@ -114,6 +138,8 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   let map: L.Map | null = null;
   let poiLayer: L.LayerGroup | null = null;
   let currentPoints: TripPointOfInterestRecord[] = [];
+  let currentAiGuide = '';
+
   if (!tripId || !planId || !description || !nearbyPoiRoot) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -121,6 +147,23 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
   const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: planId });
   if (editLink) editLink.href = planEditUrl;
   if (visibleEditLink) visibleEditLink.href = planEditUrl;
+  aiGuidePlayButton?.addEventListener('click', () => {
+    if (!currentAiGuide) {
+      return;
+    }
+
+    const supported = playGuideSpeech(currentAiGuide, locale);
+    setMessage(
+      aiGuideMessage,
+      supported ? t('plan.aiGuide.playing') : t('plan.aiGuide.unsupported'),
+      supported ? 'success' : 'danger',
+    );
+  });
+  aiGuideStopButton?.addEventListener('click', () => {
+    stopGuideSpeech();
+    setMessage(aiGuideMessage, t('plan.aiGuide.stopped'), 'success');
+  });
+  window.addEventListener('beforeunload', stopGuideSpeech);
   deleteButton?.addEventListener('click', async () => {
     const confirmed = window.confirm(t('plan.deleteConfirm'));
 
@@ -131,6 +174,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     setButtonBusy(deleteButton, true, t('plan.delete'), t('common.saving'));
 
     try {
+      stopGuideSpeech();
       await deletePlan(tripId, planId);
       redirectTo(locale, 'trip', { trip: tripId });
     } catch (error) {
@@ -150,6 +194,17 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         if (!plan) return;
         syncPlanShell(locale, trip, plan);
         description.textContent = plan.description || t('plan.descriptionEmpty');
+        currentAiGuide = plan.aiGuide?.trim() ?? '';
+
+        if (aiGuideSection && aiGuideText) {
+          aiGuideSection.hidden = !currentAiGuide;
+          aiGuideText.textContent = currentAiGuide;
+        }
+
+        if (!currentAiGuide) {
+          stopGuideSpeech();
+        }
+
         renderPlanLinks(linksSection, linksList, plan.links);
 
         if (map) {
