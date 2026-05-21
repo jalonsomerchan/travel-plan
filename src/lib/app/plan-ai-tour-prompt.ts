@@ -91,7 +91,7 @@ export function buildPlanAiTourPrompt(
   options: PlanAiTourPromptOptions,
 ) {
   if (locale === 'en') {
-    return `Act as an expert local guide and create a self-guided tour script for this saved trip plan.
+    return `Act as an expert local guide and create a self-guided audio-guide narration for this saved trip plan.
 
 Trip context:
 - Trip: ${trip.name}
@@ -114,23 +114,20 @@ Style instructions:
 - ${getFocusInstruction(options.focus, locale)}
 
 What I want:
-- Write the response as a tour that I can read or listen to while I am there.
-- Start with a short intro that explains what this place is and why it matters.
-- Then guide me through the visit step by step, in a logical walking order when possible.
-- Point out what to notice, what to imagine, what details are easy to miss, and what makes the place special.
-- If useful, include brief practical notes such as best route, expected timing, crowd tips, or where to pause.
+- Write only a continuous plain-text narration, ready to be read aloud.
+- Make it sound like a tourist guide speaking directly to the traveller while they are at the place.
+- Explain what the place is, why it matters, what to imagine, what to notice and what makes it special.
+- Use natural paragraphs and one narrated flow.
+- Integrate practical tips naturally inside the narration, never as bullets or a checklist.
 - If the plan location is broad, turn it into a realistic mini route around the area instead of inventing exact facts.
 - If something is uncertain, do not invent it. Phrase it carefully.
 - Do not return JSON.
 - Do not mention that you are an AI.
-
-Format:
-- Use a clear title.
-- Use short sections or paragraphs that are comfortable to follow on mobile.
-- End with a short closing recommendation or best final viewpoint/stop if it makes sense.`;
+- Do not use titles, headings, sections, lists, tables, quotes, notes, sources, footnotes, bullet-point notes or Markdown formatting.
+- Return only the narration text.`;
   }
 
-  return `Actúa como un guía local experto y crea un texto de tour autoguiado para este plan guardado del viaje.
+  return `Actúa como un guía local experto y crea una narración de audioguía autoguiada para este plan guardado del viaje.
 
 Contexto del viaje:
 - Viaje: ${trip.name}
@@ -153,18 +150,15 @@ Instrucciones de estilo:
 - ${getFocusInstruction(options.focus, locale)}
 
 Qué quiero:
-- Escribe la respuesta como un tour que yo pueda leer o escuchar mientras estoy allí.
-- Empieza con una introducción breve que explique qué es este sitio y por qué merece la pena.
-- Después guíame paso a paso por la visita, en un orden lógico de recorrido si es posible.
-- Señala en qué fijarme, qué imaginar, qué detalles suelen pasarse por alto y qué hace especial el lugar.
-- Si ayuda, añade notas prácticas breves como mejor recorrido, tiempo estimado, consejos de afluencia o dónde detenerse.
+- Escribe únicamente una narración continua en texto plano, lista para ser leída en voz alta.
+- Debe sonar como un guía turístico hablando directamente al viajero mientras está allí.
+- Explica qué es el lugar, por qué merece la pena, qué imaginar, en qué fijarse y qué lo hace especial.
+- Usa párrafos naturales y un único flujo narrado.
+- Integra los consejos prácticos dentro de la narración, nunca como bullets ni checklist.
 - Si el lugar del plan es una zona amplia, conviértelo en una mini ruta realista por esa zona sin inventarte datos exactos.
 - Si algo no está claro, no lo inventes. Exprésalo con prudencia.
 - No devuelvas JSON.
 - No menciones que eres una IA.
-
-Formato:
-- Usa un título claro.
-- Usa secciones o párrafos cortos, cómodos de seguir en móvil.
-- Termina con una recomendación final breve o con el mejor punto donde acabar, si tiene sentido.`;
+- No uses títulos, encabezados, secciones, listas, tablas, citas, notas, fuentes, notas al pie, apuntes ni formato Markdown.
+- Devuelve solo el texto de la narración.`;
 }
