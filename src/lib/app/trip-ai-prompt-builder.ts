@@ -14,23 +14,21 @@ function getDateInstruction(options: TripAiPromptWizardOptions, locale: Locale) 
       : '- Do not assign date or time: return unscheduled plans so they can be saved without dates.';
   }
 
-  if (locale === 'es') {
-    return `- Planifica usando fechas entre ${options.startDate || 'el inicio del viaje'} y ${options.endDate || 'el final del viaje'}, con horas realistas.`;
-  }
-
-  return `- Schedule plans between ${options.startDate || 'the trip start'} and ${options.endDate || 'the trip end'}, with realistic times.`;
+  return locale === 'es'
+    ? `- Puedes asignar date entre ${options.startDate || 'el inicio del viaje'} y ${options.endDate || 'el final del viaje'} si aporta valor, pero evita duraciones, minutos y bloques horarios.`
+    : `- You may assign date between ${options.startDate || 'the trip start'} and ${options.endDate || 'the trip end'} when useful, but avoid durations, minutes and schedule blocks.`;
 }
 
 function getModeInstruction(options: TripAiPromptWizardOptions, locale: Locale) {
   if (options.planMode === 'independent') {
     return locale === 'es'
-      ? '- Devuelve planes independientes, útiles por separado, sin obligar a seguir un itinerario cerrado.'
-      : '- Return independent plans that are useful separately, without forcing a fixed itinerary.';
+      ? '- Devuelve planes independientes, con una descripción completa e interesante de cada sitio.'
+      : '- Return independent plans, with a complete and interesting description of each place.';
   }
 
   return locale === 'es'
-    ? '- Devuelve una planificación coherente, ordenada y fácil de seguir por días o bloques.'
-    : '- Return a coherent itinerary ordered by days or blocks and easy to follow.';
+    ? '- Puedes ordenar las propuestas por día o zona, pero no escribas una guía de ruta paso a paso.'
+    : '- You may order proposals by day or area, but do not write a step-by-step route guide.';
 }
 
 function getTourismInstruction(style: TripAiPromptWizardOptions['tourismStyle'], locale: Locale) {
@@ -65,25 +63,32 @@ function getBudgetInstruction(mode: TripAiPromptWizardOptions['budgetMode'], loc
 
 function getAccessInstruction(mode: TripAiPromptWizardOptions['accessMode'], locale: Locale) {
   const es = {
-    public: '- Explica en description cómo llegar usando transporte público cuando sea útil.',
-    walking: '- Prioriza planes accesibles caminando o agrupables a pie. Explica rutas a pie cuando sea útil.',
-    car: '- Ten en cuenta desplazamientos en coche y añade notas prácticas de acceso o aparcamiento si procede.',
-    mixed: '- Combina caminar, transporte público y coche según tenga más sentido. Explica cómo llegar en description.',
+    public: '- Si aporta valor, añade una nota muy breve de acceso en transporte público, sin convertirlo en una ruta.',
+    walking: '- Si aporta valor, indica si el sitio encaja bien en un paseo, sin guiar paso a paso.',
+    car: '- Si aporta valor, añade una nota muy breve sobre acceso en coche o aparcamiento.',
+    mixed: '- Si aporta valor, añade una nota muy breve con la forma de acceso más razonable.',
   };
   const en = {
-    public: '- Explain in description how to get there by public transport when useful.',
-    walking: '- Prioritize places reachable on foot or easy to group by walking. Explain walking routes when useful.',
-    car: '- Consider car transfers and add practical access or parking notes when relevant.',
-    mixed: '- Combine walking, public transport and car when it makes sense. Explain how to get there in description.',
+    public: '- If useful, add a very short public transport note, without turning it into a route.',
+    walking: '- If useful, mention whether the place fits well into a walk, without step-by-step guidance.',
+    car: '- If useful, add a very short note about car access or parking.',
+    mixed: '- If useful, add a very short note with the most reasonable access option.',
   };
 
   return locale === 'es' ? es[mode] : en[mode];
+}
+
+function getContentInstruction(locale: Locale) {
+  return locale === 'es'
+    ? '- En description quiero que me cuentes cosas del sitio: historia, contexto, curiosidades, qué mirar allí y por qué merece la pena.'
+    : '- In description, tell me about the place: history, context, curiosities, what to notice there and why it is worth it.';
 }
 
 function getWizardInstructions(options: TripAiPromptWizardOptions, locale: Locale) {
   const lines = [
     locale === 'es' ? 'Preferencias del usuario:' : 'User preferences:',
     locale === 'es' ? `- Lugar principal: ${options.place}` : `- Main place: ${options.place}`,
+    getContentInstruction(locale),
     getDateInstruction(options, locale),
     getModeInstruction(options, locale),
     locale === 'es'
