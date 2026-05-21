@@ -133,7 +133,21 @@ describe('project smoke checks', () => {
     assert.doesNotMatch(googleButton, /fonts\.googleapis|gstatic|flaticon/);
     assert.match(landingPage, /GoogleSignInButton/);
     assert.match(landingPage, /google-sign-in-form/);
+    assert.match(landingPage, /data-auth-session-loading/);
+    assert.match(landingPage, /data-google-sign-in-button/);
+    assert.match(landingPage, /auth\.checkingSession/);
     assert.match(landingPage, /type=\"submit\"/);
+  });
+
+  it('keeps the landing auth check fast and flicker-free', () => {
+    const landingScript = readText('src/scripts/pages/landing.ts');
+    const sessionSource = readText('src/lib/firebase/session.ts');
+
+    assert.match(landingScript, /setSessionCheckVisible\(true\)/);
+    assert.match(landingScript, /signInButton\.hidden = isVisible/);
+    assert.match(landingScript, /revealSignIn\(\)/);
+    assert.match(sessionSource, /void trySyncUserProfile\(user\)/);
+    assert.doesNotMatch(sessionSource, /await trySyncUserProfile\(user\)/);
   });
 
   it('keeps Astro i18n enabled and aligned with site config', () => {
@@ -185,6 +199,18 @@ describe('project smoke checks', () => {
       assert.ok(translations['home.title'], `${locale}.json should include home.title`);
       assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
     });
+  });
+
+  it('keeps auth loading feature translations aligned and registered', () => {
+    const es = readJson('src/i18n/feature-translations/auth-loading/es.json');
+    const en = readJson('src/i18n/feature-translations/auth-loading/en.json');
+    const ui = readText('src/i18n/ui.ts');
+
+    assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+    assert.equal(es['auth.checkingSession'], 'Iniciando sesión...');
+    assert.equal(en['auth.checkingSession'], 'Signing you in...');
+    assert.match(ui, /feature-translations\/auth-loading\/es\.json/);
+    assert.match(ui, /feature-translations\/auth-loading\/en\.json/);
   });
 
   it('keeps routing and assets compatible with root and subpath deployments', () => {
@@ -248,7 +274,7 @@ describe('project smoke checks', () => {
     assert.match(sessionSource, /async function trySyncUserProfile/);
     assert.match(sessionSource, /catch \(error\)/);
     assert.match(sessionSource, /console\.warn\('syncUserProfile', error\)/);
-    assert.match(sessionSource, /await trySyncUserProfile\(user\)/);
+    assert.match(sessionSource, /void trySyncUserProfile\(user\)/);
     assert.match(sessionSource, /callback\(user\)/);
     assert.doesNotMatch(sessionSource, /await syncUserProfile\(credential\.user\)/);
   });

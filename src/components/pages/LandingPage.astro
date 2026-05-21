@@ -16,7 +16,7 @@ const homeDescription = locale === 'es'
   ? 'Tu app para planificar viajes con tus amigos'
   : 'Your app for planning trips with friends';
 const signInLabel = locale === 'es' ? 'Inicia sesión' : 'Sign in';
-const translatedSmokeLabels = [t('home.title'), t('auth.signIn')];
+const translatedSmokeLabels = [t('home.title'), t('auth.signIn'), t('auth.checkingSession')];
 void translatedSmokeLabels;
 const highlights = [
   {
@@ -44,7 +44,20 @@ const highlights = [
         {homeDescription}
       </p>
       <form id="google-sign-in-form" class="mt-8 flex justify-center">
-        <GoogleSignInButton type="submit">{signInLabel}</GoogleSignInButton>
+        <div
+          aria-busy="true"
+          aria-live="polite"
+          class="inline-flex min-h-11 items-center justify-center gap-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text)] shadow-[var(--shadow-xs)]"
+          data-auth-session-loading
+          role="status"
+        >
+          <span
+            aria-hidden="true"
+            class="size-5 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--color-primary)]"
+          ></span>
+          <span>{t('auth.checkingSession')}</span>
+        </div>
+        <GoogleSignInButton data-google-sign-in-button hidden type="submit">{signInLabel}</GoogleSignInButton>
       </form>
       <p class="sr-only" id="google-sign-in-message">{t('auth.providerHint')}</p>
       <div class="sr-only" data-firebase-state>{t('firebase.configPending')}</div>

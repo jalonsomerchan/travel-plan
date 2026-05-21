@@ -7,9 +7,27 @@ export function mountLandingPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   const signInForm = document.querySelector<HTMLFormElement>('#google-sign-in-form');
   const signInMessage = document.querySelector<HTMLElement>('#google-sign-in-message');
-  const signInButton = signInForm?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
+  const signInButton = document.querySelector<HTMLButtonElement>('[data-google-sign-in-button]');
+  const sessionLoading = document.querySelector<HTMLElement>('[data-auth-session-loading]');
+
+  const setSessionCheckVisible = (isVisible: boolean) => {
+    if (sessionLoading) {
+      sessionLoading.hidden = !isVisible;
+      sessionLoading.setAttribute('aria-busy', String(isVisible));
+    }
+
+    if (signInButton) {
+      signInButton.hidden = isVisible;
+      signInButton.disabled = isVisible;
+    }
+  };
+
+  const revealSignIn = () => setSessionCheckVisible(false);
+
+  setSessionCheckVisible(true);
 
   if (!ensureFirebaseReady(locale)) {
+    revealSignIn();
     signInForm?.querySelectorAll('button').forEach((node) => node.setAttribute('disabled', 'true'));
     return;
   }
@@ -17,7 +35,10 @@ export function mountLandingPage({ locale }: { locale: Locale }) {
   observeSession((user) => {
     if (user) {
       redirectTo(locale, 'dashboard');
+      return;
     }
+
+    revealSignIn();
   });
 
   signInForm?.addEventListener('submit', async (event) => {
@@ -30,7 +51,6 @@ export function mountLandingPage({ locale }: { locale: Locale }) {
       redirectTo(locale, 'dashboard');
     } catch (error) {
       setMessage(signInMessage, error instanceof Error ? error.message : t('auth.error'), 'danger');
-    } finally {
       setButtonBusy(signInButton, false, t('auth.signIn'), t('auth.loading'));
     }
   });
