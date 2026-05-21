@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import vm from 'node:vm';
 
 const root = process.cwd();
 
@@ -11,6 +12,14 @@ function readText(path) {
 
 function readJson(path) {
   return JSON.parse(readText(path));
+}
+
+function loadNormalizeAiGuideText() {
+  const source = readText('src/lib/app/ai-guide-text.ts')
+    .replace('export function normalizeAiGuideText(value: string)', 'function normalizeAiGuideText(value)')
+    .concat('\nnormalizeAiGuideText;');
+
+  return vm.runInNewContext(source);
 }
 
 describe('trip AI prompt wizard', () => {
@@ -87,7 +96,39 @@ describe('trip AI prompt wizard', () => {
     assert.match(planPage, /plan\.aiTour\.resultLabel/);
     assert.match(planScript, /aiTourResultInput/);
     assert.match(planScript, /aiTourSaveGuideButton/);
+    assert.match(planScript, /normalizeAiGuideText\(aiTourResultInput\.value\)/);
+    assert.match(planScript, /aiTourResultInput\.value = aiGuide/);
     assert.match(planScript, /await updatePlan\(tripId, planId, \{ \.\.\.currentPlan, aiGuide \}\)/);
+  });
+
+  it('uses the final plain narration instruction in the plan AI tour prompt', () => {
+    const planScript = readText('src/scripts/pages/plan.ts');
+    const promptBuilder = readText('src/lib/app/plan-ai-tour-prompt.ts');
+
+    assert.match(promptBuilder, /continuous plain-text narration/);
+    assert.match(promptBuilder, /narración continua en texto plano/);
+    assert.match(promptBuilder, /Do not use titles, headings, sections, lists, tables, quotes, notes, sources, footnotes, bullet-point notes or Markdown formatting/);
+    assert.match(promptBuilder, /No uses títulos, encabezados, secciones, listas, tablas, citas, notas, fuentes, notas al pie, apuntes ni formato Markdown/);
+    assert.match(planScript, /plan\.aiTour\.plainNarrationInstruction/);
+    assert.match(planScript, /const finalPrompt = `\$\{prompt\}\\n\\n\$\{t\('plan\.aiTour\.plainNarrationInstruction'\)\}`/);
+    assert.match(planScript, /aiTourOutput\.value = finalPrompt/);
+    assert.match(planScript, /getChatGptPromptUrl\(finalPrompt\)/);
+  });
+
+  it('normalizes basic Markdown from saved AI guide text', () => {
+    const normalizeAiGuideText = loadNormalizeAiGuideText();
+    const input = `# Catedral
+
+**Bienvenido** a este lugar.
+
+- Mira los vitrales.
+
+[Web oficial](https://example.com)`;
+
+    assert.equal(
+      normalizeAiGuideText(input),
+      'Catedral\n\nBienvenido a este lugar.\n\nMira los vitrales.\n\nWeb oficial',
+    );
   });
 
   it('keeps wizard translations aligned', () => {
@@ -101,6 +142,8 @@ describe('trip AI prompt wizard', () => {
     assert.ok(en['plan.aiGuide.title']);
     assert.ok(es['plan.aiTour.resultLabel']);
     assert.ok(en['plan.aiTour.resultLabel']);
+    assert.ok(es['plan.aiTour.plainNarrationInstruction']);
+    assert.ok(en['plan.aiTour.plainNarrationInstruction']);
     assert.ok(es['tripAiPrompt.wizard.place']);
     assert.ok(en['tripAiPrompt.wizard.accessMode']);
     assert.ok(es['tripAiPrompt.wizard.bookingModeRequired']);
