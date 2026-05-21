@@ -58,8 +58,8 @@ export function getPlanNameWithFlagsHtml(
   const flags = getPlanFlagsHtml(plan, t);
 
   return `
-    <span class="flex min-w-0 items-center gap-2">
-      <span class="truncate">${escapeHtml(plan.name)}</span>
+    <span class="flex min-w-0 flex-wrap items-center gap-2">
+      <span class="min-w-0 break-words [overflow-wrap:anywhere]">${escapeHtml(plan.name)}</span>
       ${flags ? `<span class="inline-flex shrink-0 items-center gap-1">${flags}</span>` : ''}
     </span>
   `;
