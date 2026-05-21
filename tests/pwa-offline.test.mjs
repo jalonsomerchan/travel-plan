@@ -69,7 +69,9 @@ describe('PWA offline support', () => {
     assert.match(config, /persistentLocalCache/);
     assert.match(config, /persistentMultipleTabManager/);
     assert.match(config, /shouldUseSafeFirestoreMode/);
-    assert.match(config, /iPad\|iPhone\|iPod/);
+    assert.match(config, /maxTouchPoints/);
+    assert.match(config, /MacIntel/);
+    assert.match(config, /AppleWebKit/);
     assert.match(config, /firebaseDb = getFirestore\(app\)/);
   });
 
@@ -81,5 +83,7 @@ describe('PWA offline support', () => {
     assert.match(docs, /network-first de scripts, estilos y manifest/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
+    assert.match(docs, /Safari iOS/i);
+    assert.match(docs, /getFirebaseDb\(\)/);
   });
 });

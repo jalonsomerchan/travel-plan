@@ -47,6 +47,22 @@ ASTRO_BASE=/travel-plan
 
 Al iniciar sesión, la app intenta sincronizar `users/{uid}` con el correo y nombre del usuario autenticado. Si esa escritura falla por reglas, permisos o conectividad, el acceso no se bloquea: Firebase Auth sigue siendo la fuente de verdad de la sesión y el error queda registrado con `console.warn` para depuración.
 
+## Inicialización de Firestore en navegador
+
+Toda la app debe obtener Firestore desde `src/lib/firebase/config.ts` mediante `getFirebaseDb()`.
+
+Motivo:
+
+- El proyecto usa caché local persistente cuando el navegador la soporta bien.
+- Safari iOS / iPadOS puede dar problemas silenciosos con la persistencia avanzada de Firestore.
+- Para esos navegadores la app cae automáticamente a un modo seguro sin esa persistencia, reutilizando la misma API `getFirebaseDb()`.
+
+Reglas prácticas:
+
+- No usar `initializeFirestore(...)` fuera de `src/lib/firebase/config.ts`.
+- No usar `getFirestore(app)` directamente fuera de `src/lib/firebase/config.ts`.
+- Todos los módulos en `src/lib/firebase/` deben recibir la instancia llamando a `getFirebaseDb()`.
+
 ## Colecciones usadas
 
 - `users/{uid}`: perfil básico del usuario autenticado. Solo puede leerlo o escribirlo el propio usuario.

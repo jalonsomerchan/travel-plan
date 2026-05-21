@@ -25,10 +25,13 @@ function shouldUseSafeFirestoreMode() {
   }
 
   const userAgent = navigator.userAgent;
-  const isIosWebkit = /iPad|iPhone|iPod/.test(userAgent);
-  const isSafariDesktop = /Safari\//.test(userAgent) && !/Chrome\/|Chromium\/|Edg\/|OPR\//.test(userAgent);
+  const platform = navigator.platform ?? '';
+  const maxTouchPoints = navigator.maxTouchPoints ?? 0;
+  const isIosDevice = /iPad|iPhone|iPod/.test(userAgent) || /iPad|iPhone|iPod/.test(platform);
+  const isIpadOsDesktopMode = platform === 'MacIntel' && maxTouchPoints > 1;
+  const isAppleWebkit = /AppleWebKit\//.test(userAgent);
 
-  return isIosWebkit || isSafariDesktop;
+  return isAppleWebkit && (isIosDevice || isIpadOsDesktopMode);
 }
 
 export function getMissingFirebaseConfig() {

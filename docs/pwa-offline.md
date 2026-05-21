@@ -11,13 +11,27 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 - Fallback de navegación a la shell cacheada cuando no hay red.
 - Caché de assets estáticos visitados, como imágenes y fuentes.
 - Actualización network-first de scripts, estilos y manifest para evitar servir versiones antiguas cuando hay conexión.
-- Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña.
+- Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña cuando el navegador lo soporta con suficiente estabilidad.
 
 ## Datos sin conexión
 
 Firestore mantiene en el dispositivo los documentos que ya se han leído en sesiones anteriores. Esto permite abrir vistas con datos visitados previamente incluso si la red falla, siempre que Firebase haya podido guardarlos en la caché local del navegador.
 
 La caché compartida propia de la app sigue funcionando como valor inicial de UI y se limpia al cambiar usuario o cerrar sesión.
+
+### Compatibilidad Safari iOS
+
+Safari iOS e iPadOS puede fallar de forma silenciosa con IndexedDB persistente y gestor multi-pestaña de Firestore, especialmente en listeners de listas como viajes o planes.
+
+Por eso la app centraliza toda la inicialización de Firestore en `src/lib/firebase/config.ts`:
+
+- Navegadores compatibles: usan `initializeFirestore(...)` con `persistentLocalCache(...)`.
+- Safari iOS / iPadOS: usan un modo seguro con `getFirestore(app)` sin esa persistencia avanzada.
+
+Regla obligatoria para el proyecto:
+
+- Ningún módulo de `src/lib/firebase/` debe inicializar Firestore por su cuenta.
+- Todas las lecturas y escrituras deben usar siempre `getFirebaseDb()`.
 
 ## Estrategia del service worker
 
