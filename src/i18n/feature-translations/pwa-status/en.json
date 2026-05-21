@@ -1,0 +1,6 @@
+{
+  "pwaStatus.online": "Online",
+  "pwaStatus.offline": "Offline",
+  "pwaStatus.onlineDescription": "The app is back online and will refresh data and files when available.",
+  "pwaStatus.offlineDescription": "You are offline. Previously saved data will be used when available."
+}
