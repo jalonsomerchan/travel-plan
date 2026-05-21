@@ -1,0 +1,5 @@
+{
+  "plan.form.sectionBasics": "Datos principales",
+  "plan.form.sectionBasicsHelp": "Define el contenido, tipo, estado y momento del plan.",
+  "plan.form.flagsHelp": "Marca las características útiles para reconocer el plan de un vistazo."
+}
