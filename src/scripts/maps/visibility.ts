@@ -1,4 +1,6 @@
 import L from 'leaflet';
+import mapVisibilityEn from '../../i18n/feature-translations/map-visibility/en.json';
+import mapVisibilityEs from '../../i18n/feature-translations/map-visibility/es.json';
 import type { MapTranslate } from './layers';
 
 export type MapVisibilityKey = 'currentLocation' | 'accommodation' | 'proposedPlans' | 'plans' | 'tripPois';
@@ -20,6 +22,17 @@ const visibilityOptions: { key: MapVisibilityKey; labelKey: string }[] = [
   { key: 'plans', labelKey: 'map.visibility.otherPlans' },
   { key: 'tripPois', labelKey: 'tripPois.breadcrumb' },
 ];
+
+function translateMapVisibility(t: MapTranslate, key: string) {
+  const translated = t(key);
+
+  if (translated !== key) {
+    return translated;
+  }
+
+  const dictionary = document.documentElement.lang === 'en' ? mapVisibilityEn : mapVisibilityEs;
+  return (dictionary as Record<string, string>)[key] ?? key;
+}
 
 export function getMapVisibilityState(): MapVisibilityState {
   try {
@@ -64,11 +77,14 @@ export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.disableScrollPropagation(container);
 
+    const titleText = translateMapVisibility(t, 'map.visibility.title');
+    const toggleLabel = translateMapVisibility(t, 'map.visibility.toggleLabel');
+
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'map-icon-button';
-    trigger.title = t('map.visibility.title');
-    trigger.setAttribute('aria-label', t('map.visibility.toggleLabel'));
+    trigger.title = titleText;
+    trigger.setAttribute('aria-label', toggleLabel);
     trigger.setAttribute('aria-expanded', 'false');
     trigger.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8 5.2v3.6M15 10.2v3.6M11 15.2v3.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`;
 
@@ -78,13 +94,13 @@ export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (
 
     const title = document.createElement('p');
     title.className = 'map-tool-title';
-    title.textContent = t('map.visibility.title');
+    title.textContent = titleText;
 
     const fieldset = document.createElement('fieldset');
     fieldset.className = 'map-poi-options';
     const legend = document.createElement('legend');
     legend.className = 'sr-only';
-    legend.textContent = t('map.visibility.toggleLabel');
+    legend.textContent = toggleLabel;
     fieldset.append(legend);
 
     visibilityOptions.forEach((option) => {
@@ -95,7 +111,7 @@ export function addMapVisibilityControl(map: L.Map, t: MapTranslate, onChange: (
       input.checked = state[option.key];
       input.addEventListener('change', () => syncState({ ...state, [option.key]: input.checked }));
       const text = document.createElement('span');
-      text.textContent = t(option.labelKey);
+      text.textContent = translateMapVisibility(t, option.labelKey);
       label.append(input, text);
       fieldset.append(label);
     });
