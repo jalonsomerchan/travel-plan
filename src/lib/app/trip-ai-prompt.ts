@@ -57,21 +57,21 @@ export function buildTripAiPrompt(trip: TripRecord, plans: PlanRecord[], locale:
   const existingPlans = formatExistingPlans(plans, locale);
 
   if (locale === 'en') {
-    return `You are an expert travel planner. Create a useful itinerary for this trip and return only valid JSON, without markdown fences or extra comments.
+    return `You are an expert local travel curator. Create useful place proposals for this trip and return only valid JSON, without markdown fences or extra comments.
 
 Trip data:
 - Trip name: ${trip.name}
 - Destination: ${tripLocation}
 - Accommodation: ${accommodation}
-- Dates: from ${trip.startDate} to ${trip.endDate}
+- Trip dates: from ${trip.startDate} to ${trip.endDate}
 - Already saved plans, to avoid duplicates:\n${existingPlans}
 
 Return a JSON object with this exact structure:
 {
   "plans": [
     {
-      "name": "Short plan title",
-      "description": "Why it is worth it and practical notes. Put sources or reference links here, never in name.",
+      "name": "Short plain-text place or plan title",
+      "description": "Tell me interesting things about this place: what it is, why it matters, a bit of history or context, curiosities, what to notice there and practical notes. Put sources or reference links here, never in name.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -89,10 +89,11 @@ Return a JSON object with this exact structure:
 }
 
 Rules:
-- Create between 8 and 18 plans, distributed realistically across the trip dates.
+- Create between 8 and 18 useful proposals, avoiding duplicates with saved plans.
 - Use only these categories: ${categories}.
 - Use only these statuses: ${statuses}. Usually use "pending".
-- Use dates within the trip range only.
+- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in the description.
+- Focus each description on what the place is like and what makes it interesting, not on guiding me step by step through the area.
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
 - Do not invent bookings. If something is only a recommendation, keep isBooked as false.
@@ -101,21 +102,21 @@ Rules:
 - Return only JSON.`;
   }
 
-  return `Actúa como una IA experta en planificación de viajes. Crea una planificación útil para este viaje y devuelve solo JSON válido, sin bloques markdown ni comentarios extra.
+  return `Actúa como una IA experta en viajes y cultura local. Crea propuestas útiles de sitios o planes para este viaje y devuelve solo JSON válido, sin bloques markdown ni comentarios extra.
 
 Datos del viaje:
 - Nombre del viaje: ${trip.name}
 - Destino: ${tripLocation}
 - Alojamiento: ${accommodation}
-- Fechas: del ${trip.startDate} al ${trip.endDate}
+- Fechas del viaje: del ${trip.startDate} al ${trip.endDate}
 - Planes ya guardados, para evitar duplicados:\n${existingPlans}
 
 Devuelve un objeto JSON con esta estructura exacta:
 {
   "plans": [
     {
-      "name": "Título corto del plan",
-      "description": "Por qué merece la pena y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
+      "name": "Título corto y limpio del sitio o plan",
+      "description": "Cuéntame cosas interesantes del sitio: qué es, por qué merece la pena, algo de historia o contexto, curiosidades, en qué fijarme allí y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -133,13 +134,14 @@ Devuelve un objeto JSON con esta estructura exacta:
 }
 
 Reglas:
-- Crea entre 8 y 18 planes, repartidos de forma realista entre los días del viaje.
+- Crea entre 8 y 18 propuestas útiles, evitando duplicados con los planes guardados.
 - Usa solo estas categorías: ${categories}.
 - Usa solo estos estados: ${statuses}. Normalmente usa "pending".
-- Usa únicamente fechas dentro del rango del viaje.
+- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en la descripción.
+- Centra cada descripción en cómo es el sitio y por qué es interesante, no en guiarme paso a paso por la zona.
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
-- No inventes reservas. Si algo es una recomendación, deja isBooked como false.
+- No inventes reservas. Si algo es solo una recomendación, deja isBooked como false.
 - Mantén name como un título limpio en texto plano: sin enlaces, sin URLs, sin markdown, sin citas, sin nombres de fuente y sin fragmentos JSON.
 - Si necesitas incluir una fuente, enlace, cita o web oficial, ponlo en description o links, nunca en name.
 - Devuelve solo JSON.`;
