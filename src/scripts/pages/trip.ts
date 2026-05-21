@@ -125,7 +125,7 @@ function renderFirstPlanLink(locale: Locale, plan: PlanRecord) {
     return '';
   }
 
-  return `<span class="mt-3 inline-flex text-sm font-semibold text-[var(--color-primary)]">↗ ${escapeHtml(link.label || t('plan.links.open'))}</span>`;
+  return `<span class="mt-3 inline-flex max-w-full break-words text-sm font-semibold text-[var(--color-primary)] [overflow-wrap:anywhere]">↗ ${escapeHtml(link.label || t('plan.links.open'))}</span>`;
 }
 
 function getPlanDateLabel(locale: Locale, plan: PlanRecord) {
@@ -200,17 +200,17 @@ function renderPlans(
       const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id });
 
       return `
-        <article class="app-card-shell">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <a class="block" href="${planUrl}">
-                <div class="flex items-center gap-2">
+        <article class="app-card-shell min-w-0 overflow-hidden">
+          <div class="flex min-w-0 items-start justify-between gap-3">
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <a class="block min-w-0" href="${planUrl}">
+                <div class="flex min-w-0 items-center gap-2">
                   <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                  <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
+                  <h3 class="min-w-0 break-words text-lg font-bold text-[var(--color-text)] [overflow-wrap:anywhere]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
                   ${renderPlanAiGuideIndicator(locale, plan)}
                 </div>
               </a>
-              ${description ? `<p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(description)}</p>` : ''}
+              ${description ? `<p class="mt-2 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
             </div>
             <div class="flex shrink-0 items-start gap-2">
               <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
@@ -239,10 +239,10 @@ function renderPlans(
               </details>
             </div>
           </div>
-          <div class="mt-4 grid gap-2 text-sm text-[var(--color-text-soft)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
-            <p class="min-w-0"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>
-            <p class="min-w-0"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
-            <p class="min-w-0 sm:text-right"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
+          <div class="mt-4 grid min-w-0 gap-2 text-sm text-[var(--color-text-soft)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+            <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>
+            <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
+            <p class="min-w-0 break-words sm:text-right [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
           </div>
           ${renderFirstPlanLink(locale, plan)}
         </article>
