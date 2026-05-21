@@ -6,6 +6,7 @@ import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribePendingInvites, subscribeUserTrips } from '../../lib/firebase/trips';
 import {
   bindSignOut,
@@ -128,37 +129,47 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   const signOutButton = document.querySelector<HTMLElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
   const invitesLink = document.querySelector<HTMLAnchorElement>('#dashboard-invites-link');
+  const subscriptions = createSubscriptionScope();
   if (!ensureFirebaseReady(locale)) return;
   bindSignOut(signOutButton, locale);
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');
+
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
     revealAppShell();
-    subscribeUserTrips(
-      user.uid,
-      (trips) => {
-        renderStats(locale, trips);
-        renderTrips(locale, trips);
-      },
-      () => {
-        logTripsPermissionError(user);
-        renderStats(locale, []);
-        renderTripsError(locale);
-      },
+    subscriptions.add(
+      subscribeUserTrips(
+        user.uid,
+        (trips) => {
+          renderStats(locale, trips);
+          renderTrips(locale, trips);
+        },
+        () => {
+          logTripsPermissionError(user);
+          renderStats(locale, []);
+          renderTripsError(locale);
+        },
+      ),
     );
 
     if (user.email) {
-      subscribePendingInvites(
-        user.email,
-        (invites) => renderInviteCount(locale, invites.length),
-        () => {
-          logInvitesPermissionError(user);
-          renderInvitesError(locale);
-        },
+      subscriptions.add(
+        subscribePendingInvites(
+          user.email,
+          (invites) => renderInviteCount(locale, invites.length),
+          () => {
+            logInvitesPermissionError(user);
+            renderInvitesError(locale);
+          },
+        ),
       );
     }
   });
