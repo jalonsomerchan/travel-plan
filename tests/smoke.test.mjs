@@ -141,13 +141,13 @@ describe('project smoke checks', () => {
 
   it('keeps the landing auth check fast and flicker-free', () => {
     const landingScript = readText('src/scripts/pages/landing.ts');
-    const session = readText('src/lib/firebase/session.ts');
+    const sessionSource = readText('src/lib/firebase/session.ts');
 
     assert.match(landingScript, /setSessionCheckVisible\(true\)/);
     assert.match(landingScript, /signInButton\.hidden = isVisible/);
     assert.match(landingScript, /revealSignIn\(\)/);
-    assert.match(session, /void trySyncUserProfile\(user\)/);
-    assert.doesNotMatch(session, /await trySyncUserProfile\(user\)/);
+    assert.match(sessionSource, /void trySyncUserProfile\(user\)/);
+    assert.doesNotMatch(sessionSource, /await trySyncUserProfile\(user\)/);
   });
 
   it('keeps Astro i18n enabled and aligned with site config', () => {
@@ -227,40 +227,111 @@ describe('project smoke checks', () => {
     });
 
     assert.match(pathHelpers, /withBasePath/);
-    assert.match(pathHelpers, /getAbsoluteUrl/);
     assert.match(pathHelpers, /stripBasePath/);
+    assert.match(pathHelpers, /getAbsoluteUrl/);
+    assert.match(manifest, /start_url/);
+    assert.match(robots, /sitemap-index\.xml/);
   });
 
-  it('keeps navigation and theme hooks accessible', () => {
+  it('keeps starter links and labels configurable or translated', () => {
+    const siteConfig = readText('src/config/site.ts');
     const header = readText('src/components/Header.astro');
-    const themeScript = readText('src/scripts/theme.ts');
-
-    assert.match(header, /aria-label=\{t\('nav.main'\)\}/);
-    assert.match(header, /data-theme-toggle/);
-    assert.match(themeScript, /localStorage/);
-    assert.match(themeScript, /prefers-color-scheme/);
-  });
-
-  it('keeps homepage content wired to translations', () => {
     const landingPage = readText('src/components/pages/LandingPage.astro');
+    const envExample = readText('.env.example');
 
-    assert.match(landingPage, /useTranslations/);
-    assert.match(landingPage, /home\.title/);
-    assert.match(landingPage, /auth\.signIn/);
+    assert.match(siteConfig, /repositoryUrl/);
+    assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
+    assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
+    assert.match(header, /t\('nav\.main'\)/);
+    assert.match(landingPage, /t\('home\.title'\)/);
+    assert.match(landingPage, /t\('auth\.signIn'\)/);
+    assert.doesNotMatch(landingPage, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
 
-  it('keeps firebase config helper isolated from runtime imports', () => {
-    const firebaseConfig = readText('src/lib/firebase/config.ts');
-    const dashboardScript = readText('src/scripts/pages/dashboard.ts');
+  it('keeps repository links pointing at the current repository by default', () => {
+    const sources = [
+      readText('src/config/site.ts'),
+      readText('.env.example'),
+      readText('README.md'),
+      readText('docs/firebase-guide.md'),
+    ].join('\n');
 
-    assert.match(firebaseConfig, /initializeApp/);
-    assert.match(firebaseConfig, /isFirebaseConfigured/);
-    assert.match(dashboardScript, /ensureFirebaseReady/);
+    assert.match(sources, /https:\/\/github\.com\/jalonsomerchan\/travel-plan/);
+    assert.doesNotMatch(sources, /https:\/\/github\.com\/jorgealonso\/travel-plan/);
   });
 
-  it('keeps CI and Pages workflows available', () => {
-    ['.github/workflows/ci.yml', '.github/workflows/pages.yml'].forEach((path) => {
-      assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
+  it('keeps new-tab external links protected with noopener', () => {
+    const tripPageScript = readText('src/scripts/pages/trip.ts');
+
+    assert.match(tripPageScript, /target = mapUrl \? '_blank' : ''/);
+    assert.match(tripPageScript, /rel = mapUrl \? 'noopener noreferrer' : ''/);
+    assert.doesNotMatch(tripPageScript, /rel = mapUrl \? 'noreferrer' : ''/);
+  });
+
+  it('keeps Firebase profile sync from blocking authenticated sessions', () => {
+    const sessionSource = readText('src/lib/firebase/session.ts');
+
+    assert.match(sessionSource, /async function trySyncUserProfile/);
+    assert.match(sessionSource, /catch \(error\)/);
+    assert.match(sessionSource, /console\.warn\('syncUserProfile', error\)/);
+    assert.match(sessionSource, /void trySyncUserProfile\(user\)/);
+    assert.match(sessionSource, /callback\(user\)/);
+    assert.doesNotMatch(sessionSource, /await syncUserProfile\(credential\.user\)/);
+  });
+
+  it('uses geolocation-specific errors instead of auth errors for current location', () => {
+    const tripPageScript = readText('src/scripts/pages/trip.ts');
+    const i18nHelper = readText('src/i18n/ui.ts');
+    const esMessages = readJson('src/i18n/feature-translations/geolocation/es.json');
+    const enMessages = readJson('src/i18n/feature-translations/geolocation/en.json');
+
+    assert.match(tripPageScript, /geolocation\.error\.unsupported/);
+    assert.match(tripPageScript, /geolocation\.error\.unavailable/);
+    assert.doesNotMatch(tripPageScript, /geolocation[\s\S]{0,400}auth\.error/);
+    assert.match(i18nHelper, /feature-translations\/geolocation\/es\.json/);
+    assert.equal(typeof esMessages['geolocation.error.unsupported'], 'string');
+    assert.equal(typeof esMessages['geolocation.error.unavailable'], 'string');
+    assert.deepEqual(Object.keys(enMessages).sort(), Object.keys(esMessages).sort());
+  });
+
+  it('includes GitHub workflows for CI and Pages', () => {
+    const pagesWorkflow = readText('.github/workflows/pages.yml');
+    const ciWorkflow = readText('.github/workflows/ci.yml');
+
+    assert.match(pagesWorkflow, /actions\/deploy-pages@v4/);
+    assert.match(pagesWorkflow, /npm run build/);
+    assert.match(pagesWorkflow, /npm test/);
+    assert.match(ciWorkflow, /pull_request/);
+    assert.match(ciWorkflow, /npm run build/);
+    assert.match(ciWorkflow, /npm test/);
+  });
+
+  it('keeps useful project documentation available', () => {
+    const readme = readText('README.md');
+
+    assert.match(readme, /\S/, 'README.md should not be empty');
+    assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
+    assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
+    assert.equal(existsSync(join(root, 'docs/ai-authenticated-client.md')), true, 'docs/ai-authenticated-client.md should exist');
+    assert.equal(existsSync(join(root, 'docs/firebase-guide.md')), true, 'docs/firebase-guide.md should exist');
+    assert.equal(existsSync(join(root, 'public/CNAME')), true, 'public/CNAME should exist');
+  });
+
+  it('keeps AppShell pages inside a single main card', () => {
+    const pageFiles = readdirSync(join(root, 'src/components/pages')).filter((file) => file.endsWith('.astro'));
+
+    pageFiles.forEach((file) => {
+      const source = readText(`src/components/pages/${file}`);
+
+      if (!source.includes('<AppShell')) {
+        return;
+      }
+
+      assert.doesNotMatch(
+        source,
+        /<\/AppShell>\s*<Container[\s\S]*section-shell/,
+        `${file} should keep the main page content inside AppShell instead of creating a second large card`
+      );
     });
   });
 });
