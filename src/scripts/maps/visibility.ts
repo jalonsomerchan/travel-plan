@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import { getPlanCategoryColors } from '../../lib/app/plan-category-colors';
 import { planCategoryValues, type PlanCategory } from '../../lib/app/models';
+import { tripPoiTypeValues, type TripPoiType } from '../../config/trip-pois';
 import type { MapTranslate } from './layers';
 
 export type MapVisibilityKey =
@@ -11,12 +12,15 @@ export type MapVisibilityKey =
   | 'tripPois';
 export type MapVisibilityState = Record<MapVisibilityKey, boolean>;
 export type MapCategoryVisibilityState = Record<PlanCategory, boolean>;
+export type MapPoiTypeVisibilityState = Record<TripPoiType, boolean>;
 export interface MapVisibilityPreferences extends MapVisibilityState {
   categories: MapCategoryVisibilityState;
+  poiTypes: MapPoiTypeVisibilityState;
 }
 
 type StoredVisibilityState = Partial<Record<MapVisibilityKey | 'tripPois', unknown>> & {
   categories?: Partial<Record<PlanCategory, unknown>>;
+  poiTypes?: Partial<Record<TripPoiType, unknown>>;
   plans?: unknown;
 };
 
@@ -31,6 +35,9 @@ const defaultVisibility: MapVisibilityState = {
 const defaultCategoryVisibility: MapCategoryVisibilityState = Object.fromEntries(
   planCategoryValues.map((category) => [category, true]),
 ) as MapCategoryVisibilityState;
+const defaultPoiTypeVisibility: MapPoiTypeVisibilityState = Object.fromEntries(
+  tripPoiTypeValues.map((type) => [type, true]),
+) as MapPoiTypeVisibilityState;
 
 const visibilityOptions: { key: MapVisibilityKey; labelKey: string }[] = [
   { key: 'currentLocation', labelKey: 'map.visibility.currentLocation' },
@@ -98,6 +105,15 @@ function normalizeMapCategoryVisibilityState(
   }, { ...defaultCategoryVisibility });
 }
 
+function normalizeMapPoiTypeVisibilityState(
+  parsed: Partial<Record<TripPoiType, unknown>> | null | undefined,
+) {
+  return tripPoiTypeValues.reduce<MapPoiTypeVisibilityState>((result, type) => {
+    result[type] = isStoredBoolean(parsed?.[type]) ? parsed[type] : true;
+    return result;
+  }, { ...defaultPoiTypeVisibility });
+}
+
 export function getMapVisibilityState(): MapVisibilityPreferences {
   try {
     const stored = window.localStorage.getItem(storageKey);
@@ -105,9 +121,14 @@ export function getMapVisibilityState(): MapVisibilityPreferences {
     return {
       ...normalizeMapVisibilityState(parsed),
       categories: normalizeMapCategoryVisibilityState(parsed?.categories),
+      poiTypes: normalizeMapPoiTypeVisibilityState(parsed?.poiTypes),
     };
   } catch {
-    return { ...defaultVisibility, categories: { ...defaultCategoryVisibility } };
+    return {
+      ...defaultVisibility,
+      categories: { ...defaultCategoryVisibility },
+      poiTypes: { ...defaultPoiTypeVisibility },
+    };
   }
 }
 
@@ -186,12 +207,15 @@ export function addMapVisibilityControl(
       inputs.push(input);
     });
 
-    const categoriesTitle = document.createElement('p');
-    categoriesTitle.className = 'map-tool-title';
-    categoriesTitle.textContent = t('map.visibility.planTypes');
+    const categoriesSection = document.createElement('details');
+    categoriesSection.className = 'map-tool-accordion';
+    const categoriesSummary = document.createElement('summary');
+    categoriesSummary.className = 'map-tool-accordion-summary';
+    categoriesSummary.textContent = t('map.visibility.planTypes');
+    categoriesSection.append(categoriesSummary);
 
     const categoriesFieldset = document.createElement('fieldset');
-    categoriesFieldset.className = 'map-poi-options';
+    categoriesFieldset.className = 'map-poi-options map-poi-options--nested';
 
     const categoriesLegend = document.createElement('legend');
     categoriesLegend.className = 'sr-only';
@@ -224,6 +248,46 @@ export function addMapVisibilityControl(
       categoriesFieldset.append(label);
       inputs.push(input);
     });
+
+    categoriesSection.append(categoriesFieldset);
+
+    const poiTypesSection = document.createElement('details');
+    poiTypesSection.className = 'map-tool-accordion';
+    const poiTypesSummary = document.createElement('summary');
+    poiTypesSummary.className = 'map-tool-accordion-summary';
+    poiTypesSummary.textContent = t('map.visibility.poiTypes');
+    poiTypesSection.append(poiTypesSummary);
+
+    const poiTypesFieldset = document.createElement('fieldset');
+    poiTypesFieldset.className = 'map-poi-options map-poi-options--nested';
+
+    const poiTypesLegend = document.createElement('legend');
+    poiTypesLegend.className = 'sr-only';
+    poiTypesLegend.textContent = t('map.visibility.poiTypes');
+    poiTypesFieldset.append(poiTypesLegend);
+
+    tripPoiTypeValues.forEach((type) => {
+      const label = document.createElement('label');
+      label.className = 'map-poi-option';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = state.poiTypes[type];
+      input.addEventListener('change', () =>
+        syncState({
+          ...state,
+          poiTypes: {
+            ...state.poiTypes,
+            [type]: input.checked,
+          },
+        }));
+      const text = document.createElement('span');
+      text.textContent = t(`tripPois.type.${type}`);
+      label.append(input, text);
+      poiTypesFieldset.append(label);
+      inputs.push(input);
+    });
+
+    poiTypesSection.append(poiTypesFieldset);
 
     const setPanelState = (open: boolean) => {
       panel.hidden = !open;
@@ -274,7 +338,7 @@ export function addMapVisibilityControl(
     window.addEventListener('scroll', syncPanelPosition, { passive: true });
     map.on('resize move zoom', syncPanelPosition);
 
-    panel.append(title, fieldset, categoriesTitle, categoriesFieldset);
+    panel.append(title, fieldset, categoriesSection, poiTypesSection);
     document.body.append(panel);
     portalPanel = panel;
     container.append(trigger);

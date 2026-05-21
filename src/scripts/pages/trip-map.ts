@@ -71,12 +71,15 @@ function renderPlanList(
   tripId: string,
   plans: PlanRecord[],
   points: TripPointOfInterestRecord[],
+  visibility: MapVisibilityPreferences,
 ) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-map-plan-list]');
   const count = document.querySelector<HTMLElement>('[data-map-count]');
   const locatedPlans = plans.filter(hasPlanLocation);
-  const visiblePoints = points.filter(shouldShowTripPoiOnMap);
+  const visiblePoints = points.filter(
+    (point) => shouldShowTripPoiOnMap(point) && visibility.poiTypes[point.type],
+  );
 
   if (count) {
     count.textContent = String(locatedPlans.length + visiblePoints.length);
@@ -226,7 +229,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
   const syncMap = () => {
     const { proposedPlans, plans } = splitLocatedPlans(currentPlans);
-    renderPlanList(locale, tripId, currentPlans, currentPoints);
+    renderPlanList(locale, tripId, currentPlans, currentPoints, visibility);
     proposedPlanMarkers.clearLayers();
     planMarkers.clearLayers();
     accommodationMarkers.clearLayers();
@@ -262,7 +265,9 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     addAccommodationMarker(currentTrip, accommodationMarkers, bounds);
     addTripLocationFallback(currentTrip, bounds);
 
-    currentPoints.filter(shouldShowTripPoiOnMap).forEach((point) => {
+    currentPoints
+      .filter((point) => shouldShowTripPoiOnMap(point) && visibility.poiTypes[point.type])
+      .forEach((point) => {
       const latLng = L.latLng(point.locationLat, point.locationLng);
       bounds.extend(latLng);
       L.marker(latLng, {
@@ -274,7 +279,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
           `<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(t(`tripPois.type.${point.type}`))}<br />${escapeHtml(point.locationName)}${point.description ? `<br />${escapeHtml(point.description)}` : ''}`,
         )
         .addTo(poiMarkers);
-    });
+      });
 
     applyVisibility(visibility);
     requestAnimationFrame(() => fitTripMap(map, bounds));
