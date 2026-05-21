@@ -126,9 +126,39 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     </div>
   </AppShell>
 
+  <style is:global>
+    [data-plan-list] .app-card-shell {
+      cursor: pointer;
+    }
+
+    [data-plan-list] .app-actions-menu,
+    [data-plan-list] .app-actions-menu * {
+      cursor: auto;
+    }
+  </style>
+
   <script>
     import { mountTripPage } from '../../scripts/pages/trip';
 
     mountTripPage({ locale: document.documentElement.lang });
+
+    const planList = document.querySelector<HTMLElement>('[data-plan-list]');
+
+    planList?.addEventListener('click', (event) => {
+      if (event.defaultPrevented || !(event.target instanceof HTMLElement)) {
+        return;
+      }
+
+      if (event.target.closest('a, button, details, summary, input, select, textarea, label')) {
+        return;
+      }
+
+      const card = event.target.closest<HTMLElement>('.app-card-shell');
+      const link = card?.querySelector<HTMLAnchorElement>('a[href]');
+
+      if (link) {
+        window.location.href = link.href;
+      }
+    });
   </script>
 </BaseLayout>
