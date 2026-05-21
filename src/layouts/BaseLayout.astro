@@ -70,5 +70,10 @@ const themeScript = `
       <slot />
     </main>
     <Footer locale={locale} />
+    <script>
+      import { registerServiceWorker } from '../scripts/pwa/register-service-worker';
+
+      registerServiceWorker();
+    </script>
   </body>
 </html>
