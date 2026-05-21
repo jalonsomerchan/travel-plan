@@ -9,14 +9,13 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('trip edit subscription scope usage', () => {
-  it('uses the shared scope for the trip edit listener', () => {
+describe('trip edit Firebase reads', () => {
+  it('uses a cached one-shot trip read instead of a live trip listener', () => {
     const tripEdit = readText('src/scripts/pages/trip-edit.ts');
 
-    assert.match(tripEdit, /createSubscriptionScope/);
-    assert.match(tripEdit, /const subscriptions = createSubscriptionScope/);
-    assert.match(tripEdit, /pagehide/);
-    assert.match(tripEdit, /subscriptions\.clear/);
-    assert.match(tripEdit, /subscriptions\.add\(\n\s*subscribeTrip\(/);
+    assert.match(tripEdit, /getTripOnce/);
+    assert.match(tripEdit, /syncTripForm/);
+    assert.doesNotMatch(tripEdit, /createSubscriptionScope/);
+    assert.doesNotMatch(tripEdit, /subscribeTrip/);
   });
 });
