@@ -14,64 +14,88 @@ const { locale, prefix } = Astro.props;
 const t = useTranslations(locale);
 ---
 
-<div class="space-y-4">
-  <div>
-    <label class="field-label" for={`${prefix}-name`}>{t('plan.form.name')}</label>
-    <input class="field-input" id={`${prefix}-name`} name="name" required />
+<div class="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)] xl:items-start" data-plan-form-layout>
+  <div class="space-y-5">
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 md:p-5">
+      <div class="mb-4">
+        <h2 class="text-base font-black text-[var(--color-text)]">{t('plan.form.sectionBasics')}</h2>
+        <p class="mt-1 text-sm text-[var(--color-text-soft)]">{t('plan.form.sectionBasicsHelp')}</p>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="md:col-span-2">
+          <label class="field-label" for={`${prefix}-name`}>{t('plan.form.name')}</label>
+          <input class="field-input" id={`${prefix}-name`} name="name" required />
+        </div>
+        <div class="md:col-span-2">
+          <label class="field-label" for={`${prefix}-description`}>{t('plan.form.description')}</label>
+          <textarea class="field-textarea min-h-40" id={`${prefix}-description`} name="description"></textarea>
+        </div>
+        <div>
+          <label class="field-label" for={`${prefix}-category`}>{t('plan.form.category')}</label>
+          <select class="field-select" id={`${prefix}-category`} name="category">
+            {planCategoryValues.map((category) => (
+              <option value={category}>{t(`category.${category}`)}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for={`${prefix}-status`}>{t('plan.form.status')}</label>
+          <select class="field-select" id={`${prefix}-status`} name="status">
+            {planStatusValues.map((status) => (
+              <option value={status}>{t(`status.plan.${status}`)}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for={`${prefix}-date`}>{t('plan.form.date')}</label>
+          <input class="field-input" id={`${prefix}-date`} name="date" type="date" />
+        </div>
+        <div>
+          <label class="field-label" for={`${prefix}-time`}>{t('plan.form.time')}</label>
+          <input class="field-input" id={`${prefix}-time`} name="time" type="time" />
+        </div>
+      </div>
+    </section>
+
+    <PlanLocationFields locale={locale} prefix={prefix} />
   </div>
-  <div>
-    <label class="field-label" for={`${prefix}-description`}>{t('plan.form.description')}</label>
-    <textarea class="field-textarea" id={`${prefix}-description`} name="description"></textarea>
-  </div>
-  <div class="grid gap-4 md:grid-cols-2">
-    <div>
-      <label class="field-label" for={`${prefix}-category`}>{t('plan.form.category')}</label>
-      <select class="field-select" id={`${prefix}-category`} name="category">
-        {planCategoryValues.map((category) => (
-          <option value={category}>{t(`category.${category}`)}</option>
-        ))}
-      </select>
-    </div>
-    <div>
-      <label class="field-label" for={`${prefix}-status`}>{t('plan.form.status')}</label>
-      <select class="field-select" id={`${prefix}-status`} name="status">
-        {planStatusValues.map((status) => (
-          <option value={status}>{t(`status.plan.${status}`)}</option>
-        ))}
-      </select>
-    </div>
-  </div>
-  <div class="grid gap-4 md:grid-cols-2">
-    <div>
-      <label class="field-label" for={`${prefix}-date`}>{t('plan.form.date')}</label>
-      <input class="field-input" id={`${prefix}-date`} name="date" type="date" />
-    </div>
-    <div>
-      <label class="field-label" for={`${prefix}-time`}>{t('plan.form.time')}</label>
-      <input class="field-input" id={`${prefix}-time`} name="time" type="time" />
-    </div>
-  </div>
-  <fieldset class="grid gap-3">
-    <legend class="field-label">{t('plan.form.flags')}</legend>
-    <div class="grid gap-3 sm:grid-cols-2">
-      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
-        <input id={`${prefix}-isPaid`} name="isPaid" type="checkbox" />
-        <span>{t('plan.form.isPaid')}</span>
-      </label>
-      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
-        <input id={`${prefix}-isBooked`} name="isBooked" type="checkbox" />
-        <span>{t('plan.form.isBooked')}</span>
-      </label>
-      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
-        <input id={`${prefix}-isOptional`} name="isOptional" type="checkbox" />
-        <span>{t('plan.form.isOptional')}</span>
-      </label>
-      <label class="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-text)]">
-        <input id={`${prefix}-isImportant`} name="isImportant" type="checkbox" />
-        <span>{t('plan.form.isImportant')}</span>
-      </label>
-    </div>
-  </fieldset>
-  <PlanLocationFields locale={locale} prefix={prefix} />
-  <PlanLinksFields locale={locale} prefix={prefix} />
+
+  <aside class="space-y-5 xl:sticky xl:top-24" data-plan-form-sidebar>
+    <fieldset class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 md:p-5">
+      <legend class="text-base font-black text-[var(--color-text)]">{t('plan.form.flags')}</legend>
+      <p class="mt-1 text-sm text-[var(--color-text-soft)]">{t('plan.form.flagsHelp')}</p>
+      <div class="mt-4 grid gap-3">
+        <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
+          <input class="mt-1" id={`${prefix}-isPaid`} name="isPaid" type="checkbox" />
+          <span>
+            <span class="block font-bold">{t('plan.form.isPaid')}</span>
+            <span class="mt-0.5 block text-xs leading-snug text-[var(--color-text-soft)]">{t('plan.form.isPaidHint')}</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
+          <input class="mt-1" id={`${prefix}-isBooked`} name="isBooked" type="checkbox" />
+          <span>
+            <span class="block font-bold">{t('plan.form.isBooked')}</span>
+            <span class="mt-0.5 block text-xs leading-snug text-[var(--color-text-soft)]">{t('plan.form.isBookedHint')}</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
+          <input class="mt-1" id={`${prefix}-isOptional`} name="isOptional" type="checkbox" />
+          <span>
+            <span class="block font-bold">{t('plan.form.isOptional')}</span>
+            <span class="mt-0.5 block text-xs leading-snug text-[var(--color-text-soft)]">{t('plan.form.isOptionalHint')}</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
+          <input class="mt-1" id={`${prefix}-isImportant`} name="isImportant" type="checkbox" />
+          <span>
+            <span class="block font-bold">{t('plan.form.isImportant')}</span>
+            <span class="mt-0.5 block text-xs leading-snug text-[var(--color-text-soft)]">{t('plan.form.isImportantHint')}</span>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
+    <PlanLinksFields locale={locale} prefix={prefix} />
+  </aside>
 </div>
