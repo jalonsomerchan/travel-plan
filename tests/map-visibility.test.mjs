@@ -26,6 +26,7 @@ describe('map visibility selector', () => {
     const tripMap = readText('src/scripts/pages/trip-map.ts');
     const planPage = readText('src/scripts/pages/plan.ts');
     const markers = readText('src/scripts/maps/trip-markers.ts');
+    const focus = readText('src/scripts/maps/plan-focus.ts');
 
     assert.match(visibility, /travel-plan\.map\.visibility/);
     assert.match(visibility, /legacyPlans/);
@@ -35,6 +36,8 @@ describe('map visibility selector', () => {
     assert.match(visibility, /map\.visibility\.proposedPlans/);
     assert.match(visibility, /map\.visibility\.plans/);
     assert.match(visibility, /map\.visibility\.planTypes/);
+    assert.match(visibility, /getPlanCategoryColors/);
+    assert.match(visibility, /map-plan-category-swatch/);
     assert.match(tripMap, /splitLocatedPlans/);
     assert.match(tripMap, /visibility\.categories\[plan\.category\]/);
     assert.match(planPage, /splitLocatedPlans/);
@@ -42,7 +45,10 @@ describe('map visibility selector', () => {
     assert.match(planPage, /focusPlanMap/);
     assert.match(markers, /map\.visibility\.goToPlan/);
     assert.match(markers, /class="map-popup-link"/);
+    assert.match(focus, /map\.planAccommodationFocus/);
+    assert.match(focus, /fitBounds/);
     assert.match(planPage, /createPlanMarkerIcon\(currentPlan, locale, \{ emphasized: true \}\)/);
     assert.match(planPage, /createPlanMarkerIcon\(plan, locale, \{ muted: true \}\)/);
+    assert.match(planPage, /planAccommodationFocusControl/);
   });
 });

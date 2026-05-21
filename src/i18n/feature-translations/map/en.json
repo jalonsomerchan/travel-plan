@@ -23,5 +23,6 @@
   "map.poi.loading": "Loading nearby points...",
   "map.poi.empty": "No nearby points found for those categories.",
   "map.poi.error": "Points of interest could not be loaded.",
-  "map.poi.limitHint": "Showing up to 20 nearby points."
+  "map.poi.limitHint": "Showing up to 20 nearby points.",
+  "map.planAccommodationFocus": "Show plan and accommodation"
 }

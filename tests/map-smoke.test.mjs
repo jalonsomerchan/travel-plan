@@ -44,6 +44,7 @@ describe('map smoke checks', () => {
   it('keeps map controls accessible and interaction based', () => {
     const layers = readText('src/scripts/maps/layers.ts');
     const location = readText('src/scripts/maps/location.ts');
+    const focus = readText('src/scripts/maps/plan-focus.ts');
     const pois = readText('src/scripts/maps/pois.ts');
     const visibility = readText('src/scripts/maps/visibility.ts');
     const tripMap = readText('src/components/pages/TripMapPage.astro');
@@ -64,6 +65,9 @@ describe('map smoke checks', () => {
     assert.match(visibility, /key === 'Escape'/);
     assert.match(visibility, /map\.visibility\.planTypes/);
     assert.match(visibility, /category\.\$\{category\}/);
+    assert.match(visibility, /map-plan-category-swatch/);
+    assert.match(focus, /map\.planAccommodationFocus/);
+    assert.match(focus, /fitBounds/);
     assert.match(pois, /mapPoiLimit/);
     assert.match(locationPicker, /addMapTools\(map, getPageTranslator\(locale\)\)/);
     assert.match(locationPicker, /refreshPickerMap/);
@@ -71,6 +75,7 @@ describe('map smoke checks', () => {
     assert.match(tripMapScript, /centerOnLocation: false/);
     assert.match(tripMapScript, /proposedPlans/);
     assert.match(planPage, /addMapVisibilityControl\(map, t, \(nextVisibility\) =>/);
+    assert.match(planPage, /addPlanAccommodationFocusControl/);
   });
 
   it('keeps map feature translations aligned', () => {

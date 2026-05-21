@@ -23,5 +23,6 @@
   "map.poi.loading": "Buscando puntos cercanos...",
   "map.poi.empty": "No hay puntos cercanos para esas categorías.",
   "map.poi.error": "No se han podido cargar los puntos de interés.",
-  "map.poi.limitHint": "Mostrando hasta 20 puntos cercanos."
+  "map.poi.limitHint": "Mostrando hasta 20 puntos cercanos.",
+  "map.planAccommodationFocus": "Mostrar plan y alojamiento"
 }

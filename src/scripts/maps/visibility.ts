@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { getPlanCategoryColors } from '../../lib/app/plan-category-colors';
 import { planCategoryValues, type PlanCategory } from '../../lib/app/models';
 import type { MapTranslate } from './layers';
 
@@ -198,6 +199,7 @@ export function addMapVisibilityControl(
     categoriesFieldset.append(categoriesLegend);
 
     planCategoryValues.forEach((category) => {
+      const colors = getPlanCategoryColors(category);
       const label = document.createElement('label');
       label.className = 'map-poi-option';
       const input = document.createElement('input');
@@ -211,9 +213,14 @@ export function addMapVisibilityControl(
             [category]: input.checked,
           },
         }));
+      const swatch = document.createElement('span');
+      swatch.className = 'map-plan-category-swatch';
+      swatch.setAttribute('aria-hidden', 'true');
+      swatch.style.background = colors.fill;
+      swatch.style.borderColor = colors.border;
       const text = document.createElement('span');
       text.textContent = t(`category.${category}`);
-      label.append(input, text);
+      label.append(input, swatch, text);
       categoriesFieldset.append(label);
       inputs.push(input);
     });

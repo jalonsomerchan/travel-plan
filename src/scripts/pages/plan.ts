@@ -20,6 +20,7 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
+import { addPlanAccommodationFocusControl } from '../maps/plan-focus';
 import { splitLocatedPlans } from '../maps/trip-plan-layers';
 import {
   accommodationMarkerIcon,
@@ -144,6 +145,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         tripPois: L.LayerGroup;
       }
     | null = null;
+  let planAccommodationFocusControl: ReturnType<typeof addPlanAccommodationFocusControl> | null = null;
   let currentPoints: TripPointOfInterestRecord[] = [];
   let currentTrip: TripRecord | null = null;
   let currentPlan: PlanRecord | null = null;
@@ -338,6 +340,18 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
         accommodation: L.layerGroup().addTo(map),
         tripPois: L.layerGroup().addTo(map),
       };
+      planAccommodationFocusControl = addPlanAccommodationFocusControl(map, t, () => {
+        const accommodation = currentTrip?.accommodation;
+
+        if (!currentPlan || !hasPlanLocation(currentPlan) || !hasAccommodationLocation(accommodation)) {
+          return null;
+        }
+
+        return [
+          [currentPlan.locationLat, currentPlan.locationLng],
+          [accommodation.locationLat, accommodation.locationLng],
+        ];
+      });
       ensureMapVisibilityControl();
     }
 
@@ -406,6 +420,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     });
 
     const accommodation = currentTrip.accommodation;
+    planAccommodationFocusControl?.setVisible(hasAccommodationLocation(accommodation));
 
     if (hasAccommodationLocation(accommodation)) {
       const accommodationLabel = getAccommodationMarkerLabel(accommodation);
@@ -444,6 +459,7 @@ export function mountPlanPage({ locale }: { locale: Locale }) {
     currentPlans = [];
     currentAiGuide = '';
     mapLayers = null;
+    planAccommodationFocusControl = null;
     hasVisibilityControl = false;
     if (map) {
       map.remove();
