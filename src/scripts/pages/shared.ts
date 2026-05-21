@@ -270,6 +270,8 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
   setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
   setNavigationLinkHref('trip-checklist-link', getAppUrl(locale, 'trip-checklist', { trip: tripId }));
   setNavigationLinkHref('trip-luggage-link', getAppUrl(locale, 'trip-luggage', { trip: tripId }));
+  setNavigationLinkHref('trip-weather-link', getAppUrl(locale, 'trip-weather', { trip: tripId }));
+  setNavigationLinkHref('trip-weather-action-link', getAppUrl(locale, 'trip-weather', { trip: tripId }));
   setNavigationLinkHref('trip-ai-link', getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId }));
   setNavigationLinkHref('trip-ai-prompt-link', getAppUrl(locale, 'trip-ai-prompt', { trip: tripId }));
   setNavigationLinkHref('trip-accommodation-link', getAppUrl(locale, 'trip-accommodation', { trip: tripId }));
@@ -342,6 +344,17 @@ export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCoun
     t('tripChecklist.breadcrumb'),
     getAppUrl(locale, 'trip-checklist', { trip: trip.id }),
   );
+}
+
+export function syncWeatherShell(locale: Locale, trip: TripRecord) {
+  const t = getPageTranslator(locale);
+
+  setAppShellTitle(t('weather.titleWithTrip').replace('{trip}', trip.name));
+  setAppShellDescription(t('weather.pageDescription'));
+  setAppShellMeta([trip.location, formatTripDateRange(locale, trip)]);
+  setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
+  setBreadcrumbItem('trip-weather', t('weather.breadcrumb'), getAppUrl(locale, 'trip-weather', { trip: trip.id }));
+  revealAppShell();
 }
 
 export function syncLuggageShell(locale: Locale, trip: TripRecord) {

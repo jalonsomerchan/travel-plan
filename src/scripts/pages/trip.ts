@@ -4,7 +4,7 @@ import {
   hasAccommodationLocation,
 } from '../../lib/app/accommodation';
 import { escapeHtml } from '../../lib/app/dom';
-import { formatDistance, formatPlanMoment } from '../../lib/app/format';
+import { formatDistance, formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
 import {
   getGoogleMapsPlaceUrl,
   getGoogleMapsPlaceUrlFromCoordinates,
@@ -15,6 +15,14 @@ import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
+import {
+  fetchMergedWeatherDataset,
+  getTripWeatherCardDates,
+  getTripWeatherRequirement,
+  getWeatherIconSvg,
+  getWeatherLabelKeyForCode,
+  isForecastAvailable,
+} from '../../lib/app/weather';
 import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
 import { deletePlan, subscribeTripPlans, updatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
@@ -265,6 +273,153 @@ function renderChecklistNotice(locale: Locale, tripId: string, items: ChecklistI
   `;
 }
 
+function formatTemperature(value: number | null, unit: string) {
+  if (value === null) {
+    return '--';
+  }
+
+  return `${Math.round(value)}${unit}`;
+}
+
+function getWeatherCardShell(actionable: boolean, href: string, content: string) {
+  const classes =
+    'app-card-shell trip-weather-card rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]';
+
+  if (!actionable) {
+    return `<article class="${classes}">${content}</article>`;
+  }
+
+  return `<a class="${classes}" href="${href}">${content}</a>`;
+}
+
+function renderWeatherCardState(
+  locale: Locale,
+  tripId: string,
+  trip: TripRecord | null,
+  state: { actionable: boolean; badge: string; body: string },
+) {
+  const target = document.querySelector<HTMLElement>('[data-trip-weather-card]');
+
+  if (!target || !trip) {
+    return;
+  }
+
+  const detailUrl = getAppUrl(locale, 'trip-weather', { trip: tripId });
+
+  target.innerHTML = getWeatherCardShell(
+    state.actionable,
+    detailUrl,
+    `
+      <div class="trip-weather-card-inner">
+        <div class="trip-weather-card-copy">
+          <div class="trip-weather-card-badges">
+            <span class="eyebrow">${escapeHtml(state.badge)}</span>
+            <span class="status-pill" data-tone="${state.actionable ? 'primary' : 'warning'}">${escapeHtml(
+              trip.location,
+            )}</span>
+          </div>
+          ${state.body}
+        </div>
+        <span class="trip-weather-card-arrow" aria-hidden="true">${state.actionable ? '›' : ''}</span>
+      </div>
+    `,
+  );
+}
+
+function renderMissingWeatherCard(locale: Locale, tripId: string, trip: TripRecord | null) {
+  const t = getPageTranslator(locale);
+
+  renderWeatherCardState(locale, tripId, trip, {
+    actionable: false,
+    badge: t('weather.navLabel'),
+    body: `
+      <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+      <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.missingConfig'))}</p>
+    `,
+  });
+}
+
+function renderPastWeatherCard(locale: Locale, tripId: string, trip: TripRecord | null) {
+  const t = getPageTranslator(locale);
+
+  renderWeatherCardState(locale, tripId, trip, {
+    actionable: true,
+    badge: t('weather.card.badgeHistory'),
+    body: `
+      <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+      <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.viewHistory'))}</p>
+    `,
+  });
+}
+
+function renderUnavailableForecastCard(locale: Locale, tripId: string, trip: TripRecord | null) {
+  const t = getPageTranslator(locale);
+
+  renderWeatherCardState(locale, tripId, trip, {
+    actionable: true,
+    badge: t('weather.card.badgeForecast'),
+    body: `
+      <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+      <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.availableLater'))}</p>
+    `,
+  });
+}
+
+function renderWeatherSummaryCard(
+  locale: Locale,
+  tripId: string,
+  trip: TripRecord | null,
+  dates: string[],
+  dataset: Awaited<ReturnType<typeof fetchMergedWeatherDataset>>,
+) {
+  const t = getPageTranslator(locale);
+  const days = dates
+    .map((date) => dataset.daily.find((entry) => entry.date === date))
+    .filter(Boolean);
+
+  if (days.length === 0) {
+    renderUnavailableForecastCard(locale, tripId, trip);
+    return;
+  }
+
+  renderWeatherCardState(locale, tripId, trip, {
+    actionable: true,
+    badge: dates.length > 1 ? t('weather.card.badgeLive') : t('weather.card.badgeForecast'),
+    body: `
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+          <p class="trip-weather-card-helper">${escapeHtml(
+            dates.length > 1 ? t('weather.card.todayAndTomorrow') : t('weather.card.firstDay'),
+          )}</p>
+        </div>
+      </div>
+      <div class="trip-weather-card-days">
+        ${days
+          .map((day) => {
+            const label = t(getWeatherLabelKeyForCode(day.weatherCode));
+            return `
+              <article class="trip-weather-day-card">
+                <div>
+                  <p class="trip-weather-day-label">${escapeHtml(formatFriendlyDate(day.date, locale))}</p>
+                  <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
+                </div>
+                <div class="trip-weather-day-main">
+                  ${getWeatherIconSvg(day.weatherCode, true, label)}
+                  <div class="trip-weather-day-temperatures">
+                    <strong>${escapeHtml(formatTemperature(day.temperatureMax, dataset.temperatureUnit))}</strong>
+                    <span>${escapeHtml(formatTemperature(day.temperatureMin, dataset.temperatureUnit))}</span>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join('')}
+      </div>
+    `,
+  });
+}
+
 export function mountTripPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const calendarLink = document.querySelector<HTMLAnchorElement>('#trip-calendar-link');
@@ -290,6 +445,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const subscriptions = createSubscriptionScope();
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
+  let weatherRequestId = 0;
   const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
   const filters: PlanFilters = { search: '', category: 'all', status: 'all' };
   if (!tripId) {
@@ -336,10 +492,89 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const resetState = () => {
     allPlans = [];
     currentTrip = null;
+    weatherRequestId += 1;
     geolocation.isLoading = false;
     geolocation.errorKey = null;
     geolocation.location = null;
     stopPlanAiGuidePlayer();
+  };
+
+  const syncWeatherCard = async () => {
+    const trip = currentTrip;
+
+    if (!trip) {
+      return;
+    }
+
+    const weatherRequirement = getTripWeatherRequirement(trip);
+
+    if (!weatherRequirement.ready) {
+      renderMissingWeatherCard(locale, tripId, trip);
+      return;
+    }
+
+    const cardState = getTripWeatherCardDates(trip);
+
+    if (cardState.mode === 'past') {
+      renderPastWeatherCard(locale, tripId, trip);
+      return;
+    }
+
+    if (cardState.mode === 'missing') {
+      renderMissingWeatherCard(locale, tripId, trip);
+      return;
+    }
+
+    if (cardState.dates.length === 0 || !cardState.dates.some((date) => isForecastAvailable(date))) {
+      renderUnavailableForecastCard(locale, tripId, trip);
+      return;
+    }
+
+    const requestId = weatherRequestId + 1;
+    weatherRequestId = requestId;
+    renderWeatherCardState(locale, tripId, trip, {
+      actionable: true,
+      badge: t('weather.card.badgeForecast'),
+      body: `
+        <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+        <p class="trip-weather-card-helper">${escapeHtml(t('common.loading'))}</p>
+      `,
+    });
+
+    try {
+      const lastAvailableDate = cardState.dates.filter((date) => isForecastAvailable(date)).at(-1);
+
+      if (!lastAvailableDate || typeof trip.locationLat !== 'number' || typeof trip.locationLng !== 'number') {
+        renderUnavailableForecastCard(locale, tripId, trip);
+        return;
+      }
+
+      const dataset = await fetchMergedWeatherDataset(
+        trip.locationLat,
+        trip.locationLng,
+        cardState.dates[0],
+        lastAvailableDate,
+      );
+
+      if (requestId !== weatherRequestId) {
+        return;
+      }
+
+      renderWeatherSummaryCard(locale, tripId, trip, cardState.dates, dataset);
+    } catch {
+      if (requestId !== weatherRequestId) {
+        return;
+      }
+
+      renderWeatherCardState(locale, tripId, trip, {
+        actionable: true,
+        badge: t('weather.card.badgeForecast'),
+        body: `
+          <h2 class="trip-weather-card-title">${escapeHtml(t('weather.card.title'))}</h2>
+          <p class="trip-weather-card-helper">${escapeHtml(t('weather.card.error'))}</p>
+        `,
+      });
+    }
   };
 
   const updateGeolocation = (nextState: Partial<GeolocationState>) => {
@@ -483,6 +718,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         if (trip) {
           currentTrip = trip;
           syncTripShell(locale, trip);
+          void syncWeatherCard();
           setNavigationLinkHidden('trip-luggage-link', !trip.memberIds.includes(user.uid));
           if (accommodationMapsLink) {
             const hasLocation = hasAccommodationLocation(trip.accommodation);
