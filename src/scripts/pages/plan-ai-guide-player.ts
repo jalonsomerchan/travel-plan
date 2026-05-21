@@ -14,7 +14,7 @@ export function renderPlanAiGuideIndicator(locale: Locale, plan: PlanRecord) {
 
   const label = getPageTranslator(locale)('plan.aiGuide.badge');
 
-  return `<span aria-label="${escapeHtml(label)}" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-soft)] text-sm" role="img" title="${escapeHtml(label)}">♪</span>`;
+  return `<span aria-label="${escapeHtml(label)}" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-soft)] text-sm" role="img" title="${escapeHtml(label)}">♪</span>`;
 }
 
 export function renderPlanAiGuideMenuAction(locale: Locale, plan: PlanRecord) {

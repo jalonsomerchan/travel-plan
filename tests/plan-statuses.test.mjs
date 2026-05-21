@@ -20,6 +20,8 @@ describe('plan statuses', () => {
     assert.match(shared, /status === 'proposed'/);
     assert.match(es, /"status\.plan\.proposed": "Propuesto"/);
     assert.match(en, /"status\.plan\.proposed": "Proposed"/);
+    assert.match(es, /"trip\.planCard\.statusTooltip": "Estado: \{status\}"/);
+    assert.match(en, /"trip\.planCard\.statusTooltip": "Status: \{status\}"/);
   });
 
   it('renders the compact plan card actions for proposed, pending and completed states', () => {
@@ -33,6 +35,8 @@ describe('plan statuses', () => {
     assert.match(tripPage, /trip\.planCard\.type/);
     assert.match(tripPage, /trip\.planCard\.date/);
     assert.match(tripPage, /trip\.planCard\.distance/);
+    assert.match(tripPage, /renderPlanStatusIndicator\(locale, plan\.status\)/);
+    assert.match(tripPage, /trip\.planCard\.statusTooltip/);
   });
 
   it('keeps plan cards mobile-safe with long links in text', () => {
@@ -52,6 +56,8 @@ describe('plan statuses', () => {
     assert.doesNotMatch(tripPage, /renderFirstPlanLink/);
     assert.doesNotMatch(tripPage, /getFirstPlanLink/);
     assert.match(flags, /flex min-w-0 flex-wrap items-center gap-2/);
+    assert.match(flags, /inline-flex h-8 w-8 items-center justify-center rounded-full/);
+    assert.match(flags, /title="\$\{labels\.paid\}"/);
     assert.doesNotMatch(flags, /truncate/);
   });
 

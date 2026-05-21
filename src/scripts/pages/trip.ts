@@ -74,6 +74,13 @@ interface GeolocationState {
   location: UserLocation | null;
 }
 
+function renderPlanStatusIndicator(locale: Locale, status: PlanStatus) {
+  const label = getPlanStatusLabel(locale, status);
+  const tooltip = getPageTranslator(locale)('trip.planCard.statusTooltip').replace('{status}', label);
+
+  return `<span aria-label="${escapeHtml(tooltip)}" class="status-pill inline-flex h-8 shrink-0 items-center px-3" data-tone="${getPlanStatusTone(status)}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
+}
+
 function filterPlans(plans: PlanRecord[], filters: PlanFilters) {
   const query = filters.search.trim().toLowerCase();
 
@@ -228,10 +235,9 @@ function renderPlans(
               </div>
             </details>
           </div>
-          ${flags || aiGuideIndicator ? `<div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}</div>` : ''}
-          <div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-            <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
-          </div>
+          ${(flags || aiGuideIndicator || plan.status)
+            ? `<div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}${renderPlanStatusIndicator(locale, plan.status)}</div>`
+            : ''}
           ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
           <div class="mt-4 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--color-text-soft)]">
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>

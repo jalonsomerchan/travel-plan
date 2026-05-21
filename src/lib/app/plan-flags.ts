@@ -8,16 +8,16 @@ interface TranslateFn {
 function getPlanFlags(plan: Pick<PlanRecord | PlanInput, 'isPaid' | 'isBooked' | 'isOptional' | 'isImportant'>) {
   return [
     plan.isPaid
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-xs font-black text-[var(--color-success)]" aria-label="paid" title="paid">$</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-sm font-black text-[var(--color-success)]" aria-label="paid" title="paid">$</span>`
       : '',
     plan.isBooked
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-black text-[var(--color-primary)]" aria-label="booked" title="booked">✓</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]" aria-label="booked" title="booked">✓</span>`
       : '',
     plan.isOptional
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-xs font-black text-[var(--color-text-soft)]" aria-label="optional" title="optional">?</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-sm font-black text-[var(--color-text-soft)]" aria-label="optional" title="optional">?</span>`
       : '',
     plan.isImportant
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-xs font-black text-[var(--color-danger)]" aria-label="important" title="important">!</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-sm font-black text-[var(--color-danger)]" aria-label="important" title="important">!</span>`
       : '',
   ].filter(Boolean);
 }
@@ -35,16 +35,16 @@ export function getPlanFlagsHtml(
 
   return [
     plan.isPaid
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-xs font-black text-[var(--color-success)]" aria-label="${labels.paid}" title="${labels.paid}">$</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-sm font-black text-[var(--color-success)]" aria-label="${labels.paid}" title="${labels.paid}">$</span>`
       : '',
     plan.isBooked
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-xs font-black text-[var(--color-primary)]" aria-label="${labels.booked}" title="${labels.booked}">✓</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]" aria-label="${labels.booked}" title="${labels.booked}">✓</span>`
       : '',
     plan.isOptional
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-xs font-black text-[var(--color-text-soft)]" aria-label="${labels.optional}" title="${labels.optional}">?</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-sm font-black text-[var(--color-text-soft)]" aria-label="${labels.optional}" title="${labels.optional}">?</span>`
       : '',
     plan.isImportant
-      ? `<span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-xs font-black text-[var(--color-danger)]" aria-label="${labels.important}" title="${labels.important}">!</span>`
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-danger-soft)] text-sm font-black text-[var(--color-danger)]" aria-label="${labels.important}" title="${labels.important}">!</span>`
       : '',
   ]
     .filter(Boolean)

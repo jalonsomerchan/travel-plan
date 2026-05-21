@@ -157,6 +157,7 @@
   "trip.planCard.markProposed": "Marcar como propuesto",
   "trip.planCard.markPending": "Marcar como pendiente",
   "trip.planCard.markVisited": "Marcar como realizado",
+  "trip.planCard.statusTooltip": "Estado: {status}",
   "trip.planCard.statusError": "No se ha podido actualizar el estado del plan.",
   "weather.metaTitle": "Tiempo del viaje",
   "weather.metaDescription": "Consulta previsión e histórico del tiempo para las fechas del viaje, con detalle diario y por horas.",

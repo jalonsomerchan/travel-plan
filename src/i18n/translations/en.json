@@ -157,6 +157,7 @@
   "trip.planCard.markProposed": "Mark as proposed",
   "trip.planCard.markPending": "Mark as pending",
   "trip.planCard.markVisited": "Mark as completed",
+  "trip.planCard.statusTooltip": "Status: {status}",
   "trip.planCard.statusError": "The plan status could not be updated.",
   "weather.metaTitle": "Trip weather",
   "weather.metaDescription": "Check forecast and weather history for the trip dates with daily and hourly detail.",
