@@ -56,6 +56,7 @@
   "tripPoisAiPrompt.candidates.saveSelected": "Save selected",
   "tripPoisAiPrompt.candidates.saving": "Saving...",
   "tripPoisAiPrompt.candidates.saved": "The selected points were saved successfully.",
+  "tripPoisAiPrompt.candidates.partialSaved": "{saved} points were saved, but {failed} failed. Review them and try again.",
   "tripPoisAiPrompt.candidates.saveError": "The selected points could not be saved.",
   "tripPoisAiPrompt.candidates.noneSelected": "Select at least one point before saving.",
   "tripPois.createAiAction": "Generate points of interest with AI"

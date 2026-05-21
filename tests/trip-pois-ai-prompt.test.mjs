@@ -57,10 +57,13 @@ describe('trip POIs AI prompt tool', () => {
     assert.match(wizard, /trip-pois-ai-prompt/);
     assert.match(helper, /buildTripPoiAiPrompt/);
     assert.match(helper, /parseTripPoiAiPromptJson/);
+    assert.match(helper, /🍽️/);
+    assert.match(helper, /icon is required|icon es obligatorio/);
     assert.match(helper, /JSON\.parse/);
     assert.match(builder, /buildTripPoiAiPromptFromWizard/);
     assert.match(script, /initTripPoisAiPromptWizard/);
     assert.match(script, /createTripPointOfInterest/);
+    assert.match(script, /Promise\.allSettled/);
     assert.match(script, /data-trip-pois-ai-candidate-checkbox/);
   });
 

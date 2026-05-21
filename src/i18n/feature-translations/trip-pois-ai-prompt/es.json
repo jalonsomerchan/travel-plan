@@ -56,6 +56,7 @@
   "tripPoisAiPrompt.candidates.saveSelected": "Guardar seleccionados",
   "tripPoisAiPrompt.candidates.saving": "Guardando...",
   "tripPoisAiPrompt.candidates.saved": "Los puntos seleccionados se han guardado correctamente.",
+  "tripPoisAiPrompt.candidates.partialSaved": "Se han guardado {saved} puntos, pero {failed} han fallado. Revisa y vuelve a intentarlo.",
   "tripPoisAiPrompt.candidates.saveError": "No se han podido guardar los puntos seleccionados.",
   "tripPoisAiPrompt.candidates.noneSelected": "Selecciona al menos un punto antes de guardarlo.",
   "tripPois.createAiAction": "Generar puntos de interes con IA"

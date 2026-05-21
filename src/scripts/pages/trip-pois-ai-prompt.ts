@@ -201,7 +201,7 @@ export function mountTripPoisAiPromptPage({ locale }: { locale: Locale }) {
   });
 
   saveSelectedButton?.addEventListener('click', async () => {
-    const selected = candidates.filter((candidate) => candidate.selected);
+    const selected = candidates.filter((candidate) => candidate.selected).map((candidate) => ({ ...candidate }));
 
     if (selected.length === 0) {
       setMessage(importMessage, t('tripPoisAiPrompt.candidates.noneSelected'), 'danger');
@@ -216,15 +216,45 @@ export function mountTripPoisAiPromptPage({ locale }: { locale: Locale }) {
     );
 
     try {
-      for (const candidate of selected) {
-        candidate.saving = true;
-        renderCandidates();
-        await createTripPointOfInterest(tripId, toPoiInput(candidate));
-      }
+      const selectedIds = new Set(selected.map((candidate) => candidate.id));
 
-      candidates = candidates.filter((candidate) => !candidate.selected);
+      candidates = candidates.map((candidate) =>
+        selectedIds.has(candidate.id) ? { ...candidate, saving: true } : candidate,
+      );
       renderCandidates();
-      setMessage(importMessage, t('tripPoisAiPrompt.candidates.saved'), 'success');
+
+      const results = await Promise.allSettled(
+        selected.map(async (candidate) => {
+          await createTripPointOfInterest(tripId, toPoiInput(candidate));
+          return candidate.id;
+        }),
+      );
+
+      const savedIds = new Set(
+        results
+          .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
+          .map((result) => result.value),
+      );
+      const failedCount = results.length - savedIds.size;
+
+      candidates = candidates
+        .filter((candidate) => !savedIds.has(candidate.id))
+        .map((candidate) => ({ ...candidate, saving: false }));
+      renderCandidates();
+
+      if (failedCount === 0) {
+        setMessage(importMessage, t('tripPoisAiPrompt.candidates.saved'), 'success');
+      } else if (savedIds.size > 0) {
+        setMessage(
+          importMessage,
+          t('tripPoisAiPrompt.candidates.partialSaved')
+            .replace('{saved}', String(savedIds.size))
+            .replace('{failed}', String(failedCount)),
+          'danger',
+        );
+      } else {
+        setMessage(importMessage, t('tripPoisAiPrompt.candidates.saveError'), 'danger');
+      }
     } catch (error) {
       setMessage(importMessage, error instanceof Error ? error.message : t('tripPoisAiPrompt.candidates.saveError'), 'danger');
     } finally {

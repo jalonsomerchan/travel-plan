@@ -42,7 +42,7 @@ Return a JSON object with this exact structure:
       "name": "Short clean point name",
       "description": "Short practical summary",
       "type": "restaurant",
-      "icon": "food",
+      "icon": "🍽️",
       "color": "#ef4444",
       "locationName": "Specific place or address",
       "locationLat": 0,
@@ -57,7 +57,8 @@ Rules:
 - Coordinates are required. Do not return points without valid latitude and longitude.
 - Keep names clean: no links, no markdown, no citations, no extra labels.
 - type must be one of the values explicitly requested later in the prompt.
-- icon and color are optional, but if you include them they must match the point type naturally.
+- icon is required and must be a single relevant emoji for the place type.
+- color is optional, but if you include it it should match the point type naturally.
 - description should be short and practical.
 - isVisible can be omitted. If omitted, it will default to true.
 - Return only JSON.`;
@@ -77,7 +78,7 @@ Devuelve un objeto JSON con esta estructura exacta:
       "name": "Nombre corto y limpio del punto",
       "description": "Resumen práctico y breve",
       "type": "restaurant",
-      "icon": "food",
+      "icon": "🍽️",
       "color": "#ef4444",
       "locationName": "Lugar o dirección concreta",
       "locationLat": 0,
@@ -92,7 +93,8 @@ Reglas:
 - Las coordenadas son obligatorias. No devuelvas puntos sin latitud y longitud válidas.
 - Mantén los nombres limpios: sin enlaces, sin markdown, sin citas y sin etiquetas extra.
 - type debe ser uno de los valores pedidos explícitamente más adelante en el prompt.
-- icon y color son opcionales, pero si los incluyes deben encajar de forma natural con el tipo.
+- icon es obligatorio y debe ser un solo emoji representativo del tipo de lugar.
+- color es opcional, pero si lo incluyes debe encajar de forma natural con el tipo.
 - description debe ser corta y práctica.
 - isVisible se puede omitir. Si se omite, se guardará como true.
 - Devuelve solo JSON.`;
