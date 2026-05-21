@@ -1,10 +1,19 @@
 import L from 'leaflet';
 import { escapeHtml } from '../../lib/app/dom';
 import type { MapTranslate } from './layers';
+import { getMapVisibilityState } from './visibility';
 
 interface CurrentLocationOptions {
   centerOnLocation?: boolean;
   locateOnLoad?: boolean;
+}
+
+function syncMarkerVisibility(marker: L.Marker) {
+  const element = marker.getElement();
+
+  if (element) {
+    element.style.display = getMapVisibilityState().currentLocation ? '' : 'none';
+  }
 }
 
 export function addUserLocationMarker(
@@ -53,6 +62,7 @@ export function addUserLocationMarker(
         }
 
         marker.bindPopup(escapeHtml(t('map.location.marker')));
+        syncMarkerVisibility(marker);
 
         if (centerOnLocation || forceCenter) {
           map.setView(latLng, Math.max(map.getZoom(), 15));

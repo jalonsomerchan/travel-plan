@@ -24,6 +24,11 @@ import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { addMapTools } from '../maps/leaflet-map-tools';
 import {
+  addMapVisibilityControl,
+  getMapVisibilityState,
+  type MapVisibilityState,
+} from '../maps/visibility';
+import {
   ensureFirebaseReady,
   formatTripDateRange,
   getCategoryLabel,
@@ -59,6 +64,23 @@ function createTripPoiIcon(point: TripPointOfInterestRecord) {
     iconAnchor: [17, 34],
     iconSize: [34, 34],
     popupAnchor: [0, -34],
+  });
+}
+
+function createPlanMarkerIcon(plan: PlanRecord, locale: Locale) {
+  const categoryLabel = getCategoryLabel(locale, plan.category);
+  const colors = getPlanCategoryColors(plan.category);
+
+  return L.divIcon({
+    className: 'trip-map-plan-marker',
+    html: `
+      <span class="trip-map-plan-marker-inner" aria-hidden="true" style="background:${colors.fill};border-color:${colors.border};"></span>
+      <span class="trip-map-plan-marker-label">${escapeHtml(plan.name)}</span>
+    `,
+    iconAnchor: [12, 12],
+    iconSize: [140, 44],
+    popupAnchor: [0, -12],
+    title: categoryLabel,
   });
 }
 
@@ -168,6 +190,16 @@ function addTripLocationFallback(trip: TripRecord | null, bounds: L.LatLngBounds
   bounds.extend(L.latLng(trip.locationLat, trip.locationLng));
 }
 
+function syncLayerVisibility(map: L.Map, layer: L.LayerGroup, visible: boolean) {
+  if (visible && !map.hasLayer(layer)) {
+    layer.addTo(map);
+  }
+
+  if (!visible && map.hasLayer(layer)) {
+    layer.removeFrom(map);
+  }
+}
+
 export function mountTripMapPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -179,6 +211,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let currentPoints: TripPointOfInterestRecord[] = [];
+  let visibility = getMapVisibilityState();
 
   if (!tripId || !mapCanvas) {
     if (tripName) {
@@ -208,7 +241,21 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
 
   addMapTools(map, t, { currentLocation: { centerOnLocation: false, locateOnLoad: true } });
 
-  const markers = L.layerGroup().addTo(map);
+  const planMarkers = L.layerGroup().addTo(map);
+  const accommodationMarkers = L.layerGroup().addTo(map);
+  const poiMarkers = L.layerGroup().addTo(map);
+
+  const applyVisibility = (nextVisibility: MapVisibilityState) => {
+    visibility = nextVisibility;
+    syncLayerVisibility(map, planMarkers, visibility.plans);
+    syncLayerVisibility(map, accommodationMarkers, visibility.accommodation);
+    syncLayerVisibility(map, poiMarkers, visibility.tripPois);
+    document.querySelectorAll<HTMLElement>('.map-user-location-marker').forEach((marker) => {
+      marker.style.display = visibility.currentLocation ? '' : 'none';
+    });
+  };
+
+  addMapVisibilityControl(map, t, applyVisibility);
 
   const resetState = () => {
     currentTrip = null;
@@ -219,7 +266,9 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
   const syncMap = () => {
     const locatedPlans = currentPlans.filter(hasPlanLocation);
     renderPlanList(locale, tripId, currentPlans, currentPoints);
-    markers.clearLayers();
+    planMarkers.clearLayers();
+    accommodationMarkers.clearLayers();
+    poiMarkers.clearLayers();
 
     const bounds = L.latLngBounds([]);
 
@@ -229,16 +278,13 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
       }
 
       const categoryLabel = getCategoryLabel(locale, plan.category);
-      const colors = getPlanCategoryColors(plan.category);
       const latLng = L.latLng(plan.locationLat, plan.locationLng);
       bounds.extend(latLng);
 
-      L.circleMarker(latLng, {
-        radius: 9,
-        color: colors.border,
-        fillColor: colors.fill,
-        fillOpacity: 0.9,
-        weight: 3,
+      L.marker(latLng, {
+        icon: createPlanMarkerIcon(plan, locale),
+        keyboard: true,
+        title: plan.name,
       })
         .bindPopup(
           `
@@ -247,10 +293,10 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
             ${escapeHtml(categoryLabel)}
           `,
         )
-        .addTo(markers);
+        .addTo(planMarkers);
     });
 
-    addAccommodationMarker(currentTrip, markers, bounds);
+    addAccommodationMarker(currentTrip, accommodationMarkers, bounds);
     addTripLocationFallback(currentTrip, bounds);
 
     currentPoints.forEach((point) => {
@@ -262,9 +308,10 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
         title: point.name,
       })
         .bindPopup(`<strong>${escapeHtml(point.name)}</strong><br />${escapeHtml(point.locationName)}`)
-        .addTo(markers);
+        .addTo(poiMarkers);
     });
 
+    applyVisibility(visibility);
     requestAnimationFrame(() => fitTripMap(map, bounds));
   };
 
