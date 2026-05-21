@@ -14,6 +14,7 @@ import {
 import { generateTripPlanSuggestions } from '../../lib/ai/trip-plan-suggestions';
 import { createPlan, subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { initLocationPickers } from './plan-location-picker';
 import {
@@ -52,6 +53,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
   const stepSections = Array.from(document.querySelectorAll<HTMLElement>('[data-trip-ai-step]'));
   const stepChips = Array.from(document.querySelectorAll<HTMLElement>('[data-step-chip]'));
   const t = getPageTranslator(locale);
+  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentPlans: PlanRecord[] = [];
   let suggestions: SuggestionEntry[] = [];
@@ -210,6 +212,15 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
       .join('');
   };
 
+  const resetSessionState = () => {
+    currentTrip = null;
+    currentPlans = [];
+    currentUser = null;
+    suggestions = [];
+    renderSuggestions();
+    syncResultsCount();
+  };
+
   const setLoading = (loading: boolean) => {
     resultsLoading.hidden = !loading;
     if (loading) {
@@ -332,7 +343,12 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     }
   });
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+    resetSessionState();
+
     if (!user) {
       redirectHome(locale);
       return;
@@ -340,45 +356,49 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
 
     currentUser = user;
 
-    subscribeTrip(tripId, (trip) => {
-      currentTrip = trip;
+    subscriptions.add(
+      subscribeTrip(tripId, (trip) => {
+        currentTrip = trip;
 
-      if (!trip) {
-        setResultsState(t('trip.notFound'), 'danger');
-        return;
-      }
+        if (!trip) {
+          setResultsState(t('trip.notFound'), 'danger');
+          return;
+        }
 
-      syncTripShell(locale, trip);
-      if (context) {
-        context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-      }
+        syncTripShell(locale, trip);
+        if (context) {
+          context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+        }
 
-      const baseLocationInput = form.elements.namedItem('baseLocationQuery') as HTMLInputElement | null;
-      const startDateInput = form.elements.namedItem('startDate') as HTMLInputElement | null;
-      const endDateInput = form.elements.namedItem('endDate') as HTMLInputElement | null;
+        const baseLocationInput = form.elements.namedItem('baseLocationQuery') as HTMLInputElement | null;
+        const startDateInput = form.elements.namedItem('startDate') as HTMLInputElement | null;
+        const endDateInput = form.elements.namedItem('endDate') as HTMLInputElement | null;
 
-      if (baseLocationInput && !baseLocationInput.value) {
-        baseLocationInput.value = trip.accommodation?.locationName || trip.location;
-      }
+        if (baseLocationInput && !baseLocationInput.value) {
+          baseLocationInput.value = trip.accommodation?.locationName || trip.location;
+        }
 
-      [startDateInput, endDateInput].forEach((input) => {
-        if (!input) return;
-        input.min = trip.startDate;
-        input.max = trip.endDate;
-      });
+        [startDateInput, endDateInput].forEach((input) => {
+          if (!input) return;
+          input.min = trip.startDate;
+          input.max = trip.endDate;
+        });
 
-      if (startDateInput && !startDateInput.value) {
-        startDateInput.value = trip.startDate;
-      }
+        if (startDateInput && !startDateInput.value) {
+          startDateInput.value = trip.startDate;
+        }
 
-      if (endDateInput && !endDateInput.value) {
-        endDateInput.value = trip.endDate;
-      }
-    });
+        if (endDateInput && !endDateInput.value) {
+          endDateInput.value = trip.endDate;
+        }
+      }),
+    );
 
-    subscribeTripPlans(tripId, (plans) => {
-      currentPlans = plans;
-    });
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        currentPlans = plans;
+      }),
+    );
   });
 
   prevStepButton?.addEventListener('click', () => {
