@@ -9,8 +9,8 @@ import { getTripLocationInputFromForm, getTripLocationValidationKey } from '../.
 import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
 import { observeSession } from '../../lib/firebase/session';
-import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
+import { updateTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
   formatTripDateRange,
@@ -28,51 +28,49 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#trip-edit-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
-  const subscriptions = createSubscriptionScope();
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
   if (backLink) backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   initLocationPickers();
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  const syncTripForm = (trip: TripRecord) => {
+    syncTripShell(locale, trip);
+    if (context) context.textContent = `${trip.name} · ${formatTripDateRange(locale, trip)}`;
+    (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
+    (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
+    (form.elements.namedItem('locationLat') as HTMLInputElement).value =
+      typeof trip.locationLat === 'number' ? String(trip.locationLat) : '';
+    (form.elements.namedItem('locationLng') as HTMLInputElement).value =
+      typeof trip.locationLng === 'number' ? String(trip.locationLng) : '';
+    (form.elements.namedItem('locationQuery') as HTMLInputElement).value = trip.location;
+    (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
+    (form.elements.namedItem('endDate') as HTMLInputElement).value = trip.endDate;
+    (form.elements.namedItem('status') as HTMLSelectElement).value = trip.status;
+    (form.elements.namedItem('accommodationName') as HTMLInputElement).value =
+      trip.accommodation?.name ?? '';
+    (form.elements.namedItem('accommodationLocationName') as HTMLInputElement).value =
+      trip.accommodation?.locationName ?? '';
+    (form.elements.namedItem('accommodationLocationLat') as HTMLInputElement).value =
+      typeof trip.accommodation?.locationLat === 'number' ? String(trip.accommodation.locationLat) : '';
+    (form.elements.namedItem('accommodationLocationLng') as HTMLInputElement).value =
+      typeof trip.accommodation?.locationLng === 'number' ? String(trip.accommodation.locationLng) : '';
+    (form.elements.namedItem('accommodationLocationQuery') as HTMLInputElement).value =
+      trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : '';
+    initLocationPickers();
+  };
 
   observeSession((user) => {
-    subscriptions.clear();
-
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscriptions.add(
-      subscribeTrip(tripId, (trip) => {
-        if (!trip) return;
-        syncTripShell(locale, trip);
-        if (context) context.textContent = `${trip.name} · ${formatTripDateRange(locale, trip)}`;
-        (form.elements.namedItem('name') as HTMLInputElement).value = trip.name;
-        (form.elements.namedItem('location') as HTMLInputElement).value = trip.location;
-        (form.elements.namedItem('locationLat') as HTMLInputElement).value =
-          typeof trip.locationLat === 'number' ? String(trip.locationLat) : '';
-        (form.elements.namedItem('locationLng') as HTMLInputElement).value =
-          typeof trip.locationLng === 'number' ? String(trip.locationLng) : '';
-        (form.elements.namedItem('locationQuery') as HTMLInputElement).value = trip.location;
-        (form.elements.namedItem('startDate') as HTMLInputElement).value = trip.startDate;
-        (form.elements.namedItem('endDate') as HTMLInputElement).value = trip.endDate;
-        (form.elements.namedItem('status') as HTMLSelectElement).value = trip.status;
-        (form.elements.namedItem('accommodationName') as HTMLInputElement).value =
-          trip.accommodation?.name ?? '';
-        (form.elements.namedItem('accommodationLocationName') as HTMLInputElement).value =
-          trip.accommodation?.locationName ?? '';
-        (form.elements.namedItem('accommodationLocationLat') as HTMLInputElement).value =
-          typeof trip.accommodation?.locationLat === 'number' ? String(trip.accommodation.locationLat) : '';
-        (form.elements.namedItem('accommodationLocationLng') as HTMLInputElement).value =
-          typeof trip.accommodation?.locationLng === 'number' ? String(trip.accommodation.locationLng) : '';
-        (form.elements.namedItem('accommodationLocationQuery') as HTMLInputElement).value =
-          trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : '';
-        initLocationPickers();
-      }),
-    );
+    void getTripOnce(tripId).then((trip) => {
+      if (trip) {
+        syncTripForm(trip);
+      }
+    });
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

@@ -16,8 +16,8 @@ import {
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { observeSession } from '../../lib/firebase/session';
-import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip, updateTrip } from '../../lib/firebase/trips';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
+import { updateTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
   getPageTranslator,
@@ -116,7 +116,6 @@ export function mountTripAccommodationPage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const mapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
   const t = getPageTranslator(locale);
-  const subscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
 
   if (!tripId || !form) {
@@ -135,10 +134,49 @@ export function mountTripAccommodationPage({ locale }: { locale: Locale }) {
 
   initLocationPickers();
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  const syncAccommodationForm = (trip: TripRecord) => {
+    currentTrip = trip;
+    syncAccommodationShell(locale, trip);
+    renderAccommodationView(locale, trip);
+
+    if (context) {
+      context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+    }
+
+    (form.elements.namedItem('accommodationName') as HTMLInputElement).value =
+      trip.accommodation?.name ?? '';
+    (form.elements.namedItem('accommodationLocationName') as HTMLInputElement).value =
+      trip.accommodation?.locationName ?? '';
+    (form.elements.namedItem('accommodationLocationLat') as HTMLInputElement).value =
+      typeof trip.accommodation?.locationLat === 'number'
+        ? String(trip.accommodation.locationLat)
+        : '';
+    (form.elements.namedItem('accommodationLocationLng') as HTMLInputElement).value =
+      typeof trip.accommodation?.locationLng === 'number'
+        ? String(trip.accommodation.locationLng)
+        : '';
+    (form.elements.namedItem('accommodationLocationQuery') as HTMLInputElement).value =
+      trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : '';
+    initLocationPickers();
+
+    if (mapsLink) {
+      const mapUrl = hasAccommodationLocation(trip.accommodation)
+        ? getGoogleMapsPlaceUrlFromCoordinates(
+            trip.accommodation.locationLat,
+            trip.accommodation.locationLng,
+          )
+        : trip.accommodation?.locationName
+          ? getGoogleMapsPlaceUrl(trip.accommodation.locationName)
+          : '';
+
+      mapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
+      mapsLink.hidden = !mapUrl;
+      mapsLink.target = mapUrl ? '_blank' : '';
+      mapsLink.rel = mapUrl ? 'noreferrer' : '';
+    }
+  };
 
   observeSession((user) => {
-    subscriptions.clear();
     currentTrip = null;
 
     if (!user) {
@@ -146,53 +184,11 @@ export function mountTripAccommodationPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    subscriptions.add(
-      subscribeTrip(tripId, (trip) => {
-        if (!trip) {
-          return;
-        }
-
-        currentTrip = trip;
-        syncAccommodationShell(locale, trip);
-        renderAccommodationView(locale, trip);
-
-        if (context) {
-          context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
-        }
-
-        (form.elements.namedItem('accommodationName') as HTMLInputElement).value =
-          trip.accommodation?.name ?? '';
-        (form.elements.namedItem('accommodationLocationName') as HTMLInputElement).value =
-          trip.accommodation?.locationName ?? '';
-        (form.elements.namedItem('accommodationLocationLat') as HTMLInputElement).value =
-          typeof trip.accommodation?.locationLat === 'number'
-            ? String(trip.accommodation.locationLat)
-            : '';
-        (form.elements.namedItem('accommodationLocationLng') as HTMLInputElement).value =
-          typeof trip.accommodation?.locationLng === 'number'
-            ? String(trip.accommodation.locationLng)
-            : '';
-        (form.elements.namedItem('accommodationLocationQuery') as HTMLInputElement).value =
-          trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : '';
-        initLocationPickers();
-
-        if (mapsLink) {
-          const mapUrl = hasAccommodationLocation(trip.accommodation)
-            ? getGoogleMapsPlaceUrlFromCoordinates(
-                trip.accommodation.locationLat,
-                trip.accommodation.locationLng,
-              )
-            : trip.accommodation?.locationName
-              ? getGoogleMapsPlaceUrl(trip.accommodation.locationName)
-              : '';
-
-          mapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
-          mapsLink.hidden = !mapUrl;
-          mapsLink.target = mapUrl ? '_blank' : '';
-          mapsLink.rel = mapUrl ? 'noreferrer' : '';
-        }
-      }),
-    );
+    void getTripOnce(tripId).then((trip) => {
+      if (trip) {
+        syncAccommodationForm(trip);
+      }
+    });
   });
 
   form.addEventListener('submit', async (event) => {

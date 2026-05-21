@@ -44,6 +44,16 @@ describe('cached one-shot reads', () => {
     assert.doesNotMatch(page, /subscribePlan/);
   });
 
+  it('uses one-shot trip reads on trip form pages instead of live listeners', () => {
+    const tripEdit = readText('src/scripts/pages/trip-edit.ts');
+    const accommodation = readText('src/scripts/pages/trip-accommodation.ts');
+
+    assert.match(tripEdit, /getTripOnce/);
+    assert.match(accommodation, /getTripOnce/);
+    assert.doesNotMatch(tripEdit, /subscribeTrip/);
+    assert.doesNotMatch(accommodation, /subscribeTrip/);
+  });
+
   it('documents one-shot cached reads', () => {
     const docs = readText('docs/firebase-shared-cache.md');
 
