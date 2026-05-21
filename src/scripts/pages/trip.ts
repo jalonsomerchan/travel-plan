@@ -10,8 +10,7 @@ import {
   getGoogleMapsPlaceUrlFromCoordinates,
 } from '../../lib/app/location-links';
 import type { PlanStatus } from '../../lib/app/models';
-import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
-import { getFirstPlanLink, isSafeExternalPlanUrl } from '../../lib/app/plan-links';
+import { getPlanFlagsHtml } from '../../lib/app/plan-flags';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { hasPlanLocation } from '../../lib/app/plan-location';
 import type { ChecklistItemRecord, PlanRecord, TripRecord } from '../../lib/app/models';
@@ -117,17 +116,6 @@ function getCurrentLocationDistanceLabel(
   return formatDistance(distanceKm, locale);
 }
 
-function renderFirstPlanLink(locale: Locale, plan: PlanRecord) {
-  const t = getPageTranslator(locale);
-  const link = getFirstPlanLink(plan);
-
-  if (!link || !isSafeExternalPlanUrl(link.url)) {
-    return '';
-  }
-
-  return `<span class="mt-3 inline-flex max-w-full break-words text-sm font-semibold text-[var(--color-primary)] [overflow-wrap:anywhere]">↗ ${escapeHtml(link.label || t('plan.links.open'))}</span>`;
-}
-
 function getPlanDateLabel(locale: Locale, plan: PlanRecord) {
   return formatPlanMoment(plan, locale) || getPageTranslator(locale)('trip.planCard.noDate');
 }
@@ -198,53 +186,50 @@ function renderPlans(
       const menuItems = getStatusChangeMenuItems(locale, plan);
       const planUrl = getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id });
       const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id });
+      const flags = getPlanFlagsHtml(plan, t);
+      const aiGuideIndicator = renderPlanAiGuideIndicator(locale, plan);
 
       return `
         <article class="app-card-shell min-w-0 overflow-hidden">
-          <div class="flex min-w-0 items-start justify-between gap-3">
-            <div class="min-w-0 flex-1 overflow-hidden">
-              <a class="block min-w-0" href="${planUrl}">
-                <div class="flex min-w-0 items-center gap-2">
-                  <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
-                  <h3 class="min-w-0 break-words text-lg font-bold text-[var(--color-text)] [overflow-wrap:anywhere]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
-                  ${renderPlanAiGuideIndicator(locale, plan)}
-                </div>
-              </a>
-              ${description ? `<p class="mt-2 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
-            </div>
-            <div class="flex shrink-0 items-start gap-2">
-              <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
-              <details class="app-actions-menu">
-                <summary aria-label="${escapeHtml(t('trip.planCard.actions'))}" class="app-actions-menu-trigger" title="${escapeHtml(t('trip.planCard.actions'))}">
-                  ...
-                </summary>
-                <div class="app-actions-menu-panel">
-                  ${menuItems
-                    .map(
-                      (item) => `
-                        <button class="app-actions-menu-link app-actions-menu-button" data-plan-status-action="${item.status}" data-plan-id="${escapeHtml(plan.id)}" type="button">
-                          ${escapeHtml(item.label)}
-                        </button>`,
-                    )
-                    .join('')}
-                  ${renderPlanAiGuideMenuAction(locale, plan)}
-                  ${renderPlanAiTourGenerateMenuAction(locale, plan)}
-                  <a class="app-actions-menu-link" href="${planEditUrl}">
-                    ${escapeHtml(t('common.edit'))}
-                  </a>
-                  <button class="app-actions-menu-link app-actions-menu-button" data-plan-delete-action="${escapeHtml(plan.id)}" type="button">
-                    ${escapeHtml(t('common.delete'))}
-                  </button>
-                </div>
-              </details>
-            </div>
+          <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+            <span class="plan-category-dot mt-2" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
+            <a class="min-w-0" href="${planUrl}">
+              <h3 class="min-w-0 break-words text-lg font-bold leading-tight text-[var(--color-text)] [overflow-wrap:anywhere]">${escapeHtml(plan.name)}</h3>
+            </a>
+            <details class="app-actions-menu">
+              <summary aria-label="${escapeHtml(t('trip.planCard.actions'))}" class="app-actions-menu-trigger" title="${escapeHtml(t('trip.planCard.actions'))}">
+                ⋮
+              </summary>
+              <div class="app-actions-menu-panel">
+                ${menuItems
+                  .map(
+                    (item) => `
+                      <button class="app-actions-menu-link app-actions-menu-button" data-plan-status-action="${item.status}" data-plan-id="${escapeHtml(plan.id)}" type="button">
+                        ${escapeHtml(item.label)}
+                      </button>`,
+                  )
+                  .join('')}
+                ${renderPlanAiGuideMenuAction(locale, plan)}
+                ${renderPlanAiTourGenerateMenuAction(locale, plan)}
+                <a class="app-actions-menu-link" href="${planEditUrl}">
+                  ${escapeHtml(t('common.edit'))}
+                </a>
+                <button class="app-actions-menu-link app-actions-menu-button" data-plan-delete-action="${escapeHtml(plan.id)}" type="button">
+                  ${escapeHtml(t('common.delete'))}
+                </button>
+              </div>
+            </details>
           </div>
-          <div class="mt-4 grid min-w-0 gap-2 text-sm text-[var(--color-text-soft)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+          ${flags || aiGuideIndicator ? `<div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}</div>` : ''}
+          <div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+            <span class="status-pill" data-tone="${getPlanStatusTone(plan.status)}">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+          </div>
+          ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
+          <div class="mt-4 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--color-text-soft)]">
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.type'))}</span> | ${escapeHtml(categoryLabel)}</p>
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
-            <p class="min-w-0 break-words sm:text-right [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
+            <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
           </div>
-          ${renderFirstPlanLink(locale, plan)}
         </article>
       `;
     }).join('')}
