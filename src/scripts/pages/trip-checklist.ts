@@ -194,29 +194,36 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     );
   });
 
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(form);
     const title = String(data.get('title') ?? '').trim();
+    const titleInput = form.elements.namedItem('title') as HTMLInputElement | null;
 
     if (!title) {
       return;
     }
 
     setButtonBusy(button, true, addLabel, t('common.saving'));
+    form.reset();
+    setButtonBusy(button, false, addLabel, t('common.saving'));
+    titleInput?.focus();
 
-    try {
-      await createTripChecklistItem(tripId, {
+    void createTripChecklistItem(tripId, {
         title,
         status: 'pending',
-      });
-      form.reset();
+      })
+      .then(() => {
       setMessage(message, t('tripChecklist.form.created'), 'success');
-    } catch (error) {
-      setMessage(message, error instanceof Error ? error.message : t('tripChecklist.form.error'), 'danger');
-    } finally {
-      setButtonBusy(button, false, addLabel, t('common.saving'));
-    }
+      })
+      .catch((error) => {
+        if (titleInput && !titleInput.value.trim()) {
+          titleInput.value = title;
+          titleInput.focus();
+        }
+
+        setMessage(message, error instanceof Error ? error.message : t('tripChecklist.form.error'), 'danger');
+      });
   });
 
   list.addEventListener('change', async (event) => {

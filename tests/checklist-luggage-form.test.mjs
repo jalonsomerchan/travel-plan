@@ -34,4 +34,16 @@ describe('checklist and luggage item forms', () => {
     assert.equal(existsSync(join(root, 'src/i18n/feature-translations/checklist-forms/es.json')), true);
     assert.equal(existsSync(join(root, 'src/i18n/feature-translations/checklist-forms/en.json')), true);
   });
+
+  it('keeps checklist and luggage add flows non-blocking for consecutive entries', () => {
+    const checklistScript = readText('src/scripts/pages/trip-checklist.ts');
+    const luggageScript = readText('src/scripts/pages/trip-luggage.ts');
+
+    [checklistScript, luggageScript].forEach((source) => {
+      assert.match(source, /form\.reset\(\);/);
+      assert.match(source, /setButtonBusy\(button, false, addLabel, t\('common\.saving'\)\);/);
+      assert.match(source, /titleInput\?\.focus\(\);/);
+      assert.match(source, /catch\(\(error\) => \{/);
+    });
+  });
 });
