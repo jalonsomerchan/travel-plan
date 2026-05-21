@@ -1,7 +1,9 @@
 ---
 import '../styles/global.css';
+import '../styles/pwa-status.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import PwaConnectionStatus from '../components/PwaConnectionStatus.astro';
 import { defaultLocale, siteConfig, type Locale } from '../config/site';
 import { useTranslations } from '../i18n/ui';
 import { getAbsoluteUrl, stripBasePath, withBasePath } from '../utils/paths';
@@ -70,6 +72,7 @@ const themeScript = `
       <slot />
     </main>
     <Footer locale={locale} />
+    <PwaConnectionStatus locale={locale} />
     <script>
       import { registerServiceWorker } from '../scripts/pwa/register-service-worker';
 
