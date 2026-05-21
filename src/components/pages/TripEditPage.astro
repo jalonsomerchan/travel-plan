@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppShell from '../app/AppShell.astro';
 import TripActionsMenu from '../app/TripActionsMenu.astro';
 import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
-import TripSectionNav from '../app/TripSectionNav.astro';
 import Button from '../Button.astro';
 import TripFormFields from '../app/TripFormFields.astro';
 import { type Locale } from '../../config/site';
@@ -29,7 +28,6 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
-    <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <h2 class="text-2xl font-black" data-trip-context>{t('trip.detailsTitle')}</h2>
       <form class="mx-auto mt-6 max-w-3xl space-y-4" id="trip-form">

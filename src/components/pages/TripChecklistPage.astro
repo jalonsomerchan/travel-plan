@@ -5,7 +5,6 @@ import ChecklistItemFormFields from '../app/ChecklistItemFormFields.astro';
 import LoadingState from '../app/LoadingState.astro';
 import TripActionsMenu from '../app/TripActionsMenu.astro';
 import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
-import TripSectionNav from '../app/TripSectionNav.astro';
 import Button from '../Button.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
@@ -33,7 +32,6 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
-    <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>

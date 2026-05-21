@@ -93,12 +93,18 @@ describe('poi smoke checks', () => {
     assert.match(dialog, /tripPois\.form\.visible/);
     assert.match(dialog, /list="trip-poi-icon-suggestions"/);
     assert.match(page, /data-trip-poi-edit/);
+    assert.match(page, /data-trip-poi-visibility-toggle/);
+    assert.match(page, /tripPois\.actions/);
+    assert.match(page, /tripPois\.actions\.hide/);
+    assert.match(page, /tripPois\.actions\.show/);
+    assert.match(page, /app-actions-menu/);
     assert.match(page, /showSnackbar/);
     assert.match(page, /showModal|openPoiDialog/);
     assert.match(page, /initLocationPickers/);
     assert.match(page, /resolveTripPoiIcon/);
     assert.match(page, /tripPois\.modal\.createTitle/);
     assert.match(page, /tripPois\.visibility\.visible/);
+    assert.match(page, /w-full break-words text-sm text-\[var\(--color-text-soft\)\]/);
     assert.match(locationPicker, /data-location-current-button/);
     assert.match(page, /revealAppShell\(\);\s*initLocationPickers\(\)/);
     assert.match(map, /subscribeTripPointsOfInterest/);

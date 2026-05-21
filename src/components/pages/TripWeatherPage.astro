@@ -4,7 +4,6 @@ import AppShell from '../app/AppShell.astro';
 import LoadingState from '../app/LoadingState.astro';
 import TripActionsMenu from '../app/TripActionsMenu.astro';
 import TripNavigationTopbar from '../app/TripNavigationTopbar.astro';
-import TripSectionNav from '../app/TripSectionNav.astro';
 import { type Locale } from '../../config/site';
 import { getLocalizedPath, useTranslations } from '../../i18n/ui';
 
@@ -33,7 +32,6 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
-    <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
 
     <div slot="body" class="pt-6">
       <div class="grid gap-6">

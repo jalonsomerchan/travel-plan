@@ -134,27 +134,37 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
   list.innerHTML = points
     .map(
       (point) => `
-        <article class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex min-w-0 items-start gap-3">
-              <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-[var(--shadow-xs)]" style="background:${escapeHtml(point.color)};">
-                ${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}
-              </span>
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="font-bold text-[var(--color-text)]">${escapeHtml(point.name)}</h3>
-                  <span class="rounded-full border border-[var(--color-border)] px-2 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-soft)]">${escapeHtml(t(`tripPois.type.${point.type}`))}</span>
-                  <span class="rounded-full px-2 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] ${point.isVisible ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]' : 'bg-[var(--color-surface-soft)] text-[var(--color-text-soft)]'}">${escapeHtml(point.isVisible ? t('tripPois.visibility.visible') : t('tripPois.visibility.hidden'))}</span>
-                </div>
-                ${point.description ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(point.description)}</p>` : ''}
-                <p class="mt-2 break-words text-sm text-[var(--color-text-muted)]">${escapeHtml(point.locationName)}</p>
+        <article class="app-card-shell min-w-0 overflow-hidden">
+          <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+            <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-[var(--shadow-xs)]" style="background:${escapeHtml(point.color)};">
+              ${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}
+            </span>
+            <div class="min-w-0">
+              <div class="flex min-w-0 flex-wrap items-center gap-3">
+                <h3 class="min-w-0 break-words text-lg font-bold leading-tight text-[var(--color-text)] [overflow-wrap:anywhere]">${escapeHtml(point.name)}</h3>
+                <span class="rounded-full border border-[var(--color-border)] px-2 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-soft)]">${escapeHtml(t(`tripPois.type.${point.type}`))}</span>
+                <span class="status-pill" data-tone="${point.isVisible ? 'success' : 'warning'}">${escapeHtml(point.isVisible ? t('tripPois.visibility.visible') : t('tripPois.visibility.hidden'))}</span>
               </div>
             </div>
-            <div class="flex shrink-0 gap-2">
-              <button class="app-card-link" data-trip-poi-edit="${escapeHtml(point.id)}" data-variant="secondary" type="button">${escapeHtml(t('common.edit'))}</button>
-              <button class="app-card-link" data-trip-poi-delete="${escapeHtml(point.id)}" data-variant="danger" type="button">${escapeHtml(t('common.delete'))}</button>
-            </div>
+            <details class="app-actions-menu">
+              <summary aria-label="${escapeHtml(t('tripPois.actions'))}" class="app-actions-menu-trigger" title="${escapeHtml(t('tripPois.actions'))}">
+                ⋮
+              </summary>
+              <div class="app-actions-menu-panel">
+                <button class="app-actions-menu-link app-actions-menu-button" data-trip-poi-edit="${escapeHtml(point.id)}" type="button">
+                  ${escapeHtml(t('common.edit'))}
+                </button>
+                <button class="app-actions-menu-link app-actions-menu-button" data-trip-poi-visibility-toggle="${escapeHtml(point.id)}" type="button">
+                  ${escapeHtml(point.isVisible ? t('tripPois.actions.hide') : t('tripPois.actions.show'))}
+                </button>
+                <button class="app-actions-menu-link app-actions-menu-button" data-trip-poi-delete="${escapeHtml(point.id)}" type="button">
+                  ${escapeHtml(t('common.delete'))}
+                </button>
+              </div>
+            </details>
           </div>
+          ${point.description ? `<p class="mt-3 w-full break-words text-sm text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(point.description)}</p>` : ''}
+          <p class="mt-3 w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(point.locationName)}</p>
         </article>
       `,
     )
@@ -376,6 +386,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
     const target = event.target as HTMLElement | null;
     const editButton = target?.closest<HTMLButtonElement>('[data-trip-poi-edit]');
     const deleteButton = target?.closest<HTMLButtonElement>('[data-trip-poi-delete]');
+    const visibilityButton = target?.closest<HTMLButtonElement>('[data-trip-poi-visibility-toggle]');
 
     if (editButton) {
       const point = currentPoints.find((entry) => entry.id === editButton.dataset.tripPoiEdit);
@@ -389,6 +400,36 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
       setMessage(formMessage, t('tripPois.form.editing').replace('{name}', point.name));
       openPoiDialog(dialog);
       getFormInput(form, 'name')?.focus();
+      return;
+    }
+
+    if (visibilityButton) {
+      const pointId = visibilityButton.dataset.tripPoiVisibilityToggle;
+      const point = currentPoints.find((entry) => entry.id === pointId);
+
+      if (!point) {
+        return;
+      }
+
+      visibilityButton.disabled = true;
+
+      try {
+        await updateTripPointOfInterest(tripId, point.id, {
+          name: point.name,
+          description: point.description,
+          type: point.type,
+          icon: point.icon,
+          color: point.color,
+          isVisible: !point.isVisible,
+          locationName: point.locationName,
+          locationLat: point.locationLat,
+          locationLng: point.locationLng,
+        });
+      } catch (error) {
+        visibilityButton.disabled = false;
+        setMessage(pageMessage, error instanceof Error ? error.message : t('tripPois.form.error'), 'danger');
+      }
+
       return;
     }
 
