@@ -55,7 +55,13 @@ describe('PWA offline support', () => {
     assert.match(worker, /CACHE_NAME/);
     assert.match(worker, /SHELL_URLS/);
     assert.match(worker, /cache\.addAll\(SHELL_URLS\)/);
+    assert.match(worker, /withBasePath\('app\/'\)/);
+    assert.match(worker, /withBasePath\('app\/trip\/'\)/);
+    assert.match(worker, /withBasePath\('app\/plan\/'\)/);
     assert.match(worker, /request\.mode === 'navigate'/);
+    assert.match(worker, /getUrlWithoutSearch/);
+    assert.match(worker, /matchNavigationFallback/);
+    assert.match(worker, /cache\.match\(SHELL_URLS\[1\]\)/);
     assert.match(worker, /cache\.match\(SHELL_URLS\[0\]\)/);
     assert.match(worker, /request\.destination/);
     assert.match(worker, /script', 'style', 'manifest/);
@@ -88,8 +94,9 @@ describe('PWA offline support', () => {
     assert.match(en, /pwaStatus\.offline/);
   });
 
-  it('enables persistent Firestore local cache', () => {
+  it('enables persistent Firestore local cache where supported and iOS-safe fallbacks', () => {
     const config = readText('src/lib/firebase/config.ts');
+    const sharedCache = readText('src/lib/firebase/shared-data-cache.ts');
 
     assert.match(config, /initializeFirestore/);
     assert.match(config, /persistentLocalCache/);
@@ -99,6 +106,9 @@ describe('PWA offline support', () => {
     assert.match(config, /MacIntel/);
     assert.match(config, /AppleWebKit/);
     assert.match(config, /firebaseDb = getFirestore\(app\)/);
+    assert.match(sharedCache, /window\.localStorage/);
+    assert.doesNotMatch(sharedCache, /window\.sessionStorage/);
+    assert.match(sharedCache, /travel-plan:shared-cache:v2/);
   });
 
   it('documents current offline limits and next phases', () => {
@@ -107,6 +117,8 @@ describe('PWA offline support', () => {
     assert.match(docs, /Persistencia offline de Firestore/);
     assert.match(docs, /[Ff]allback de navegación/);
     assert.match(docs, /network-first de scripts, estilos y manifest/);
+    assert.match(docs, /localStorage/);
+    assert.match(docs, /parámetros/);
     assert.match(docs, /Estado de conexión/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
