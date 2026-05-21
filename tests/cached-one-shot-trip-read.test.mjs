@@ -9,7 +9,7 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('cached one-shot trip reads', () => {
+describe('cached one-shot reads', () => {
   it('provides a cached one-shot trip reader', () => {
     const reader = readText('src/lib/firebase/trip-reads.ts');
 
@@ -19,12 +19,29 @@ describe('cached one-shot trip reads', () => {
     assert.match(reader, /export async function getTripOnce/);
   });
 
+  it('provides a cached one-shot plan reader', () => {
+    const reader = readText('src/lib/firebase/plan-reads.ts');
+
+    assert.match(reader, /getDoc/);
+    assert.match(reader, /getCachedTripPlans/);
+    assert.match(reader, /export async function getPlanOnce/);
+  });
+
   it('uses one-shot trip reads on the plan create page instead of a trip listener', () => {
     const page = readText('src/scripts/pages/plan-create.ts');
 
     assert.match(page, /getTripOnce/);
     assert.doesNotMatch(page, /subscribeTrip/);
     assert.doesNotMatch(page, /createSubscriptionScope/);
+  });
+
+  it('uses one-shot trip and plan reads on the plan edit page instead of live listeners', () => {
+    const page = readText('src/scripts/pages/plan-edit.ts');
+
+    assert.match(page, /getTripOnce/);
+    assert.match(page, /getPlanOnce/);
+    assert.doesNotMatch(page, /subscribeTrip/);
+    assert.doesNotMatch(page, /subscribePlan/);
   });
 
   it('documents one-shot cached reads', () => {
