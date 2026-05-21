@@ -19,11 +19,14 @@ describe('cached one-shot reads', () => {
     assert.match(reader, /export async function getTripOnce/);
   });
 
-  it('provides a cached one-shot plan reader', () => {
+  it('provides cached one-shot plan readers', () => {
     const reader = readText('src/lib/firebase/plan-reads.ts');
 
     assert.match(reader, /getDoc/);
+    assert.match(reader, /getDocs/);
     assert.match(reader, /getCachedTripPlans/);
+    assert.match(reader, /setCachedTripPlans/);
+    assert.match(reader, /export async function getTripPlansOnce/);
     assert.match(reader, /export async function getPlanOnce/);
   });
 
@@ -52,6 +55,15 @@ describe('cached one-shot reads', () => {
     assert.match(accommodation, /getTripOnce/);
     assert.doesNotMatch(tripEdit, /subscribeTrip/);
     assert.doesNotMatch(accommodation, /subscribeTrip/);
+  });
+
+  it('uses one-shot reads on the trip plan suggestions page instead of live listeners', () => {
+    const page = readText('src/scripts/pages/trip-plan-suggestions.ts');
+
+    assert.match(page, /getTripOnce/);
+    assert.match(page, /getTripPlansOnce/);
+    assert.doesNotMatch(page, /subscribeTrip/);
+    assert.doesNotMatch(page, /subscribeTripPlans/);
   });
 
   it('documents one-shot cached reads', () => {
