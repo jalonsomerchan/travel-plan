@@ -32,7 +32,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
       <h2 class="text-2xl font-black" data-trip-context>{t('trip.detailsTitle')}</h2>
-      <form class="mx-auto mt-6 max-w-3xl space-y-4" id="trip-form">
+      <form class="mt-6 w-full space-y-4" id="trip-form">
         <TripFormFields locale={locale} prefix="trip-edit" />
         <p class="text-sm text-[var(--color-text-soft)]" id="trip-form-message" role="status" aria-live="polite">{t('trip.form.helper')}</p>
         <div class="flex flex-wrap gap-3">
