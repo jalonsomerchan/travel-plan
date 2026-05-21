@@ -14,7 +14,7 @@ export interface TripPoisAiPromptWizardController {
   syncTrip: (trip: TripRecord) => void;
 }
 
-const totalSteps = 3;
+const totalSteps = 4;
 
 function getFieldValue(root: HTMLElement | null, key: string) {
   const field = root?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${key}"]`);

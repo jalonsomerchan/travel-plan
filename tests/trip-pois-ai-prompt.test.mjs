@@ -51,8 +51,8 @@ describe('trip POIs AI prompt tool', () => {
     const script = readText('src/scripts/pages/trip-pois-ai-prompt.ts');
 
     assert.match(body, /TripPoisAiPromptWizard/);
-    assert.match(body, /data-trip-pois-ai-prompt-output/);
-    assert.match(body, /data-trip-pois-ai-import-form/);
+    assert.match(wizard, /data-trip-pois-ai-prompt-output/);
+    assert.match(wizard, /data-trip-pois-ai-import-form/);
     assert.match(wizard, /name="type"/);
     assert.match(wizard, /trip-pois-ai-prompt/);
     assert.match(helper, /buildTripPoiAiPrompt/);

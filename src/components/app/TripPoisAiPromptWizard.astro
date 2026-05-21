@@ -11,7 +11,12 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const steps = [t('tripPoisAiPrompt.wizard.placeStep'), t('tripPoisAiPrompt.wizard.typeStep'), t('tripPoisAiPrompt.wizard.resultStep')];
+const steps = [
+  t('tripPoisAiPrompt.wizard.placeStep'),
+  t('tripPoisAiPrompt.wizard.typeStep'),
+  t('tripPoisAiPrompt.wizard.promptStep'),
+  t('tripPoisAiPrompt.wizard.importStep'),
+];
 ---
 
 <section class="space-y-5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 md:p-6" aria-labelledby="trip-pois-ai-prompt-wizard-title">
@@ -75,9 +80,35 @@ const steps = [t('tripPoisAiPrompt.wizard.placeStep'), t('tripPoisAiPrompt.wizar
 
     <section class="space-y-4" data-trip-pois-ai-prompt-step="2" hidden>
       <div>
-        <h3 class="text-xl font-black text-[var(--color-text)]">{t('tripPoisAiPrompt.wizard.resultTitle')}</h3>
-        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripPoisAiPrompt.wizard.resultHelper')}</p>
+        <h3 class="text-xl font-black text-[var(--color-text)]">{t('tripPoisAiPrompt.wizard.promptTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripPoisAiPrompt.wizard.promptHelper')}</p>
       </div>
+
+      <label class="field-label" for="trip-pois-ai-prompt-output">{t('tripPoisAiPrompt.prompt.label')}</label>
+      <textarea class="field-input min-h-72 font-mono text-sm" data-trip-pois-ai-prompt-output id="trip-pois-ai-prompt-output" readonly></textarea>
+      <div class="flex flex-wrap gap-3">
+        <Button data-trip-pois-ai-prompt-copy type="button">{t('tripPoisAiPrompt.prompt.copy')}</Button>
+        <Button data-trip-pois-ai-prompt-chatgpt href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank" variant="secondary">{t('tripPoisAiPrompt.prompt.openChatGpt')}</Button>
+      </div>
+      <p class="text-sm text-[var(--color-text-soft)]" data-trip-pois-ai-prompt-message>{t('tripPoisAiPrompt.prompt.helper')}</p>
+    </section>
+
+    <section class="space-y-4" data-trip-pois-ai-prompt-step="3" hidden>
+      <div>
+        <h3 class="text-xl font-black text-[var(--color-text)]">{t('tripPoisAiPrompt.wizard.importTitle')}</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-soft)]">{t('tripPoisAiPrompt.wizard.importHelper')}</p>
+      </div>
+
+      <form class="space-y-4" data-trip-pois-ai-import-form>
+        <label class="grid gap-2">
+          <span class="field-label">{t('tripPoisAiPrompt.import.label')}</span>
+          <textarea class="field-input min-h-60 font-mono text-sm" name="json" placeholder={t('tripPoisAiPrompt.import.placeholder')}></textarea>
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <Button type="submit">{t('tripPoisAiPrompt.import.action')}</Button>
+        </div>
+      </form>
+      <p class="text-sm text-[var(--color-text-soft)]" data-trip-pois-ai-import-message>{t('tripPoisAiPrompt.import.helper')}</p>
     </section>
   </div>
 
