@@ -95,6 +95,7 @@ export interface PlanRecord {
   time?: string;
   status: PlanStatus;
   links: PlanLinkRecord[];
+  aiGuide?: string;
 }
 
 export interface PlanInput {
@@ -112,6 +113,7 @@ export interface PlanInput {
   time?: string;
   status: PlanStatus;
   links?: PlanLinkRecord[];
+  aiGuide?: string;
 }
 
 export interface ChecklistItemRecord {
