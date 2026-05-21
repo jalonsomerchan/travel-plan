@@ -27,9 +27,7 @@ const shellClasses = [
   compactTop ? 'app-shell--compact-top py-5 md:py-6' : 'py-7 md:py-8',
 ];
 const shouldStartAtDashboard =
-  breadcrumbs.length > 1 &&
-  breadcrumbs[0]?.href === '/' &&
-  Boolean(breadcrumbs[1]?.href?.includes('/app/'));
+  breadcrumbs.length > 1 && Boolean(breadcrumbs[1]?.href?.endsWith('/app/'));
 const visibleBreadcrumbs = shouldStartAtDashboard ? breadcrumbs.slice(1) : breadcrumbs;
 ---
 
