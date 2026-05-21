@@ -13,12 +13,24 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 - Caché de assets estáticos visitados, como imágenes y fuentes.
 - Actualización network-first de scripts, estilos y manifest para evitar servir versiones antiguas cuando hay conexión.
 - Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña cuando el navegador lo soporta con suficiente estabilidad.
+- Escrituras no bloqueantes para crear y editar planes, apoyadas en la cola local de Firestore cuando el navegador está offline.
 
 ## Datos sin conexión
 
 Firestore mantiene en el dispositivo los documentos que ya se han leído en sesiones anteriores. Esto permite abrir vistas con datos visitados previamente incluso si la red falla, siempre que Firebase haya podido guardarlos en la caché local del navegador.
 
 La caché compartida propia de la app sigue funcionando como valor inicial de UI y se limpia al cambiar usuario o cerrar sesión.
+
+## Escrituras offline
+
+Las pantallas de crear y editar planes usan helpers no bloqueantes (`queueCreatePlan(...)` y `queueUpdatePlan(...)`). La UI no espera a que el servidor confirme la escritura: Firestore la guarda localmente cuando puede y la sincroniza al recuperar conexión.
+
+Convención:
+
+- Usar helpers `queue*` solo en acciones donde sea aceptable confirmar la UI con escritura local pendiente.
+- Mantener helpers `async` como `createPlan(...)` o `updatePlan(...)` cuando la pantalla necesite confirmación real del servidor antes de continuar.
+- Registrar en consola los fallos tardíos de escrituras encoladas para depuración.
+- Actualizar la caché compartida cuando exista un valor cacheado previo, para que la navegación inmediata vea el cambio.
 
 ### Compatibilidad Safari iOS
 
@@ -49,8 +61,8 @@ Regla obligatoria para el proyecto:
 ## Límites actuales
 
 - El service worker no intenta cachear llamadas externas ni APIs de Firebase.
-- La sincronización offline de cambios pendientes queda para una fase posterior.
-- Las mutaciones offline dependen del soporte de Firestore; no hay aún una cola visual propia en la UI.
+- Todavía no hay una cola visual propia de cambios pendientes; las mutaciones encoladas dependen del soporte de Firestore.
+- Las reglas de seguridad siguen aplicándose cuando Firestore sincroniza con el servidor.
 
 ## Siguientes fases recomendadas
 
