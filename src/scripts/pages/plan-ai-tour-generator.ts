@@ -17,12 +17,16 @@ const allowedOptions: Record<OptionName, readonly string[]> = {
   planAiTourFocus: ['history', 'practical', 'mixed'],
 };
 
+function getGenerateGuideLabel(locale: Locale) {
+  return locale === 'es' ? 'Generar guía' : 'Generate guide';
+}
+
 export function renderPlanAiTourGenerateMenuAction(locale: Locale, plan: PlanRecord) {
   if (plan.aiGuide?.trim()) return '';
 
   return `
     <button class="app-actions-menu-link app-actions-menu-button" data-plan-ai-tour-generate-action="${escapeHtml(plan.id)}" type="button">
-      ${escapeHtml(getPageTranslator(locale)('plan.aiTour.open'))}
+      ${escapeHtml(getGenerateGuideLabel(locale))}
     </button>`;
 }
 
@@ -70,6 +74,7 @@ function getPrompt(locale: Locale, trip: TripRecord, plan: PlanRecord, modal: HT
 
 function buildModalHtml(locale: Locale) {
   const t = getPageTranslator(locale);
+  const generateGuideLabel = getGenerateGuideLabel(locale);
 
   return `
     <div class="max-h-[min(88vh,56rem)] overflow-y-auto p-4 md:p-6">
@@ -78,7 +83,7 @@ function buildModalHtml(locale: Locale) {
           <span aria-hidden="true">×</span>
         </button>
         <div class="pr-14">
-          <span class="eyebrow">${escapeHtml(t('plan.aiTour.eyebrow'))}</span>
+          <span class="eyebrow">${escapeHtml(generateGuideLabel)}</span>
           <h2 class="mt-3 text-2xl font-black text-[var(--color-text)]">${escapeHtml(t('plan.aiTour.title'))}</h2>
           <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(t('plan.aiTour.helper'))}</p>
         </div>

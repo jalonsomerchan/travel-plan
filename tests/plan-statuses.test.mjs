@@ -65,5 +65,19 @@ describe('plan statuses', () => {
     assert.match(generator, /data-plan-ai-tour-generator-output/);
     assert.match(generator, /data-plan-ai-tour-generator-save/);
     assert.match(generator, /renderPlanAiTourGenerateMenuAction/);
+    assert.match(generator, /Generar guía/);
+    assert.match(generator, /Generate guide/);
+  });
+
+  it('shows the reusable guide player from the plan detail actions', () => {
+    const planPage = readText('src/components/pages/PlanPage.astro');
+
+    assert.match(planPage, /data-plan-ai-guide-open-player/);
+    assert.match(planPage, /Ver \/ escuchar guía/);
+    assert.match(planPage, /View \/ listen to guide/);
+    assert.match(planPage, /Generar guía/);
+    assert.match(planPage, /Generate guide/);
+    assert.match(planPage, /openPlanAiGuidePlayer/);
+    assert.match(planPage, /MutationObserver/);
   });
 });
