@@ -55,6 +55,16 @@ describe('plan statuses', () => {
     assert.doesNotMatch(flags, /truncate/);
   });
 
+  it('makes the whole plan card clickable while preserving menu actions', () => {
+    const tripPageComponent = readText('src/components/pages/TripPage.astro');
+
+    assert.match(tripPageComponent, /\[data-plan-list\] \.app-card-shell/);
+    assert.match(tripPageComponent, /cursor: pointer/);
+    assert.match(tripPageComponent, /event\.target\.closest\('a, button, details, summary, input, select, textarea, label'\)/);
+    assert.match(tripPageComponent, /event\.defaultPrevented/);
+    assert.match(tripPageComponent, /window\.location\.href = link\.href/);
+  });
+
   it('starts app breadcrumbs at dashboard when available', () => {
     const appShell = readText('src/components/app/AppShell.astro');
 
