@@ -1,0 +1,6 @@
+{
+  "pwaStatus.online": "Connected",
+  "pwaStatus.offline": "No connection",
+  "pwaStatus.onlineDescription": "The app has network access again and can refresh data and files when available.",
+  "pwaStatus.offlineDescription": "There is no connection. Previously saved data will be used when available."
+}
