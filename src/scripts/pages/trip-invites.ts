@@ -5,6 +5,7 @@ import { formatDateRange } from '../../lib/app/format';
 import type { TripInviteRecord } from '../../lib/app/models';
 import { getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { acceptInvite, subscribePendingInvites } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getPageTranslator, getRoleLabel } from './shared';
 
@@ -64,8 +65,14 @@ function logInvitesPermissionError(user: User | null) {
 }
 
 export function mountTripInvitesPage({ locale }: { locale: Locale }) {
+  const subscriptions = createSubscriptionScope();
   if (!ensureFirebaseReady(locale)) return;
+
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
@@ -74,13 +81,15 @@ export function mountTripInvitesPage({ locale }: { locale: Locale }) {
       renderInvitesError(locale);
       return;
     }
-    subscribePendingInvites(
-      user.email,
-      (invites) => renderInvites(locale, invites, user),
-      (error) => {
-        logInvitesPermissionError(user);
-        renderInvitesError(locale, error.message);
-      },
+    subscriptions.add(
+      subscribePendingInvites(
+        user.email,
+        (invites) => renderInvites(locale, invites, user),
+        (error) => {
+          logInvitesPermissionError(user);
+          renderInvitesError(locale, error.message);
+        },
+      ),
     );
   });
 }
