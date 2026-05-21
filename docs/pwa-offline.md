@@ -9,7 +9,8 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 - Service worker registrado desde el layout base.
 - Caché de shell inicial para la home, manifest e iconos básicos.
 - Fallback de navegación a la shell cacheada cuando no hay red.
-- Caché de assets estáticos visitados, como scripts, estilos, imágenes, fuentes y manifest.
+- Caché de assets estáticos visitados, como imágenes y fuentes.
+- Actualización network-first de scripts, estilos y manifest para evitar servir versiones antiguas cuando hay conexión.
 - Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña.
 
 ## Datos sin conexión
@@ -22,7 +23,8 @@ La caché compartida propia de la app sigue funcionando como valor inicial de UI
 
 - En `install`, precachea la shell mínima con rutas compatibles con `BASE_URL`.
 - En navegación, usa estrategia network-first y vuelve a la caché si falla la red.
-- En assets estáticos, usa cache-first y guarda respuestas válidas para siguientes visitas.
+- En scripts, estilos y manifest, usa estrategia network-first para servir versiones nuevas cuando hay conexión y solo usar caché como respaldo offline.
+- En imágenes y fuentes, usa cache-first y guarda respuestas válidas para siguientes visitas.
 - Ignora peticiones externas y métodos distintos de `GET`.
 
 ## Límites actuales
