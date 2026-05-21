@@ -174,7 +174,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
 
     .trip-weather-day-row {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr);
       gap: 0.65rem;
       align-items: center;
       min-width: 0;
@@ -190,10 +190,11 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     }
 
     .trip-weather-day-summary {
-      margin: 0.15rem 0 0;
+      margin: 0;
       color: var(--color-text-muted);
-      font-size: 0.88rem;
-      font-weight: 700;
+      font-size: 0.96rem;
+      font-weight: 800;
+      line-height: 1.1;
     }
 
     .trip-weather-day-icon {
@@ -207,6 +208,15 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
       min-width: 0;
     }
 
+    .trip-weather-day-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.45rem 0.8rem;
+      margin-top: 0.2rem;
+    }
+
     .trip-weather-day-temperatures {
       display: grid;
       gap: 0.15rem;
@@ -216,20 +226,31 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     .trip-weather-day-temperatures--inline {
       display: inline-flex;
       align-items: baseline;
-      gap: 0.45rem;
+      gap: 0.35rem;
       white-space: nowrap;
     }
 
+    .trip-weather-day-temperatures strong,
+    .trip-weather-day-temperatures em {
+      font-size: 0.96rem;
+      font-style: normal;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
     .trip-weather-day-temperatures strong {
-      font-size: 1rem;
       line-height: 1;
       color: var(--color-danger);
     }
 
     .trip-weather-day-temperatures span {
-      color: var(--color-info);
-      font-size: 0.82rem;
+      color: var(--color-text-soft);
+      font-size: 0.8rem;
       font-weight: 700;
+    }
+
+    .trip-weather-day-temperatures em {
+      color: var(--color-info);
     }
 
     .trip-weather-card-arrow {
@@ -239,8 +260,8 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     }
 
     .weather-icon-svg {
-      width: 2.75rem;
-      height: 2.75rem;
+      width: 3.35rem;
+      height: 3.35rem;
       flex-shrink: 0;
     }
 

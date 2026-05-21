@@ -133,16 +133,18 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
     .trip-weather-day-summary,
     .trip-weather-hour-summary {
-      color: var(--color-text-soft);
-      font-size: 0.84rem;
-      font-weight: 600;
+      margin: 0;
+      color: var(--color-text-muted);
+      font-size: 0.96rem;
+      font-weight: 800;
+      line-height: 1.1;
     }
 
     .trip-weather-day-main {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
-      justify-content: space-between;
-      gap: 0.9rem;
+      gap: 0.75rem;
       margin-top: 0.55rem;
     }
 
@@ -154,17 +156,44 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       text-align: right;
     }
 
+    .trip-weather-day-temperatures--inline,
+    .trip-weather-hour-temperatures--inline {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .trip-weather-day-temperatures strong,
+    .trip-weather-day-temperatures em,
+    .trip-weather-hour-temperatures strong,
+    .trip-weather-hour-temperatures em {
+      font-size: 0.96rem;
+      font-style: normal;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
     .trip-weather-day-temperatures strong,
     .trip-weather-hour-temperatures strong {
-      font-size: 1.05rem;
-      line-height: 1;
+      color: var(--color-danger);
     }
 
     .trip-weather-day-temperatures span,
     .trip-weather-hour-temperatures span {
       color: var(--color-text-soft);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
+    }
+
+    .trip-weather-day-temperatures em,
+    .trip-weather-hour-temperatures em {
+      color: var(--color-info);
+    }
+
+    .trip-weather-day-copy,
+    .trip-weather-hour-copy {
+      min-width: 0;
     }
 
     .trip-weather-day-topline {
@@ -201,8 +230,15 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     .trip-weather-hour-grid {
       display: grid;
       gap: 0.55rem;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .trip-weather-hour-main {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
+      gap: 0.75rem;
     }
 
     .trip-weather-hour-meta {
@@ -225,8 +261,8 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     }
 
     .weather-icon-svg {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 3.2rem;
+      height: 3.2rem;
       flex-shrink: 0;
     }
 
@@ -238,16 +274,18 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
       }
 
       .trip-weather-day-main {
-        align-items: start;
+        align-items: center;
       }
 
-      .trip-weather-hour-grid {
-        grid-template-columns: minmax(0, 1fr);
+      .trip-weather-hour-main {
+        grid-template-columns: auto minmax(0, 1fr);
       }
 
       .trip-weather-hour-temperatures {
+        grid-column: 1 / -1;
         justify-items: start;
         text-align: left;
+        padding-left: calc(3.2rem + 0.75rem);
       }
 
       .trip-weather-hour-meta {

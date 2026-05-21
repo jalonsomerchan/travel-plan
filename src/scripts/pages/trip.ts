@@ -401,11 +401,14 @@ function renderWeatherSummaryCard(
                 </div>
                 <div class="trip-weather-day-copy">
                   <p class="trip-weather-day-label">${escapeHtml(formatFriendlyDate(day.date, locale))}</p>
-                  <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
-                </div>
-                <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
-                  <strong>${escapeHtml(formatTemperature(day.temperatureMax, dataset.temperatureUnit))}</strong>
-                  <span>${escapeHtml(formatTemperature(day.temperatureMin, dataset.temperatureUnit))}</span>
+                  <div class="trip-weather-day-meta">
+                    <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
+                    <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
+                      <strong>${escapeHtml(formatTemperature(day.temperatureMax, dataset.temperatureUnit))}</strong>
+                      <span aria-hidden="true">|</span>
+                      <em>${escapeHtml(formatTemperature(day.temperatureMin, dataset.temperatureUnit))}</em>
+                    </div>
+                  </div>
                 </div>
               </article>
             `;

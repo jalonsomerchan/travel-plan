@@ -112,13 +112,14 @@ function getWeatherDaySummary(
 ) {
   if (day.mode === 'later') {
     return `
-      <div>
-        <p class="trip-weather-day-summary">${escapeHtml(laterLabel)}</p>
-      </div>
       <div class="trip-weather-day-main">
-        <div class="trip-weather-day-temperatures">
+        <div class="trip-weather-day-copy">
+          <p class="trip-weather-day-summary">${escapeHtml(laterLabel)}</p>
+        </div>
+        <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
           <strong>--</strong>
-          <span>--</span>
+          <span aria-hidden="true">|</span>
+          <em>--</em>
         </div>
       </div>
     `;
@@ -126,13 +127,14 @@ function getWeatherDaySummary(
 
   if (day.mode === 'unavailable') {
     return `
-      <div>
-        <p class="trip-weather-day-summary">${escapeHtml(unavailableLabel)}</p>
-      </div>
       <div class="trip-weather-day-main">
-        <div class="trip-weather-day-temperatures">
+        <div class="trip-weather-day-copy">
+          <p class="trip-weather-day-summary">${escapeHtml(unavailableLabel)}</p>
+        </div>
+        <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
           <strong>--</strong>
-          <span>--</span>
+          <span aria-hidden="true">|</span>
+          <em>--</em>
         </div>
       </div>
     `;
@@ -141,14 +143,15 @@ function getWeatherDaySummary(
   const label = t(getWeatherLabelKeyForCode(day.weatherCode));
 
   return `
-    <div>
-      <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
-    </div>
     <div class="trip-weather-day-main">
       ${getWeatherIconSvg(day.weatherCode, true, label)}
-      <div class="trip-weather-day-temperatures">
+      <div class="trip-weather-day-copy">
+        <p class="trip-weather-day-summary">${escapeHtml(label)}</p>
+      </div>
+      <div class="trip-weather-day-temperatures trip-weather-day-temperatures--inline">
         <strong>${escapeHtml(formatTemperature(day.temperatureMax, temperatureUnit))}</strong>
-        <span>${escapeHtml(formatTemperature(day.temperatureMin, temperatureUnit))}</span>
+        <span aria-hidden="true">|</span>
+        <em>${escapeHtml(formatTemperature(day.temperatureMin, temperatureUnit))}</em>
       </div>
     </div>
   `;
@@ -226,14 +229,19 @@ function renderWeatherHoursContent(
               <p class="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(
                 formatHourLabel(hour.time, locale),
               )}</p>
-              <p class="trip-weather-hour-summary mt-1">${escapeHtml(label)}</p>
             </div>
-            <div class="flex items-center justify-start sm:justify-center">
-              ${getWeatherIconSvg(hour.weatherCode, hour.isDay, label)}
-            </div>
-            <div class="trip-weather-hour-temperatures">
-              <strong>${escapeHtml(formatTemperature(hour.temperature, model.temperatureUnit))}</strong>
-              <span>${escapeHtml(formatTemperature(hour.apparentTemperature, model.temperatureUnit))}</span>
+            <div class="trip-weather-hour-main">
+              <div class="flex items-center justify-start">
+                ${getWeatherIconSvg(hour.weatherCode, hour.isDay, label)}
+              </div>
+              <div class="trip-weather-hour-copy">
+                <p class="trip-weather-hour-summary">${escapeHtml(label)}</p>
+              </div>
+              <div class="trip-weather-hour-temperatures trip-weather-hour-temperatures--inline">
+                <strong>${escapeHtml(formatTemperature(hour.temperature, model.temperatureUnit))}</strong>
+                <span aria-hidden="true">|</span>
+                <em>${escapeHtml(formatTemperature(hour.apparentTemperature, model.temperatureUnit))}</em>
+              </div>
             </div>
           </div>
           <div class="trip-weather-hour-meta">

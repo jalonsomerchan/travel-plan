@@ -64,6 +64,7 @@ describe('trip POIs AI prompt tool', () => {
     assert.match(script, /initTripPoisAiPromptWizard/);
     assert.match(script, /createTripPointOfInterest/);
     assert.match(script, /Promise\.allSettled/);
+    assert.match(script, /redirectTo\(locale, 'trip-pois', \{ trip: tripId \}\)/);
     assert.match(script, /data-trip-pois-ai-candidate-checkbox/);
   });
 

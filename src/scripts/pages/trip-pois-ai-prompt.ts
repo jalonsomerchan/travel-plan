@@ -15,6 +15,7 @@ import { initTripPoisAiPromptWizard } from './trip-pois-ai-prompt-wizard';
 import {
   ensureFirebaseReady,
   getPageTranslator,
+  redirectTo,
   redirectHome,
   syncTripNavigation,
   syncTripShell,
@@ -244,6 +245,8 @@ export function mountTripPoisAiPromptPage({ locale }: { locale: Locale }) {
 
       if (failedCount === 0) {
         setMessage(importMessage, t('tripPoisAiPrompt.candidates.saved'), 'success');
+        redirectTo(locale, 'trip-pois', { trip: tripId });
+        return;
       } else if (savedIds.size > 0) {
         setMessage(
           importMessage,
