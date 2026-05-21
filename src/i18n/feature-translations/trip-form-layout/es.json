@@ -1,0 +1,8 @@
+{
+  "trip.form.sectionBasics": "Datos principales",
+  "trip.form.sectionBasicsHelp": "Define el nombre, las fechas y el estado general del viaje.",
+  "trip.form.sectionDestination": "Destino del viaje",
+  "trip.form.sectionDestinationHelp": "Busca el lugar base del viaje para conectar mapas, distancias y planes.",
+  "trip.form.sectionAccommodationHelp": "Añade el alojamiento si lo tienes para calcular distancias y mostrarlo en los mapas.",
+  "trip.form.statusHelp": "Usa el estado para diferenciar borradores, viajes activos, visitados o archivados."
+}
