@@ -78,6 +78,18 @@ describe('trip AI prompt wizard', () => {
     assert.match(editScript, /planInput\.aiGuide = currentPlan\.aiGuide/);
   });
 
+  it('lets users paste and save an AI tour result from the plan modal', () => {
+    const planPage = readText('src/components/pages/PlanPage.astro');
+    const planScript = readText('src/scripts/pages/plan.ts');
+
+    assert.match(planPage, /data-plan-ai-tour-result/);
+    assert.match(planPage, /data-plan-ai-tour-save-guide/);
+    assert.match(planPage, /plan\.aiTour\.resultLabel/);
+    assert.match(planScript, /aiTourResultInput/);
+    assert.match(planScript, /aiTourSaveGuideButton/);
+    assert.match(planScript, /await updatePlan\(tripId, planId, \{ \.\.\.currentPlan, aiGuide \}\)/);
+  });
+
   it('keeps wizard translations aligned', () => {
     const es = readJson('src/i18n/feature-translations/trip-ai-prompt/es.json');
     const en = readJson('src/i18n/feature-translations/trip-ai-prompt/en.json');
@@ -87,6 +99,8 @@ describe('trip AI prompt wizard', () => {
     assert.equal(en['status.plan.proposed'], 'Proposed');
     assert.ok(es['plan.aiGuide.title']);
     assert.ok(en['plan.aiGuide.title']);
+    assert.ok(es['plan.aiTour.resultLabel']);
+    assert.ok(en['plan.aiTour.resultLabel']);
     assert.ok(es['tripAiPrompt.wizard.place']);
     assert.ok(en['tripAiPrompt.wizard.accessMode']);
     assert.ok(es['tripAiPrompt.wizard.bookingModeRequired']);
