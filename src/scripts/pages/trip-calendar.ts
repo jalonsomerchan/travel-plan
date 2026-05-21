@@ -7,6 +7,7 @@ import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getAppUrl } from '../../lib/app/routes';
 import { subscribeTripPlans } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
+import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripNavigation, syncTripShell } from './shared';
 
@@ -97,6 +98,7 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
   const tripId = params.get('trip') ?? '';
   const tripName = document.querySelector<HTMLElement>('[data-calendar-trip-name]');
   const backLink = document.querySelector<HTMLAnchorElement>('#calendar-back-trip-link');
+  const subscriptions = createSubscriptionScope();
 
   if (!tripId) {
     if (tripName) {
@@ -115,23 +117,31 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   }
 
+  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+
   observeSession((user) => {
+    subscriptions.clear();
+
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
 
-    subscribeTrip(tripId, (trip: TripRecord | null) => {
-      if (tripName) {
-        tripName.textContent = trip?.name ?? t('trip.notFound');
-      }
-      if (trip) {
-        syncTripShell(locale, trip);
-      }
-    });
+    subscriptions.add(
+      subscribeTrip(tripId, (trip: TripRecord | null) => {
+        if (tripName) {
+          tripName.textContent = trip?.name ?? t('trip.notFound');
+        }
+        if (trip) {
+          syncTripShell(locale, trip);
+        }
+      }),
+    );
 
-    subscribeTripPlans(tripId, (plans) => {
-      renderTimeline(locale, tripId, plans);
-    });
+    subscriptions.add(
+      subscribeTripPlans(tripId, (plans) => {
+        renderTimeline(locale, tripId, plans);
+      }),
+    );
   });
 }
