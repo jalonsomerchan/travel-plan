@@ -6,6 +6,7 @@ import {
   doc,
   onSnapshot,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import type { PlanInput, PlanRecord } from '../app/models';
@@ -66,6 +67,45 @@ function sortPlans(plans: PlanRecord[]) {
   );
 }
 
+function inputToPlanRecord(id: string, input: PlanInput): PlanRecord {
+  return {
+    id,
+    name: input.name,
+    description: input.description,
+    category: input.category,
+    isPaid: input.isPaid,
+    isBooked: input.isBooked,
+    isOptional: input.isOptional,
+    isImportant: input.isImportant,
+    locationName: input.locationName,
+    locationLat: input.locationLat,
+    locationLng: input.locationLng,
+    date: input.date,
+    time: input.time,
+    status: input.status,
+    links: normalizePlanLinks(input.links),
+    aiGuide: input.aiGuide,
+  };
+}
+
+function upsertCachedPlan(tripId: string, plan: PlanRecord) {
+  const cachedPlans = getCachedTripPlans(tripId);
+
+  if (!cachedPlans) {
+    return;
+  }
+
+  const nextPlans = cachedPlans.some((cachedPlan) => cachedPlan.id === plan.id)
+    ? cachedPlans.map((cachedPlan) => (cachedPlan.id === plan.id ? plan : cachedPlan))
+    : [...cachedPlans, plan];
+
+  setCachedTripPlans(tripId, sortPlans(nextPlans));
+}
+
+function reportQueuedPlanWrite(error: unknown) {
+  console.error('queuedPlanWrite', error);
+}
+
 export function subscribeTripPlans(tripId: string, callback: (plans: PlanRecord[]) => void) {
   const db = getFirebaseDb();
   const plansRef = collection(db, 'trips', tripId, 'plans');
@@ -124,6 +164,20 @@ export async function createPlan(tripId: string, input: PlanInput) {
   return planRef.id;
 }
 
+export function queueCreatePlan(tripId: string, input: PlanInput) {
+  const db = getFirebaseDb();
+  const planRef = doc(collection(db, 'trips', tripId, 'plans'));
+
+  upsertCachedPlan(tripId, inputToPlanRecord(planRef.id, input));
+  void setDoc(planRef, {
+    ...getPlanCreateData(input),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }).catch(reportQueuedPlanWrite);
+
+  return planRef.id;
+}
+
 export async function updatePlan(tripId: string, planId: string, input: PlanInput) {
   const db = getFirebaseDb();
 
@@ -132,6 +186,16 @@ export async function updatePlan(tripId: string, planId: string, input: PlanInpu
     updatedAt: serverTimestamp(),
   });
   clearCachedTripPlans(tripId);
+}
+
+export function queueUpdatePlan(tripId: string, planId: string, input: PlanInput) {
+  const db = getFirebaseDb();
+
+  upsertCachedPlan(tripId, inputToPlanRecord(planId, input));
+  void updateDoc(doc(db, 'trips', tripId, 'plans', planId), {
+    ...getPlanUpdateData(input),
+    updatedAt: serverTimestamp(),
+  }).catch(reportQueuedPlanWrite);
 }
 
 export async function deletePlan(tripId: string, planId: string) {
