@@ -30,6 +30,7 @@ import type {
 } from '../app/models';
 import { getFirebaseDb } from './config';
 import { clearCachedTrip, clearTripSharedCache, getCachedTrip, setCachedTrip } from './shared-data-cache';
+import { shouldUseSnapshot } from './snapshot-freshness';
 
 export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
@@ -202,6 +203,10 @@ export function subscribeUserTrips(
   return onSnapshot(
     tripsQuery,
     (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       const trips = snapshot.docs
         .filter((item) => !isTripDeletedData(item.data()))
         .map(mapTripRecord);
@@ -227,6 +232,10 @@ export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null
   return onSnapshot(
     tripRef,
     (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       const trip =
         snapshot.exists() && !isTripDeletedData(snapshot.data()) ? mapTripRecord(snapshot) : null;
 
@@ -259,6 +268,10 @@ export function subscribeChildTrips(
   return onSnapshot(
     tripsQuery,
     (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       const trips = snapshot.docs
         .filter((item) => !isTripDeletedData(item.data()))
         .map(mapTripRecord);
@@ -279,7 +292,13 @@ export function subscribeTripMembers(tripId: string, callback: (members: TripMem
 
   return onSnapshot(
     membersQuery,
-    (snapshot) => callback(snapshot.docs.map(mapMemberRecord)),
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
+      callback(snapshot.docs.map(mapMemberRecord));
+    },
     (error) => {
       console.error('subscribeTripMembers', error);
     },
@@ -302,7 +321,13 @@ export function subscribeTripInvites(
 
   return onSnapshot(
     invitesQuery,
-    (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
+      callback(snapshot.docs.map(mapInviteRecord));
+    },
     (error) => {
       console.error('subscribeTripInvites', error);
       onError?.(error);
@@ -476,7 +501,13 @@ export function subscribePendingInvites(
 
   return onSnapshot(
     inviteIndexRef,
-    (snapshot) => callback(snapshot.exists() ? mapRecipientInviteIndex(snapshot.data()) : []),
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
+      callback(snapshot.exists() ? mapRecipientInviteIndex(snapshot.data()) : []);
+    },
     (error) => {
       console.error('subscribePendingInvites', error);
       onError?.(error);
