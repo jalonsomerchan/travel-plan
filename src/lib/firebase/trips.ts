@@ -6,6 +6,7 @@ import {
   deleteField,
   doc,
   getDocs,
+  getDocsFromServer,
   onSnapshot,
   orderBy,
   query,
@@ -131,6 +132,10 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
   };
 }
 
+function mapTripDocs(docs: Array<{ id: string; data: () => Record<string, unknown> }>) {
+  return docs.filter((item) => !isTripDeletedData(item.data())).map(mapTripRecord);
+}
+
 function mapMemberRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripMemberRecord {
   const data = snapshot.data();
 
@@ -199,25 +204,30 @@ export function subscribeUserTrips(
     where('memberIds', 'array-contains', userId),
     orderBy('startDate', 'asc'),
   );
+  let isActive = true;
 
-  return onSnapshot(
-    tripsQuery,
-    (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
+  getDocsFromServer(tripsQuery)
+    .then((snapshot) => {
+      if (!isActive) {
         return;
       }
 
-      const trips = snapshot.docs
-        .filter((item) => !isTripDeletedData(item.data()))
-        .map(mapTripRecord);
+      const trips = mapTripDocs(snapshot.docs);
       trips.forEach(setCachedTrip);
       callback(trips);
-    },
-    (error) => {
-      console.error('subscribeUserTrips', error);
+    })
+    .catch((error) => {
+      if (!isActive) {
+        return;
+      }
+
+      console.error('subscribeUserTrips.server', error);
       onError?.(error);
-    },
-  );
+    });
+
+  return () => {
+    isActive = false;
+  };
 }
 
 export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null) => void) {
@@ -272,9 +282,7 @@ export function subscribeChildTrips(
         return;
       }
 
-      const trips = snapshot.docs
-        .filter((item) => !isTripDeletedData(item.data()))
-        .map(mapTripRecord);
+      const trips = mapTripDocs(snapshot.docs);
 
       trips.forEach(setCachedTrip);
       callback(trips);
