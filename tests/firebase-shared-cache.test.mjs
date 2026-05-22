@@ -16,6 +16,9 @@ describe('Firebase shared data cache', () => {
     assert.match(cache, /travel-plan:shared-cache:v2/);
     assert.match(cache, /localStorage/);
     assert.doesNotMatch(cache, /sessionStorage/);
+    assert.match(cache, /persistentCacheMaxAgeMs/);
+    assert.match(cache, /canUseStoredValue/);
+    assert.match(cache, /navigator\.onLine === false/);
     assert.match(cache, /memoryCache/);
     assert.match(cache, /getCachedTrip/);
     assert.match(cache, /setCachedTrip/);
@@ -63,6 +66,8 @@ describe('Firebase shared data cache', () => {
     assert.match(docs, /Datos de un viaje/);
     assert.match(docs, /localStorage/);
     assert.match(docs, /Safari iOS|iPhone/);
+    assert.match(docs, /online/);
+    assert.match(docs, /offline/);
     assert.match(docs, /createSubscriptionScope/);
   });
 });
