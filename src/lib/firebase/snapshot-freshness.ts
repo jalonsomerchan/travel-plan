@@ -1,20 +1,8 @@
-type SnapshotMetadataLike = {
-  fromCache: boolean;
-  hasPendingWrites: boolean;
-};
-
 type SnapshotLike = {
-  metadata: SnapshotMetadataLike;
+  metadata: unknown;
 };
 
 export function shouldUseSnapshot(snapshot: SnapshotLike) {
-  if (snapshot.metadata.hasPendingWrites) {
-    return true;
-  }
-
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return true;
-  }
-
-  return !snapshot.metadata.fromCache;
+  void snapshot;
+  return true;
 }
