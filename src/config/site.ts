@@ -10,6 +10,23 @@ export const localeLabels: Record<Locale, string> = {
   en: 'English',
 };
 
+function getBuildId() {
+  const explicitVersion = import.meta.env.PUBLIC_APP_VERSION;
+  const githubSha = import.meta.env.GITHUB_SHA;
+
+  if (explicitVersion) {
+    return explicitVersion;
+  }
+
+  if (githubSha) {
+    return githubSha.slice(0, 7);
+  }
+
+  return '';
+}
+
+const buildId = getBuildId();
+
 export const siteConfig = {
   name: 'TravelPlan',
   description: 'Planifica viajes compartidos con calendarios, planes y colaboración en tiempo real.',
@@ -18,6 +35,8 @@ export const siteConfig = {
   repositoryUrl:
     import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jalonsomerchan/travel-plan',
   version: packageJson.version,
+  buildId,
+  releaseLabel: buildId ? `${packageJson.version}-${buildId}` : packageJson.version,
   author: 'Jorge Alonso',
   defaultLocale,
   locales,

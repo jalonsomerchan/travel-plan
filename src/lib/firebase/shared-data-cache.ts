@@ -2,7 +2,7 @@ import type { PlanRecord, TripRecord } from '../app/models';
 
 const cachePrefix = 'travel-plan:shared-cache:v2';
 const persistentCacheMaxAgeMs = 30 * 1000;
-const memoryCache = new Map<string, unknown>();
+const memoryCache = new Map<string, CachedValue<unknown>>();
 
 type CachedValue<T> = {
   savedAt: number;
@@ -34,10 +34,14 @@ function canUseStoredValue(savedAt: number) {
 }
 
 function readCachedValue<T>(key: string): T | null {
-  const memoryValue = memoryCache.get(key);
+  const memoryValue = memoryCache.get(key) as CachedValue<T> | undefined;
 
-  if (memoryValue !== undefined) {
-    return memoryValue as T;
+  if (memoryValue) {
+    if (canUseStoredValue(memoryValue.savedAt)) {
+      return memoryValue.value;
+    }
+
+    memoryCache.delete(key);
   }
 
   const storage = getStorage();
@@ -60,7 +64,7 @@ function readCachedValue<T>(key: string): T | null {
       return null;
     }
 
-    memoryCache.set(key, cached.value);
+    memoryCache.set(key, cached as CachedValue<unknown>);
 
     return cached.value;
   } catch {
@@ -70,7 +74,12 @@ function readCachedValue<T>(key: string): T | null {
 }
 
 function writeCachedValue<T>(key: string, value: T) {
-  memoryCache.set(key, value);
+  const cached = {
+    savedAt: Date.now(),
+    value,
+  } satisfies CachedValue<T>;
+
+  memoryCache.set(key, cached as CachedValue<unknown>);
   const storage = getStorage();
 
   if (!storage) {
@@ -78,13 +87,7 @@ function writeCachedValue<T>(key: string, value: T) {
   }
 
   try {
-    storage.setItem(
-      getKey(key),
-      JSON.stringify({
-        savedAt: Date.now(),
-        value,
-      } satisfies CachedValue<T>),
-    );
+    storage.setItem(getKey(key), JSON.stringify(cached));
   } catch {
     // Storage quota or privacy restrictions should not break Firebase flows.
   }
