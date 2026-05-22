@@ -72,13 +72,19 @@ function renderSelectOptions(locale: Locale, trips: TripRecord[]) {
 
   if (statusSelect) {
     const currentValue = statusSelect.value || 'all';
+    const statusOptions = getPlanStatusOptions(locale).filter(
+      (item) => item.value !== 'visited' && item.value !== 'discarded',
+    );
+
     statusSelect.innerHTML = [
       `<option value="all">${escapeHtml(t('trip.filters.allStatuses'))}</option>`,
-      ...getPlanStatusOptions(locale)
-        .filter((item) => item.value !== 'visited')
-        .map((item) => `<option value="${item.value}">${escapeHtml(item.label)}</option>`),
+      ...statusOptions.map(
+        (item) => `<option value="${item.value}">${escapeHtml(item.label)}</option>`,
+      ),
     ].join('');
-    statusSelect.value = currentValue;
+    statusSelect.value = statusOptions.some((item) => item.value === currentValue)
+      ? currentValue
+      : 'all';
   }
 }
 
