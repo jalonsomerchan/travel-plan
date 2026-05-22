@@ -286,6 +286,7 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
 
   setNavigationLinkHref('trip-plans-link', tripUrl);
   setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
+  setNavigationLinkHref('trip-create-mini-trip-menu-link', getAppUrl(locale, 'trip-create', { parent: tripId }));
   setNavigationLinkHref('trip-checklist-link', getAppUrl(locale, 'trip-checklist', { trip: tripId }));
   setNavigationLinkHref('trip-luggage-link', getAppUrl(locale, 'trip-luggage', { trip: tripId }));
   setNavigationLinkHref('trip-weather-link', getAppUrl(locale, 'trip-weather', { trip: tripId }));

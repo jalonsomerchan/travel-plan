@@ -16,7 +16,6 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardUrl = getLocalizedPath('/app/', locale);
-const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
 ---
 
 <BaseLayout title={t('trip.metaTitle')} description={t('trip.metaDescription')} locale={locale}>
@@ -56,174 +55,238 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
       <div class="mb-6" data-trip-weather-card>
         <LoadingState label={t('common.loading')} />
       </div>
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <h2 class="text-2xl font-black">{plansTitle}</h2>
-        <div class="flex flex-wrap items-center gap-3">
-          <button
-            aria-label={t('plan.location.getDirections')}
-            class="app-card-link min-w-11 px-0 text-xl leading-none"
-            data-current-location-action
-            data-variant="secondary"
-            hidden
-            title={t('plan.location.getDirections')}
-            type="button"
-          >
-            <span aria-hidden="true">📍</span>
-          </button>
-          <Button
-            aria-label={t('trip.goAiSuggestions')}
-            href={dashboardUrl}
-            id="trip-ai-inline-link"
-            title={t('trip.goAiSuggestions')}
-            variant="secondary"
-          >
-            {t('trip.goAiSuggestions')}
-          </Button>
-          <Button
-            aria-label={t('trip.goCreatePlan')}
-            class="min-w-11 px-0 text-2xl leading-none"
-            href={dashboardUrl}
-            id="trip-create-plan-inline-link"
-            title={t('trip.goCreatePlan')}
-          >
-            +
-          </Button>
-        </div>
-      </div>
-      <a
-        class="mt-5 flex min-w-0 items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-4 text-sm font-semibold leading-snug text-[var(--color-text)] transition hover:opacity-90"
-        data-trip-checklist-notice
-        href={dashboardUrl}
-        hidden
-        id="trip-checklist-notice-link"
-      ></a>
-      <div class="mt-5">
+      <div class="trip-view-tabs" data-trip-tabs hidden role="tablist" aria-label={t('trip.tabs.label')}>
         <button
-          aria-controls="trip-plan-filters"
-          aria-expanded="false"
-          class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2.5 text-sm font-bold text-[var(--color-text)] shadow-[var(--shadow-xs)] sm:hidden"
-          data-plan-filters-toggle
+          aria-controls="trip-plans-panel"
+          aria-selected="true"
+          class="trip-view-tab"
+          data-trip-tab="plans"
+          id="trip-plans-tab"
+          role="tab"
           type="button"
         >
-          <span aria-hidden="true">▾</span>
-          <span>{t('trip.filters.toggle')}</span>
+          {t('trip.tabs.plans')}
         </button>
-        <form
-          class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-          data-plan-filters
-          id="trip-plan-filters"
+        <button
+          aria-controls="trip-mini-trips-panel"
+          aria-selected="false"
+          class="trip-view-tab"
+          data-trip-tab="mini-trips"
+          id="trip-mini-trips-tab"
+          role="tab"
+          tabindex="-1"
+          type="button"
         >
-          <label class="col-span-full grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.search')}</span>
-            <input
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-search
-              name="search"
-              type="search"
-            />
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.category')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-category
-              name="category"
-            >
-              <option value="all">{t('trip.filters.allCategories')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.status')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-status
-              name="status"
-            >
-              <option value="all">{t('trip.filters.allStatuses')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.price')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-paid
-              name="paid"
-            >
-              <option value="all">{t('trip.filters.allPrices')}</option>
-              <option value="yes">{t('trip.filters.paidOnly')}</option>
-              <option value="no">{t('trip.filters.freeOnly')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.booking')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-booked
-              name="booked"
-            >
-              <option value="all">{t('trip.filters.allBookingOptions')}</option>
-              <option value="yes">{t('trip.filters.bookedOnly')}</option>
-              <option value="no">{t('trip.filters.notBookedOnly')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.dateMode')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-date
-              name="date"
-            >
-              <option value="all">{t('trip.filters.allDates')}</option>
-              <option value="today">{t('trip.filters.todayOnly')}</option>
-              <option value="no-date">{t('trip.filters.noDateOnly')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.importance')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-important
-              name="important"
-            >
-              <option value="all">{t('trip.filters.allImportance')}</option>
-              <option value="yes">{t('trip.filters.importantOnly')}</option>
-              <option value="no">{t('trip.filters.notImportantOnly')}</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>{t('trip.filters.guide')}</span>
-            <select
-              class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
-              data-plan-filter-guide
-              name="guide"
-            >
-              <option value="all">{t('trip.filters.allGuides')}</option>
-              <option value="yes">{t('trip.filters.withGuide')}</option>
-              <option value="no">{t('trip.filters.withoutGuide')}</option>
-            </select>
-          </label>
-        </form>
+          {t('trip.tabs.miniTrips')}
+        </button>
       </div>
-      <section class="mt-8 border-t border-[var(--color-border)] pt-8" data-mini-trips-section>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]">{t('trip.miniTrips.eyebrow')}</p>
-            <h2 class="mt-2 text-2xl font-black text-[var(--color-text)]">{t('trip.miniTrips.title')}</h2>
-            <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-mini-trip-count>{t('trip.miniTrips.count').replace('{count}', '0')}</p>
+      <section data-trip-panel="plans" id="trip-plans-panel" role="tabpanel" aria-labelledby="trip-plans-tab">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <h2 class="text-2xl font-black">{t('trip.plansTitle')}</h2>
+          <div class="flex flex-wrap items-center gap-3">
+            <button
+              aria-label={t('plan.location.getDirections')}
+              class="app-card-link min-w-11 px-0 text-xl leading-none"
+              data-current-location-action
+              data-variant="secondary"
+              hidden
+              title={t('plan.location.getDirections')}
+              type="button"
+            >
+              <span aria-hidden="true">📍</span>
+            </button>
+            <Button
+              aria-label={t('trip.goAiSuggestions')}
+              href={dashboardUrl}
+              id="trip-ai-inline-link"
+              title={t('trip.goAiSuggestions')}
+              variant="secondary"
+            >
+              {t('trip.goAiSuggestions')}
+            </Button>
+            <Button
+              aria-label={t('trip.goCreatePlan')}
+              class="min-w-11 px-0 text-2xl leading-none"
+              href={dashboardUrl}
+              id="trip-create-plan-inline-link"
+              title={t('trip.goCreatePlan')}
+            >
+              +
+            </Button>
           </div>
-          <Button href={dashboardUrl} id="trip-create-mini-trip-link">{t('trip.miniTrips.createAction')}</Button>
+        </div>
+        <a
+          class="mt-5 flex min-w-0 items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-4 text-sm font-semibold leading-snug text-[var(--color-text)] transition hover:opacity-90"
+          data-trip-checklist-notice
+          href={dashboardUrl}
+          hidden
+          id="trip-checklist-notice-link"
+        ></a>
+        <div class="mt-5">
+          <button
+            aria-controls="trip-plan-filters"
+            aria-expanded="false"
+            class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2.5 text-sm font-bold text-[var(--color-text)] shadow-[var(--shadow-xs)] sm:hidden"
+            data-plan-filters-toggle
+            type="button"
+          >
+            <span aria-hidden="true">▾</span>
+            <span>{t('trip.filters.toggle')}</span>
+          </button>
+          <form
+            class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            data-plan-filters
+            id="trip-plan-filters"
+          >
+            <label class="col-span-full grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.search')}</span>
+              <input
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-search
+                name="search"
+                type="search"
+              />
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.category')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-category
+                name="category"
+              >
+                <option value="all">{t('trip.filters.allCategories')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.status')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-status
+                name="status"
+              >
+                <option value="all">{t('trip.filters.allStatuses')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.price')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-paid
+                name="paid"
+              >
+                <option value="all">{t('trip.filters.allPrices')}</option>
+                <option value="yes">{t('trip.filters.paidOnly')}</option>
+                <option value="no">{t('trip.filters.freeOnly')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.booking')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-booked
+                name="booked"
+              >
+                <option value="all">{t('trip.filters.allBookingOptions')}</option>
+                <option value="yes">{t('trip.filters.bookedOnly')}</option>
+                <option value="no">{t('trip.filters.notBookedOnly')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.dateMode')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-date
+                name="date"
+              >
+                <option value="all">{t('trip.filters.allDates')}</option>
+                <option value="today">{t('trip.filters.todayOnly')}</option>
+                <option value="no-date">{t('trip.filters.noDateOnly')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.importance')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-important
+                name="important"
+              >
+                <option value="all">{t('trip.filters.allImportance')}</option>
+                <option value="yes">{t('trip.filters.importantOnly')}</option>
+                <option value="no">{t('trip.filters.notImportantOnly')}</option>
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-[var(--color-text-muted)]">
+              <span>{t('trip.filters.guide')}</span>
+              <select
+                class="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text)]"
+                data-plan-filter-guide
+                name="guide"
+              >
+                <option value="all">{t('trip.filters.allGuides')}</option>
+                <option value="yes">{t('trip.filters.withGuide')}</option>
+                <option value="no">{t('trip.filters.withoutGuide')}</option>
+              </select>
+            </label>
+          </form>
+        </div>
+        <div class="mt-6 grid gap-4" data-plan-list>
+          <LoadingState label={t('common.loading')} />
+        </div>
+      </section>
+      <section
+        class="mt-8 border-t border-[var(--color-border)] pt-8"
+        data-mini-trips-section
+        data-trip-panel="mini-trips"
+        hidden
+        id="trip-mini-trips-panel"
+        role="tabpanel"
+        aria-labelledby="trip-mini-trips-tab"
+      >
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]">{t('trip.miniTrips.eyebrow')}</p>
+          <h2 class="mt-2 text-2xl font-black text-[var(--color-text)]">{t('trip.miniTrips.title')}</h2>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-mini-trip-count>{t('trip.miniTrips.count').replace('{count}', '0')}</p>
         </div>
         <div class="mt-6 grid gap-4" data-mini-trip-list>
           <LoadingState label={t('common.loading')} />
         </div>
       </section>
-      <div class="mt-6 grid gap-4" data-plan-list>
-        <LoadingState label={t('common.loading')} />
-      </div>
     </div>
   </AppShell>
 
   <style is:global>
+    .trip-view-tabs {
+      display: flex;
+      gap: 0.65rem;
+      max-width: 100%;
+      overflow-x: auto;
+      padding-bottom: 0.15rem;
+      margin-bottom: 1.5rem;
+      scrollbar-width: thin;
+    }
+
+    .trip-view-tab {
+      flex: 0 0 auto;
+      min-height: 2.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-soft);
+      padding: 0.6rem 0.95rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--color-text-muted);
+      transition:
+        background var(--transition-base, 180ms ease),
+        color var(--transition-base, 180ms ease),
+        border-color var(--transition-base, 180ms ease);
+    }
+
+    .trip-view-tab[aria-selected="true"] {
+      border-color: color-mix(in srgb, var(--color-primary), transparent 40%);
+      background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface-raised) 35%);
+      color: var(--color-text);
+    }
+
     [data-trip-weather-card] .app-card-shell {
       display: block;
       overflow: hidden;

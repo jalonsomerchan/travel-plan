@@ -476,10 +476,14 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const membersLink = document.querySelector<HTMLAnchorElement>('#trip-members-link');
   const aiLink = document.querySelector<HTMLAnchorElement>('#trip-ai-link');
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
+  const createMiniTripMenuLink = document.querySelector<HTMLAnchorElement>('#trip-create-mini-trip-menu-link');
   const aiInlineLink = document.querySelector<HTMLAnchorElement>('#trip-ai-inline-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
-  const createMiniTripLink = document.querySelector<HTMLAnchorElement>('#trip-create-mini-trip-link');
+  const tripTabs = document.querySelector<HTMLElement>('[data-trip-tabs]');
+  const tripTabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-trip-tab]'));
   const miniTripsSection = document.querySelector<HTMLElement>('[data-mini-trips-section]');
+  const planPanel = document.querySelector<HTMLElement>('[data-trip-panel="plans"]');
+  const miniTripsPanel = document.querySelector<HTMLElement>('[data-trip-panel="mini-trips"]');
   const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
   const planList = document.querySelector<HTMLElement>('[data-plan-list]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
@@ -501,6 +505,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   let currentChecklistItems: ChecklistItemRecord[] = [];
   let parentLookupToken = 0;
   let weatherRequestId = 0;
+  let activeTab: 'plans' | 'mini-trips' = 'plans';
   const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
   const miniTripChecklistItems = new Map<string, ChecklistItemRecord[]>();
   const filters: PlanFilters = {
@@ -532,9 +537,9 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (membersLink) membersLink.href = getAppUrl(locale, 'trip-members', { trip: tripId });
   if (aiLink) aiLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (createMiniTripMenuLink) createMiniTripMenuLink.href = getAppUrl(locale, 'trip-create', { parent: tripId });
   if (aiInlineLink) aiInlineLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanInlineLink) createPlanInlineLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
-  if (createMiniTripLink) createMiniTripLink.href = getAppUrl(locale, 'trip-create', { parent: tripId });
   if (categorySelect) {
     categorySelect.innerHTML += getCategoryOptions(locale)
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
@@ -551,9 +556,48 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     filtersForm?.classList.toggle('hidden', isExpanded);
     filtersForm?.classList.toggle('grid', !isExpanded);
   });
+  tripTabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextTab = button.dataset.tripTab;
+
+      if (nextTab !== 'plans' && nextTab !== 'mini-trips') {
+        return;
+      }
+
+      activeTab = nextTab;
+      syncTripPanels();
+    });
+  });
 
   const syncPlans = () => {
     renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters), geolocation);
+  };
+
+  const syncTripPanels = () => {
+    const canShowMiniTripsTab = Boolean(currentTrip && !currentTrip.parentTripId && currentMiniTrips.length > 0);
+
+    if (!canShowMiniTripsTab) {
+      activeTab = 'plans';
+    }
+
+    if (tripTabs) {
+      tripTabs.hidden = !canShowMiniTripsTab;
+    }
+
+    tripTabButtons.forEach((button) => {
+      const isSelected = canShowMiniTripsTab && button.dataset.tripTab === activeTab;
+
+      button.setAttribute('aria-selected', String(isSelected));
+      button.tabIndex = isSelected ? 0 : -1;
+    });
+
+    if (planPanel) {
+      planPanel.hidden = canShowMiniTripsTab ? activeTab !== 'plans' : false;
+    }
+
+    if (miniTripsPanel) {
+      miniTripsPanel.hidden = !canShowMiniTripsTab || activeTab !== 'mini-trips';
+    }
   };
 
   const syncChecklistNotice = () => {
@@ -565,6 +609,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
   const syncMiniTrips = () => {
     renderMiniTrips(locale, currentMiniTrips);
+    syncTripPanels();
   };
 
   const syncParentNavigation = (trip: TripRecord | null) => {
@@ -620,6 +665,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     currentTrip = null;
     currentMiniTrips = [];
     currentChecklistItems = [];
+    activeTab = 'plans';
     parentLookupToken += 1;
     miniTripChecklistItems.clear();
     syncMiniTrips();
@@ -876,8 +922,8 @@ export function mountTripPage({ locale }: { locale: Locale }) {
           if (miniTripsSection) {
             miniTripsSection.hidden = Boolean(trip.parentTripId);
           }
-          if (createMiniTripLink) {
-            createMiniTripLink.hidden = Boolean(trip.parentTripId);
+          if (createMiniTripMenuLink) {
+            createMiniTripMenuLink.hidden = Boolean(trip.parentTripId);
           }
           if (accommodationMapsLink) {
             const hasLocation = hasAccommodationLocation(trip.accommodation);
@@ -895,6 +941,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
             accommodationMapsLink.target = mapUrl ? '_blank' : '';
             accommodationMapsLink.rel = mapUrl ? 'noopener noreferrer' : '';
           }
+          syncTripPanels();
           syncPlans();
         } else {
           currentTrip = null;
@@ -904,6 +951,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
           setAppShellMeta([]);
+          syncTripPanels();
         }
       }),
     );
