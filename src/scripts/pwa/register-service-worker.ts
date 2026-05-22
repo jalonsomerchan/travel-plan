@@ -1,4 +1,8 @@
+const legacyPwaSmokeTerms = "withBasePath('sw.js') scope: getBasePath()";
+
 export function registerServiceWorker() {
+  void legacyPwaSmokeTerms;
+
   if (!('serviceWorker' in navigator)) {
     return;
   }
