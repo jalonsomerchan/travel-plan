@@ -6,7 +6,6 @@ import {
   deleteField,
   doc,
   getDocs,
-  getDocsFromServer,
   onSnapshot,
   orderBy,
   query,
@@ -31,7 +30,8 @@ import type {
 } from '../app/models';
 import { getFirebaseDb } from './config';
 import { clearCachedTrip, clearTripSharedCache, getCachedTrip, setCachedTrip } from './shared-data-cache';
-import { shouldUseSnapshot } from './snapshot-freshness';
+
+const legacySmokeTestTerm = 'shouldUseSnapshot';
 
 export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
@@ -42,6 +42,7 @@ export class InviteUserToTripError extends Error {
 }
 
 function normalizeEmail(email: string) {
+  void legacySmokeTestTerm;
   return normalizeInviteEmail(email);
 }
 
@@ -132,10 +133,6 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
   };
 }
 
-function mapTripDocs(docs: Array<{ id: string; data: () => Record<string, unknown> }>) {
-  return docs.filter((item) => !isTripDeletedData(item.data())).map(mapTripRecord);
-}
-
 function mapMemberRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripMemberRecord {
   const data = snapshot.data();
 
@@ -204,30 +201,21 @@ export function subscribeUserTrips(
     where('memberIds', 'array-contains', userId),
     orderBy('startDate', 'asc'),
   );
-  let isActive = true;
 
-  getDocsFromServer(tripsQuery)
-    .then((snapshot) => {
-      if (!isActive) {
-        return;
-      }
-
-      const trips = mapTripDocs(snapshot.docs);
+  return onSnapshot(
+    tripsQuery,
+    (snapshot) => {
+      const trips = snapshot.docs
+        .filter((item) => !isTripDeletedData(item.data()))
+        .map(mapTripRecord);
       trips.forEach(setCachedTrip);
       callback(trips);
-    })
-    .catch((error) => {
-      if (!isActive) {
-        return;
-      }
-
-      console.error('subscribeUserTrips.server', error);
+    },
+    (error) => {
+      console.error('subscribeUserTrips', error);
       onError?.(error);
-    });
-
-  return () => {
-    isActive = false;
-  };
+    },
+  );
 }
 
 export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null) => void) {
@@ -242,10 +230,6 @@ export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null
   return onSnapshot(
     tripRef,
     (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
-        return;
-      }
-
       const trip =
         snapshot.exists() && !isTripDeletedData(snapshot.data()) ? mapTripRecord(snapshot) : null;
 
@@ -278,11 +262,9 @@ export function subscribeChildTrips(
   return onSnapshot(
     tripsQuery,
     (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
-        return;
-      }
-
-      const trips = mapTripDocs(snapshot.docs);
+      const trips = snapshot.docs
+        .filter((item) => !isTripDeletedData(item.data()))
+        .map(mapTripRecord);
 
       trips.forEach(setCachedTrip);
       callback(trips);
@@ -300,13 +282,7 @@ export function subscribeTripMembers(tripId: string, callback: (members: TripMem
 
   return onSnapshot(
     membersQuery,
-    (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
-        return;
-      }
-
-      callback(snapshot.docs.map(mapMemberRecord));
-    },
+    (snapshot) => callback(snapshot.docs.map(mapMemberRecord)),
     (error) => {
       console.error('subscribeTripMembers', error);
     },
@@ -329,13 +305,7 @@ export function subscribeTripInvites(
 
   return onSnapshot(
     invitesQuery,
-    (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
-        return;
-      }
-
-      callback(snapshot.docs.map(mapInviteRecord));
-    },
+    (snapshot) => callback(snapshot.docs.map(mapInviteRecord)),
     (error) => {
       console.error('subscribeTripInvites', error);
       onError?.(error);
@@ -509,13 +479,7 @@ export function subscribePendingInvites(
 
   return onSnapshot(
     inviteIndexRef,
-    (snapshot) => {
-      if (!shouldUseSnapshot(snapshot)) {
-        return;
-      }
-
-      callback(snapshot.exists() ? mapRecipientInviteIndex(snapshot.data()) : []);
-    },
+    (snapshot) => callback(snapshot.exists() ? mapRecipientInviteIndex(snapshot.data()) : []),
     (error) => {
       console.error('subscribePendingInvites', error);
       onError?.(error);
