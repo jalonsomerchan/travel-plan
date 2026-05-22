@@ -10,6 +10,7 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardUrl = getLocalizedPath('/app/', locale);
+const todayUrl = getLocalizedPath('/app/today/', locale);
 const invitesUrl = getLocalizedPath('/app/trip-invites/', locale);
 ---
 
@@ -17,6 +18,7 @@ const invitesUrl = getLocalizedPath('/app/trip-invites/', locale);
   ariaLabel={t('dashboard.breadcrumb')}
   items={[
     { href: dashboardUrl, id: 'dashboard-trips-link', label: t('appNav.trips') },
+    { href: todayUrl, id: 'dashboard-today-link', label: t('appNav.today') },
     { href: invitesUrl, id: 'dashboard-invites-link', label: t('dashboard.goInvites') },
   ]}
 />
