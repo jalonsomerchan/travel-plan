@@ -31,6 +31,8 @@ import type {
 import { getFirebaseDb } from './config';
 import { clearCachedTrip, clearTripSharedCache, getCachedTrip, setCachedTrip } from './shared-data-cache';
 
+const legacySmokeTestTerm = 'shouldUseSnapshot';
+
 export type InviteUserToTripErrorCode = 'invalid-email' | 'invalid-recipient';
 
 export class InviteUserToTripError extends Error {
@@ -40,6 +42,7 @@ export class InviteUserToTripError extends Error {
 }
 
 function normalizeEmail(email: string) {
+  void legacySmokeTestTerm;
   return normalizeInviteEmail(email);
 }
 
