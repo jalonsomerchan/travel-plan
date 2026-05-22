@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import type { ChecklistItemInput, ChecklistItemRecord } from '../app/models';
 import { getFirebaseDb } from './config';
+import { shouldUseSnapshot } from './snapshot-freshness';
 
 function getLuggageItemWriteData(input: ChecklistItemInput) {
   return {
@@ -40,7 +41,11 @@ export function subscribeTripLuggageItems(
 
   return onSnapshot(
     luggageRef,
-    (snapshot) =>
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       callback(
         snapshot.docs
           .map(mapLuggageItemRecord)
@@ -52,7 +57,8 @@ export function subscribeTripLuggageItems(
 
             return left.title.localeCompare(right.title);
           }),
-      ),
+      );
+    },
     (error) => {
       console.error('subscribeTripLuggageItems', error);
       onError?.(error);

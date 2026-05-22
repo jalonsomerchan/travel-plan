@@ -19,7 +19,9 @@ describe('Firebase shared data cache', () => {
     assert.match(cache, /persistentCacheMaxAgeMs/);
     assert.match(cache, /canUseStoredValue/);
     assert.match(cache, /navigator\.onLine === false/);
-    assert.match(cache, /memoryCache/);
+    assert.match(cache, /memoryCache = new Map<string, CachedValue<unknown>>/);
+    assert.match(cache, /memoryValue\.savedAt/);
+    assert.match(cache, /memoryCache\.delete\(key\)/);
     assert.match(cache, /getCachedTrip/);
     assert.match(cache, /setCachedTrip/);
     assert.match(cache, /clearCachedTrip/);
@@ -28,13 +30,14 @@ describe('Firebase shared data cache', () => {
     assert.match(cache, /clearSharedDataCache/);
   });
 
-  it('uses cached trips as initial values and refreshes them from snapshots', () => {
+  it('uses cached trips as initial values and refreshes them from fresh snapshots', () => {
     const trips = readText('src/lib/firebase/trips.ts');
 
     assert.match(trips, /getCachedTrip/);
     assert.match(trips, /setCachedTrip/);
     assert.match(trips, /clearCachedTrip/);
     assert.match(trips, /queueMicrotask\(\(\) => callback\(cachedTrip\)\)/);
+    assert.match(trips, /shouldUseSnapshot/);
     assert.match(trips, /trips\.forEach\(setCachedTrip\)/);
     assert.match(trips, /clearCachedTrip\(tripId\)/);
     assert.match(trips, /clearCachedTrip\(invite\.tripId\)/);
@@ -47,7 +50,20 @@ describe('Firebase shared data cache', () => {
     assert.match(plans, /setCachedTripPlans/);
     assert.match(plans, /clearCachedTripPlans/);
     assert.match(plans, /queueMicrotask\(\(\) => callback\(cachedPlans\)\)/);
+    assert.match(plans, /shouldUseSnapshot/);
     assert.match(plans, /clearCachedTripPlans\(tripId\)/);
+  });
+
+  it('ignores stale cached snapshots online for checklist and luggage data', () => {
+    const helper = readText('src/lib/firebase/snapshot-freshness.ts');
+    const checklists = readText('src/lib/firebase/checklists.ts');
+    const luggage = readText('src/lib/firebase/luggage.ts');
+
+    assert.match(helper, /hasPendingWrites/);
+    assert.match(helper, /navigator\.onLine === false/);
+    assert.match(helper, /!snapshot\.metadata\.fromCache/);
+    assert.match(checklists, /shouldUseSnapshot/);
+    assert.match(luggage, /shouldUseSnapshot/);
   });
 
   it('clears shared cache on user changes and sign out', () => {

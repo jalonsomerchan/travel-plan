@@ -17,6 +17,7 @@ import {
   getCachedTripPlans,
   setCachedTripPlans,
 } from './shared-data-cache';
+import { shouldUseSnapshot } from './snapshot-freshness';
 
 const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time', 'aiGuide'] as const;
 
@@ -118,6 +119,10 @@ export function subscribeTripPlans(tripId: string, callback: (plans: PlanRecord[
   return onSnapshot(
     plansRef,
     (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       const plans = sortPlans(snapshot.docs.map(mapPlanRecord));
       setCachedTripPlans(tripId, plans);
       callback(plans);
@@ -144,7 +149,13 @@ export function subscribePlan(
 
   return onSnapshot(
     doc(db, 'trips', tripId, 'plans', planId),
-    (snapshot) => callback(snapshot.exists() ? mapPlanRecord(snapshot) : null),
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
+      callback(snapshot.exists() ? mapPlanRecord(snapshot) : null);
+    },
     (error) => {
       console.error('subscribePlan', error);
     },
