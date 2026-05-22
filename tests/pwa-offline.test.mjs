@@ -94,18 +94,15 @@ describe('PWA offline support', () => {
     assert.match(en, /pwaStatus\.offline/);
   });
 
-  it('enables persistent Firestore local cache where supported and iOS-safe fallbacks', () => {
+  it('uses a Firestore transport fallback without enabling persistent local cache', () => {
     const config = readText('src/lib/firebase/config.ts');
     const sharedCache = readText('src/lib/firebase/shared-data-cache.ts');
 
     assert.match(config, /initializeFirestore/);
-    assert.match(config, /persistentLocalCache/);
-    assert.match(config, /persistentMultipleTabManager/);
-    assert.match(config, /shouldUseSafeFirestoreMode/);
-    assert.match(config, /maxTouchPoints/);
-    assert.match(config, /MacIntel/);
-    assert.match(config, /AppleWebKit/);
-    assert.match(config, /firebaseDb = getFirestore\(app\)/);
+    assert.match(config, /experimentalAutoDetectLongPolling/);
+    assert.match(config, /useFetchStreams:\s*false/);
+    assert.doesNotMatch(config, /persistentLocalCache\(/);
+    assert.doesNotMatch(config, /persistentMultipleTabManager\(/);
     assert.match(sharedCache, /window\.localStorage/);
     assert.doesNotMatch(sharedCache, /window\.sessionStorage/);
     assert.match(sharedCache, /travel-plan:shared-cache:v2/);
