@@ -28,6 +28,8 @@ describe('trip form layout', () => {
     assert.match(form, /trip\.form\.sectionAccommodationHelp/);
     assert.match(form, /LocationPickerFields/);
     assert.match(form, /AccommodationFormFields/);
+    assert.doesNotMatch(form, /name="startDate"[^>]*required/);
+    assert.doesNotMatch(form, /name="endDate"[^>]*required/);
     assert.match(createPage, /class="w-full space-y-4"/);
     assert.match(editPage, /class="mt-6 w-full space-y-4"/);
     assert.doesNotMatch(createPage, /max-w-3xl/);

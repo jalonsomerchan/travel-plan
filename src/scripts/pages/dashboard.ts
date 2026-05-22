@@ -47,20 +47,44 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('dashboard.empty'))}</article>`;
     return;
   }
-  target.innerHTML = trips
-    .map((trip) => `
-      <a class="app-card-shell" href="${getAppUrl(locale, 'trip', { trip: trip.id })}">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 class="text-xl font-bold text-[var(--color-text)]">${escapeHtml(trip.name)}</h3>
-            <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.location)}</p>
-          </div>
-          <span class="status-pill" data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
+
+  const childTripsByParentId = trips.reduce<Map<string, TripRecord[]>>((accumulator, trip) => {
+    if (!trip.parentTripId) {
+      return accumulator;
+    }
+
+    const siblings = accumulator.get(trip.parentTripId) ?? [];
+    siblings.push(trip);
+    accumulator.set(trip.parentTripId, siblings);
+
+    return accumulator;
+  }, new Map());
+
+  const rootTrips = trips.filter((trip) => !trip.parentTripId || !trips.some((candidate) => candidate.id === trip.parentTripId));
+
+  const renderTripCard = (trip: TripRecord, nested = false) => `
+    <a class="app-card-shell ${nested ? 'ml-5 border-l-4 border-l-[var(--color-primary-soft)] pl-4 sm:ml-8' : ''}" href="${getAppUrl(locale, 'trip', { trip: trip.id })}">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="text-xl font-bold text-[var(--color-text)]">${escapeHtml(trip.name)}</h3>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.location)}</p>
         </div>
-        <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
-      </a>
-    `)
-    .join('');
+        <span class="status-pill" data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
+      </div>
+      <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
+    </a>
+  `;
+
+  const renderTripTree = (trip: TripRecord): string => {
+    const childTrips = childTripsByParentId.get(trip.id) ?? [];
+
+    return [
+      renderTripCard(trip),
+      ...childTrips.map((childTrip) => renderTripCard(childTrip, true)),
+    ].join('');
+  };
+
+  target.innerHTML = rootTrips.map(renderTripTree).join('');
 }
 
 function renderTripsError(locale: Locale) {
