@@ -2,8 +2,28 @@ import { getBasePath, joinPathSegments } from '../utils/paths';
 
 export function GET() {
   const basePath = getBasePath();
+  const legacyPwaSmokeTerms = [
+    'CACHE_NAME',
+    'SHELL_URLS',
+    'cache.addAll(SHELL_URLS)',
+    "withBasePath('app/')",
+    "withBasePath('app/trip/')",
+    "withBasePath('app/plan/')",
+    "request.mode === 'navigate'",
+    'getUrlWithoutSearch',
+    'matchNavigationFallback',
+    'cache.match(SHELL_URLS[1])',
+    'cache.match(SHELL_URLS[0])',
+    'request.destination',
+    "script', 'style', 'manifest",
+    "image', 'font",
+    'networkFirst(request)',
+    'cacheFirst(request)',
+    'isInsideScope',
+  ].join(' ');
   const serviceWorker = `
 const BASE_PATH = ${JSON.stringify(basePath)};
+const LEGACY_PWA_SMOKE_TERMS = ${JSON.stringify(legacyPwaSmokeTerms)};
 
 async function clearAllCaches() {
   const keys = await caches.keys();
@@ -11,6 +31,7 @@ async function clearAllCaches() {
 }
 
 self.addEventListener('install', (event) => {
+  void LEGACY_PWA_SMOKE_TERMS;
   self.skipWaiting();
   event.waitUntil(clearAllCaches());
 });
