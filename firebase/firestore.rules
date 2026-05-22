@@ -15,6 +15,7 @@ service cloud.firestore {
 
     function tripVisibleFromTripData(tripData) {
       return signedIn() && (
+        tripData.ownerId == request.auth.uid ||
         request.auth.uid in tripData.memberIds ||
         (
           tripData.parentTripId is string &&
