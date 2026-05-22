@@ -45,7 +45,7 @@ export function getFirebaseDb() {
   }
 
   firebaseDb = initializeFirestore(getFirebaseApp(), {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
     useFetchStreams: false,
   });
 
