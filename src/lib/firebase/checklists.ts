@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import type { ChecklistItemInput, ChecklistItemRecord } from '../app/models';
 import { getFirebaseDb } from './config';
+import { shouldUseSnapshot } from './snapshot-freshness';
 
 function getChecklistItemWriteData(input: ChecklistItemInput) {
   return {
@@ -36,7 +37,11 @@ export function subscribeTripChecklistItems(
 
   return onSnapshot(
     checklistRef,
-    (snapshot) =>
+    (snapshot) => {
+      if (!shouldUseSnapshot(snapshot)) {
+        return;
+      }
+
       callback(
         snapshot.docs
           .map(mapChecklistItemRecord)
@@ -48,7 +53,8 @@ export function subscribeTripChecklistItems(
 
             return left.title.localeCompare(right.title);
           }),
-      ),
+      );
+    },
     (error) => {
       console.error('subscribeTripChecklistItems', error);
     },
