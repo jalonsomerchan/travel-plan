@@ -13,8 +13,9 @@ describe('Firebase shared data cache', () => {
   it('keeps a small shared cache helper for trip and plan data', () => {
     const cache = readText('src/lib/firebase/shared-data-cache.ts');
 
-    assert.match(cache, /travel-plan:shared-cache:v1/);
-    assert.match(cache, /sessionStorage/);
+    assert.match(cache, /travel-plan:shared-cache:v2/);
+    assert.match(cache, /localStorage/);
+    assert.doesNotMatch(cache, /sessionStorage/);
     assert.match(cache, /memoryCache/);
     assert.match(cache, /getCachedTrip/);
     assert.match(cache, /setCachedTrip/);
@@ -60,7 +61,8 @@ describe('Firebase shared data cache', () => {
 
     assert.match(docs, /shared-data-cache\.ts/);
     assert.match(docs, /Datos de un viaje/);
-    assert.match(docs, /sessionStorage/);
+    assert.match(docs, /localStorage/);
+    assert.match(docs, /Safari iOS|iPhone/);
     assert.match(docs, /createSubscriptionScope/);
   });
 });

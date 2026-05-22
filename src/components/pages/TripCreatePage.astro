@@ -25,7 +25,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <AppBackButton slot="topbar" fallbackHref={dashboardUrl} label={t('common.goBack')} />
     <DashboardSectionNav slot="nav" locale={locale} />
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
-      <form class="mx-auto max-w-3xl space-y-4" id="trip-create-form">
+      <form class="w-full space-y-4" id="trip-create-form">
         <TripFormFields locale={locale} prefix="trip-create" />
         <p class="text-sm text-[var(--color-text-soft)]" id="trip-create-message" role="status" aria-live="polite">{t('dashboard.createHint')}</p>
         <div class="flex flex-wrap gap-3">

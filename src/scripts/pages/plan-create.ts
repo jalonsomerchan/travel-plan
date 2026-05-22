@@ -4,7 +4,7 @@ import { formatDateRange } from '../../lib/app/format';
 import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-links';
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
-import { createPlan } from '../../lib/firebase/plans';
+import { queueCreatePlan } from '../../lib/firebase/plans';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { observeSession } from '../../lib/firebase/session';
 import { initPlanLinksFields } from './plan-links-fields';
@@ -39,7 +39,7 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
       if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
     });
   });
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     const locationValidationKey = getPlanLocationValidationKey(form);
 
@@ -57,14 +57,8 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
     }
 
     setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
-    try {
-      await createPlan(tripId, planInput);
-      setMessage(message, t('trip.plansCreated'), 'success');
-      window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
-    } catch (error) {
-      setMessage(message, error instanceof Error ? error.message : t('trip.plansError'), 'danger');
-    } finally {
-      setButtonBusy(button, false, t('trip.plansAction'), t('trip.plansCreating'));
-    }
+    queueCreatePlan(tripId, planInput);
+    setMessage(message, t('trip.plansCreated'), 'success');
+    window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
   });
 }
