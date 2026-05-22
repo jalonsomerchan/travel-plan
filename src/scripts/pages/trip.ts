@@ -90,6 +90,21 @@ function renderPlanStatusIndicator(locale: Locale, status: PlanStatus) {
   return `<span aria-label="${escapeHtml(tooltip)}" class="status-pill inline-flex h-7 shrink-0 items-center px-3 text-xs" data-tone="${getPlanStatusTone(status)}" title="${escapeHtml(tooltip)}">${escapeHtml(label)}</span>`;
 }
 
+function renderPlanStatusSummary(
+  locale: Locale,
+  plan: PlanRecord,
+  flags: string,
+  aiGuideIndicator: string,
+) {
+  const statusIndicator = renderPlanStatusIndicator(locale, plan.status);
+
+  if (!flags && !aiGuideIndicator) {
+    return statusIndicator;
+  }
+
+  return `<div class="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2">${flags}${aiGuideIndicator}${statusIndicator}</div>`;
+}
+
 function matchesBooleanFilter(value: boolean, filter: PlanFilters['paid']) {
   if (filter === 'all') {
     return true;
@@ -279,11 +294,8 @@ function renderPlans(
           </div>
           <div class="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
             <p class="min-w-0 break-words text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(t('trip.planCard.type'))} · ${escapeHtml(categoryLabel)}</p>
-            ${renderPlanStatusIndicator(locale, plan.status)}
+            ${renderPlanStatusSummary(locale, plan, flags, aiGuideIndicator)}
           </div>
-          ${(flags || aiGuideIndicator)
-            ? `<div class="mt-2 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}</div>`
-            : ''}
           ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
           <div class="mt-3 grid min-w-0 gap-x-4 gap-y-1 text-sm text-[var(--color-text-soft)] sm:grid-cols-2">
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
@@ -933,7 +945,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
                   trip.accommodation.locationLng,
                 )
               : trip.accommodation?.locationName
-                ? getGoogleMapsPlaceUrl(trip.accommodation.locationName)
+                ? getGoogleMapsPlaceUrl(trip.accommodationName)
                 : '';
 
             accommodationMapsLink.href = mapUrl || getAppUrl(locale, 'trip-accommodation', { trip: tripId });
