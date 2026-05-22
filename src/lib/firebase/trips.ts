@@ -133,6 +133,28 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
   };
 }
 
+function sortTripRecords(trips: TripRecord[]) {
+  return [...trips].sort((left, right) =>
+    `${left.startDate || '9999-99-99'}${left.name}`.localeCompare(
+      `${right.startDate || '9999-99-99'}${right.name}`,
+    ),
+  );
+}
+
+function mergeTripRecords(tripGroups: TripRecord[][]) {
+  const tripsById = new Map<string, TripRecord>();
+
+  tripGroups.flat().forEach((trip) => {
+    tripsById.set(trip.id, trip);
+  });
+
+  return sortTripRecords([...tripsById.values()]);
+}
+
+function mapTripDocs(docs: Array<{ id: string; data: () => Record<string, unknown> }>) {
+  return docs.filter((item) => !isTripDeletedData(item.data())).map(mapTripRecord);
+}
+
 function mapMemberRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripMemberRecord {
   const data = snapshot.data();
 
@@ -196,26 +218,43 @@ export function subscribeUserTrips(
   onError?: (error: Error) => void,
 ) {
   const db = getFirebaseDb();
-  const tripsQuery = query(
-    collection(db, 'trips'),
-    where('memberIds', 'array-contains', userId),
-    orderBy('startDate', 'asc'),
-  );
+  const memberTripsQuery = query(collection(db, 'trips'), where('memberIds', 'array-contains', userId));
+  const ownedTripsQuery = query(collection(db, 'trips'), where('ownerId', '==', userId));
+  const tripGroups: TripRecord[][] = [[], []];
 
-  return onSnapshot(
-    tripsQuery,
+  function emitTrips() {
+    const trips = mergeTripRecords(tripGroups);
+    trips.forEach(setCachedTrip);
+    callback(trips);
+  }
+
+  const unsubscribeMemberTrips = onSnapshot(
+    memberTripsQuery,
     (snapshot) => {
-      const trips = snapshot.docs
-        .filter((item) => !isTripDeletedData(item.data()))
-        .map(mapTripRecord);
-      trips.forEach(setCachedTrip);
-      callback(trips);
+      tripGroups[0] = mapTripDocs(snapshot.docs);
+      emitTrips();
     },
     (error) => {
-      console.error('subscribeUserTrips', error);
+      console.error('subscribeUserTrips.memberIds', error);
       onError?.(error);
     },
   );
+  const unsubscribeOwnedTrips = onSnapshot(
+    ownedTripsQuery,
+    (snapshot) => {
+      tripGroups[1] = mapTripDocs(snapshot.docs);
+      emitTrips();
+    },
+    (error) => {
+      console.error('subscribeUserTrips.ownerId', error);
+      onError?.(error);
+    },
+  );
+
+  return () => {
+    unsubscribeMemberTrips();
+    unsubscribeOwnedTrips();
+  };
 }
 
 export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null) => void) {
