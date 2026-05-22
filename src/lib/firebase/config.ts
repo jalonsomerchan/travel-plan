@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -12,12 +12,6 @@ const firebaseConfig = {
 };
 
 let firebaseDb: Firestore | null = null;
-
-/*
- * Legacy smoke-test terms kept temporarily while the cache tests are updated:
- * initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
- * shouldUseSafeFirestoreMode, maxTouchPoints, MacIntel, AppleWebKit.
- */
 
 export function getMissingFirebaseConfig() {
   return Object.entries(firebaseConfig)
@@ -50,8 +44,10 @@ export function getFirebaseDb() {
     return firebaseDb;
   }
 
-  const app = getFirebaseApp();
-  firebaseDb = getFirestore(app);
+  firebaseDb = initializeFirestore(getFirebaseApp(), {
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false,
+  });
 
   return firebaseDb;
 }
