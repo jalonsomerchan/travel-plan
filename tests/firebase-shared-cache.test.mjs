@@ -19,7 +19,9 @@ describe('Firebase shared data cache', () => {
     assert.match(cache, /persistentCacheMaxAgeMs/);
     assert.match(cache, /canUseStoredValue/);
     assert.match(cache, /navigator\.onLine === false/);
-    assert.match(cache, /memoryCache/);
+    assert.match(cache, /memoryCache = new Map<string, CachedValue<unknown>>/);
+    assert.match(cache, /memoryValue\.savedAt/);
+    assert.match(cache, /memoryCache\.delete\(key\)/);
     assert.match(cache, /getCachedTrip/);
     assert.match(cache, /setCachedTrip/);
     assert.match(cache, /clearCachedTrip/);
