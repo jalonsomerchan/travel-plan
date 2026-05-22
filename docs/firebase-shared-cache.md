@@ -11,6 +11,8 @@ Evitar estados vacíos y trabajo repetido al navegar entre vistas que usan los m
 - La caché vive en `src/lib/firebase/shared-data-cache.ts`.
 - Usa `localStorage` cuando está disponible y una caché en memoria como respaldo.
 - El uso de `localStorage` permite conservar viajes y planes ya visitados al cerrar y reabrir la PWA en Safari iOS / iPhone, donde la persistencia avanzada de Firestore se mantiene en modo seguro.
+- Cuando el navegador está online, los datos persistentes de `localStorage` solo se reutilizan si son recientes. Así se evita pintar datos antiguos como estado actual mientras Firestore aún no ha respondido.
+- Cuando el navegador está offline, la caché persistente se puede usar aunque sea antigua, porque actúa como respaldo explícito sin conexión.
 - Solo guarda datos normalizados que ya se usan en la UI.
 - Se limpia al cambiar de usuario o cerrar sesión.
 - Se invalida al crear, editar o borrar planes.
