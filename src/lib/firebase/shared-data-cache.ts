@@ -1,6 +1,7 @@
 import type { PlanRecord, TripRecord } from '../app/models';
 
 const cachePrefix = 'travel-plan:shared-cache:v2';
+const persistentCacheMaxAgeMs = 30 * 1000;
 const memoryCache = new Map<string, unknown>();
 
 type CachedValue<T> = {
@@ -24,6 +25,14 @@ function getKey(key: string) {
   return `${cachePrefix}:${key}`;
 }
 
+function canUseStoredValue(savedAt: number) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return true;
+  }
+
+  return Date.now() - savedAt <= persistentCacheMaxAgeMs;
+}
+
 function readCachedValue<T>(key: string): T | null {
   const memoryValue = memoryCache.get(key);
 
@@ -45,6 +54,12 @@ function readCachedValue<T>(key: string): T | null {
     }
 
     const cached = JSON.parse(raw) as CachedValue<T>;
+
+    if (!canUseStoredValue(cached.savedAt)) {
+      storage.removeItem(getKey(key));
+      return null;
+    }
+
     memoryCache.set(key, cached.value);
 
     return cached.value;
