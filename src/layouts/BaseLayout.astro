@@ -28,6 +28,60 @@ const routePath = stripBasePath(Astro.url.pathname);
 const canonicalUrl = getAbsoluteUrl(withBasePath(routePath), siteConfig.url);
 const imageUrl = getAbsoluteUrl(withBasePath(image), siteConfig.url);
 const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
+const legacyStorageCleanupScript = `
+  (() => {
+    const cleanupKey = 'travelplan-legacy-storage-cleanup-v1';
+    if (sessionStorage.getItem(cleanupKey) === 'done') return;
+    sessionStorage.setItem(cleanupKey, 'done');
+
+    const cleanupTasks = [];
+
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('travel-plan:shared-cache:'))
+        .forEach((key) => localStorage.removeItem(key));
+    } catch {}
+
+    if ('caches' in window) {
+      cleanupTasks.push(
+        caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))),
+      );
+    }
+
+    if ('serviceWorker' in navigator) {
+      cleanupTasks.push(
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister()))),
+      );
+    }
+
+    if (indexedDB && typeof indexedDB.databases === 'function') {
+      cleanupTasks.push(
+        indexedDB.databases().then((databases) =>
+          Promise.all(
+            databases
+              .map((database) => database.name)
+              .filter((name) => name && name.toLowerCase().includes('firestore'))
+              .map(
+                (name) =>
+                  new Promise((resolve) => {
+                    const request = indexedDB.deleteDatabase(name);
+                    request.onsuccess = resolve;
+                    request.onerror = resolve;
+                    request.onblocked = resolve;
+                  }),
+              ),
+          ),
+        ),
+      );
+    }
+
+    Promise.allSettled(cleanupTasks).then(() => {
+      if (cleanupTasks.length > 0) window.location.reload();
+    });
+  })();
+`;
 const themeScript = `
   (() => {
     const storedTheme = localStorage.getItem('travelplan-theme');
@@ -64,6 +118,7 @@ const themeScript = `
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
+    <script is:inline set:html={legacyStorageCleanupScript}></script>
     <script is:inline set:html={themeScript}></script>
   </head>
   <body>
