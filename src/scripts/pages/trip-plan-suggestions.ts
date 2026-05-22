@@ -13,7 +13,7 @@ import {
 } from '../../lib/app/trip-plan-suggestions';
 import { generateTripPlanSuggestions } from '../../lib/ai/trip-plan-suggestions';
 import { getTripPlansOnce } from '../../lib/firebase/plan-reads';
-import { createPlan } from '../../lib/firebase/plans';
+import { queueCreatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { initLocationPickers } from './plan-location-picker';
@@ -317,7 +317,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     }
   };
 
-  const saveSuggestion = async (suggestionId: string) => {
+  const saveSuggestion = (suggestionId: string) => {
     const suggestion = suggestions.find((entry) => entry.id === suggestionId);
 
     if (!suggestion) {
@@ -328,7 +328,7 @@ export function mountTripPlanSuggestionsPage({ locale }: { locale: Locale }) {
     renderSuggestions();
 
     try {
-      await createPlan(tripId, toPlanInputFromAiSuggestion(suggestion.plan));
+      queueCreatePlan(tripId, toPlanInputFromAiSuggestion(suggestion.plan));
       suggestions = suggestions.filter((entry) => entry.id !== suggestionId);
       renderSuggestions();
       setResultsState(t('tripAi.results.savedSuccess'), 'success');

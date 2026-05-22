@@ -26,6 +26,12 @@ La caché compartida propia de la app funciona como valor inicial de UI, se guar
 
 Las pantallas de crear y editar planes usan helpers no bloqueantes (`queueCreatePlan(...)` y `queueUpdatePlan(...)`). La UI no espera a que el servidor confirme la escritura: Firestore la guarda localmente cuando puede y la sincroniza al recuperar conexión.
 
+Ese mismo patrón también se aplica en los guardados desde IA donde el bloqueo resulta especialmente frustrante:
+
+- `trip-ai-prompt` guarda los planes seleccionados con `queueCreatePlan(...)`.
+- `trip-plan-suggestions` guarda cada sugerencia aceptada con `queueCreatePlan(...)`.
+- `trip-pois-ai-prompt` guarda los puntos seleccionados con `queueCreateTripPointOfInterest(...)`.
+
 Convención:
 
 - Usar helpers `queue*` solo en acciones donde sea aceptable confirmar la UI con escritura local pendiente.

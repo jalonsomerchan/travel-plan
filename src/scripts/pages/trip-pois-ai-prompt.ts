@@ -7,7 +7,7 @@ import {
   type TripPoiAiPromptCandidate,
 } from '../../lib/app/trip-pois-ai-prompt';
 import { buildTripPoiAiPromptFromWizard } from '../../lib/app/trip-pois-ai-prompt-builder';
-import { createTripPointOfInterest } from '../../lib/firebase/trip-pois';
+import { queueCreateTripPointOfInterest } from '../../lib/firebase/trip-pois';
 import { observeSession } from '../../lib/firebase/session';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { resolveTripPoiIcon } from '../../lib/app/trip-poi-icons';
@@ -201,7 +201,7 @@ export function mountTripPoisAiPromptPage({ locale }: { locale: Locale }) {
     renderCandidates();
   });
 
-  saveSelectedButton?.addEventListener('click', async () => {
+  saveSelectedButton?.addEventListener('click', () => {
     const selected = candidates.filter((candidate) => candidate.selected).map((candidate) => ({ ...candidate }));
 
     if (selected.length === 0) {
@@ -224,40 +224,18 @@ export function mountTripPoisAiPromptPage({ locale }: { locale: Locale }) {
       );
       renderCandidates();
 
-      const results = await Promise.allSettled(
-        selected.map(async (candidate) => {
-          await createTripPointOfInterest(tripId, toPoiInput(candidate));
-          return candidate.id;
-        }),
-      );
-
-      const savedIds = new Set(
-        results
-          .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
-          .map((result) => result.value),
-      );
-      const failedCount = results.length - savedIds.size;
+      selected.forEach((candidate) => {
+        queueCreateTripPointOfInterest(tripId, toPoiInput(candidate));
+      });
 
       candidates = candidates
-        .filter((candidate) => !savedIds.has(candidate.id))
+        .filter((candidate) => !selectedIds.has(candidate.id))
         .map((candidate) => ({ ...candidate, saving: false }));
       renderCandidates();
 
-      if (failedCount === 0) {
-        setMessage(importMessage, t('tripPoisAiPrompt.candidates.saved'), 'success');
-        redirectTo(locale, 'trip-pois', { trip: tripId });
-        return;
-      } else if (savedIds.size > 0) {
-        setMessage(
-          importMessage,
-          t('tripPoisAiPrompt.candidates.partialSaved')
-            .replace('{saved}', String(savedIds.size))
-            .replace('{failed}', String(failedCount)),
-          'danger',
-        );
-      } else {
-        setMessage(importMessage, t('tripPoisAiPrompt.candidates.saveError'), 'danger');
-      }
+      setMessage(importMessage, t('tripPoisAiPrompt.candidates.saved'), 'success');
+      redirectTo(locale, 'trip-pois', { trip: tripId });
+      return;
     } catch (error) {
       setMessage(importMessage, error instanceof Error ? error.message : t('tripPoisAiPrompt.candidates.saveError'), 'danger');
     } finally {

@@ -9,7 +9,7 @@ import {
 } from '../../lib/app/trip-ai-prompt';
 import { buildTripAiPromptFromWizard } from '../../lib/app/trip-ai-prompt-builder';
 import { getTripPlansOnce } from '../../lib/firebase/plan-reads';
-import { createPlan } from '../../lib/firebase/plans';
+import { queueCreatePlan } from '../../lib/firebase/plans';
 import { observeSession } from '../../lib/firebase/session';
 import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { initTripAiPromptWizard } from './trip-ai-prompt-wizard';
@@ -230,7 +230,7 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
     renderCandidates();
   });
 
-  saveSelectedButton?.addEventListener('click', async () => {
+  saveSelectedButton?.addEventListener('click', () => {
     const selected = candidates.filter((candidate) => candidate.selected);
 
     if (selected.length === 0) {
@@ -246,12 +246,15 @@ export function mountTripAiPromptPage({ locale }: { locale: Locale }) {
     );
 
     try {
-      for (const candidate of selected) {
-        candidate.saving = true;
-        renderCandidates();
-        await createPlan(tripId, toPlanInput(candidate));
-      }
+      const selectedIds = new Set(selected.map((candidate) => candidate.id));
+      candidates = candidates.map((candidate) =>
+        selectedIds.has(candidate.id) ? { ...candidate, saving: true } : candidate,
+      );
+      renderCandidates();
 
+      selected.forEach((candidate) => {
+        queueCreatePlan(tripId, toPlanInput(candidate));
+      });
       candidates = candidates.filter((candidate) => !candidate.selected);
       renderCandidates();
       setMessage(importMessage, t('tripAiPrompt.candidates.saved'), 'success');

@@ -48,7 +48,7 @@ describe('trip AI prompt tool', () => {
     assert.match(helper, /parseTripAiPromptJson/);
     assert.match(helper, /JSON\.parse/);
     assert.match(helper, /normalizePlanLinks/);
-    assert.match(pageScript, /createPlan/);
+    assert.match(pageScript, /queueCreatePlan/);
     assert.match(pageScript, /data-trip-ai-candidate-checkbox/);
   });
 

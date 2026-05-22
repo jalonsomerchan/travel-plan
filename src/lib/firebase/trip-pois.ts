@@ -5,6 +5,7 @@ import {
   doc,
   onSnapshot,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import type { TripPointOfInterestInput, TripPointOfInterestRecord } from '../app/models';
@@ -77,6 +78,23 @@ export async function createTripPointOfInterest(tripId: string, input: TripPoint
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  return poiRef.id;
+}
+
+function reportQueuedPoiWrite(error: unknown) {
+  console.error('queuedPoiWrite', error);
+}
+
+export function queueCreateTripPointOfInterest(tripId: string, input: TripPointOfInterestInput) {
+  const db = getFirebaseDb();
+  const poiRef = doc(collection(db, 'trips', tripId, 'pointsOfInterest'));
+
+  void setDoc(poiRef, {
+    ...getPoiWriteData(input),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }).catch(reportQueuedPoiWrite);
 
   return poiRef.id;
 }

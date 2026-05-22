@@ -25,12 +25,20 @@ describe('offline plan writes', () => {
   it('uses queued writes in plan create and edit pages', () => {
     const createPage = readText('src/scripts/pages/plan-create.ts');
     const editPage = readText('src/scripts/pages/plan-edit.ts');
+    const aiPromptPage = readText('src/scripts/pages/trip-ai-prompt.ts');
+    const suggestionsPage = readText('src/scripts/pages/trip-plan-suggestions.ts');
 
     assert.match(createPage, /queueCreatePlan/);
     assert.match(editPage, /queueUpdatePlan/);
+    assert.match(aiPromptPage, /queueCreatePlan/);
+    assert.match(suggestionsPage, /queueCreatePlan/);
     assert.doesNotMatch(createPage, /await createPlan/);
     assert.doesNotMatch(editPage, /await updatePlan/);
+    assert.doesNotMatch(aiPromptPage, /await createPlan/);
+    assert.doesNotMatch(suggestionsPage, /await createPlan/);
     assert.match(createPage, /const planId = queueCreatePlan\(tripId, planInput\)/);
+    assert.match(aiPromptPage, /queueCreatePlan\(tripId, toPlanInput\(candidate\)\)/);
+    assert.match(suggestionsPage, /queueCreatePlan\(tripId, toPlanInputFromAiSuggestion\(suggestion\.plan\)\)/);
     assert.match(createPage, /window\.location\.href = getAppUrl\(locale, 'plan', \{ trip: tripId, plan: planId \}\)/);
     assert.match(editPage, /window\.location\.href = getAppUrl\(locale, 'plan', \{ trip: tripId, plan: planId \}\)/);
   });
@@ -41,6 +49,7 @@ describe('offline plan writes', () => {
     assert.match(docs, /Escrituras offline/);
     assert.match(docs, /queueCreatePlan/);
     assert.match(docs, /queueUpdatePlan/);
+    assert.match(docs, /trip-ai-prompt/);
     assert.match(docs, /cola local de Firestore/);
   });
 });
