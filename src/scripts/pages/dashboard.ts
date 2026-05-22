@@ -4,7 +4,7 @@ import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
 import type { TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
-import { getFirebasePublicConfig } from '../../lib/firebase/config';
+import { getFirebaseAuth, getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribePendingInvites, subscribeUserTrips } from '../../lib/firebase/trips';
@@ -26,6 +26,9 @@ type DashboardDebugState = {
   tripsStatus: string;
   tripsCount: number | null;
   tripIds: string[];
+  restStatus: string;
+  restMemberIds: string[];
+  restOwnerIds: string[];
   invitesStatus: string;
   invitesCount: number | null;
   error: string;
@@ -40,6 +43,9 @@ const dashboardDebugState: DashboardDebugState = {
   tripsStatus: 'waiting-session',
   tripsCount: null,
   tripIds: [],
+  restStatus: 'disabled',
+  restMemberIds: [],
+  restOwnerIds: [],
   invitesStatus: 'waiting-session',
   invitesCount: null,
   error: '',
@@ -79,10 +85,14 @@ function renderDashboardDebug() {
       <div><dt class="font-bold text-[var(--color-text)]">email</dt><dd>${escapeHtml(dashboardDebugState.email || '-')}</dd></div>
       <div><dt class="font-bold text-[var(--color-text)]">tripsStatus</dt><dd>${escapeHtml(dashboardDebugState.tripsStatus)}</dd></div>
       <div><dt class="font-bold text-[var(--color-text)]">tripsCount</dt><dd>${dashboardDebugState.tripsCount ?? '-'}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">restStatus</dt><dd>${escapeHtml(dashboardDebugState.restStatus)}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">restCount</dt><dd>${dashboardDebugState.restMemberIds.length + dashboardDebugState.restOwnerIds.length}</dd></div>
       <div><dt class="font-bold text-[var(--color-text)]">invitesStatus</dt><dd>${escapeHtml(dashboardDebugState.invitesStatus)}</dd></div>
       <div><dt class="font-bold text-[var(--color-text)]">invitesCount</dt><dd>${dashboardDebugState.invitesCount ?? '-'}</dd></div>
     </dl>
     <p class="mt-3 break-words"><strong>tripIds:</strong> ${escapeHtml(dashboardDebugState.tripIds.join(', ') || '-')}</p>
+    <p class="mt-2 break-words"><strong>restMemberIds:</strong> ${escapeHtml(dashboardDebugState.restMemberIds.join(', ') || '-')}</p>
+    <p class="mt-2 break-words"><strong>restOwnerIds:</strong> ${escapeHtml(dashboardDebugState.restOwnerIds.join(', ') || '-')}</p>
     <p class="mt-2 break-words"><strong>error:</strong> ${escapeHtml(dashboardDebugState.error || '-')}</p>
   `;
 }
@@ -90,6 +100,75 @@ function renderDashboardDebug() {
 function updateDashboardDebug(partial: Partial<DashboardDebugState>) {
   Object.assign(dashboardDebugState, partial);
   renderDashboardDebug();
+}
+
+function getRestTripId(documentName: string) {
+  return documentName.split('/').pop() ?? documentName;
+}
+
+async function runTripsRestDebug(user: User) {
+  if (!dashboardDebugState.enabled) {
+    return;
+  }
+
+  const config = getFirebasePublicConfig();
+  const projectId = config.projectId;
+
+  if (!projectId) {
+    updateDashboardDebug({ restStatus: 'missing-project-id' });
+    return;
+  }
+
+  updateDashboardDebug({ restStatus: 'loading', restMemberIds: [], restOwnerIds: [] });
+
+  try {
+    const token = await user.getIdToken(true);
+    const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+    const runQuery = async (fieldPath: string, op: 'ARRAY_CONTAINS' | 'EQUAL') => {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: 'trips' }],
+            where: {
+              fieldFilter: {
+                field: { fieldPath },
+                op,
+                value: { stringValue: user.uid },
+              },
+            },
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`${fieldPath}: ${response.status} ${await response.text()}`);
+      }
+
+      const rows = (await response.json()) as Array<{ document?: { name: string } }>;
+      return rows.flatMap((row) => (row.document?.name ? [getRestTripId(row.document.name)] : []));
+    };
+
+    const [restMemberIds, restOwnerIds] = await Promise.all([
+      runQuery('memberIds', 'ARRAY_CONTAINS'),
+      runQuery('ownerId', 'EQUAL'),
+    ]);
+
+    updateDashboardDebug({
+      restStatus: 'received',
+      restMemberIds,
+      restOwnerIds,
+    });
+  } catch (error) {
+    updateDashboardDebug({
+      restStatus: 'error',
+      error: String(error),
+    });
+  }
 }
 
 function renderStats(locale: Locale, trips: TripRecord[]) {
@@ -225,6 +304,7 @@ function logInvitesPermissionError(user: User | null) {
 }
 
 export function mountDashboardPage({ locale }: { locale: Locale }) {
+  void getFirebaseAuth;
   const signOutButton = document.querySelector<HTMLElement>('#sign-out-button');
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
   const invitesLink = document.querySelector<HTMLAnchorElement>('#dashboard-invites-link');
@@ -258,9 +338,11 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
       uid: user.uid,
       email: user.email ?? '',
       tripsStatus: 'subscribing',
+      restStatus: dashboardDebugState.enabled ? 'loading' : 'disabled',
       invitesStatus: user.email ? 'subscribing' : 'no-email',
       error: '',
     });
+    void runTripsRestDebug(user);
     subscriptions.add(
       subscribeUserTrips(
         user.uid,
