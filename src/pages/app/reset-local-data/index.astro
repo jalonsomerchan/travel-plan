@@ -1,0 +1,164 @@
+---
+import { defaultLocale } from '../../../config/site';
+import { getLocalizedPath } from '../../../i18n/ui';
+import { withBasePath } from '../../../utils/paths';
+
+const dashboardUrl = getLocalizedPath('/app/', defaultLocale);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Limpiar datos locales · TravelPlan</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #f8fafc; color: #0f172a; }
+      main { width: min(92vw, 34rem); border: 1px solid #cbd5e1; border-radius: 1.25rem; background: white; padding: 2rem; box-shadow: 0 1rem 3rem rgb(15 23 42 / 0.12); }
+      h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); }
+      p { line-height: 1.6; color: #475569; }
+      code { border-radius: .4rem; background: #e2e8f0; padding: .1rem .35rem; }
+      a, button { border: 0; border-radius: 999px; background: #2563eb; color: white; display: inline-flex; font-weight: 800; padding: .85rem 1.1rem; text-decoration: none; }
+      button { cursor: pointer; }
+      [data-log] { margin-top: 1rem; white-space: pre-wrap; font: .82rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #334155; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #020617; color: #e2e8f0; }
+        main { background: #0f172a; border-color: #334155; }
+        p, [data-log] { color: #cbd5e1; }
+        code { background: #1e293b; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Limpiar datos locales</h1>
+      <p>
+        Esta página borra datos guardados solo en este navegador: service workers,
+        Cache Storage, IndexedDB, localStorage y sessionStorage. No borra viajes en Firestore.
+      </p>
+      <p>Se ejecutará automáticamente. Después volverás al dashboard.</p>
+      <button type="button" data-reset-button>Ejecutar limpieza otra vez</button>
+      <pre data-log role="status" aria-live="polite">Preparando limpieza...</pre>
+    </main>
+
+    <script define:vars={{ dashboardUrl, swUrl: withBasePath('sw.js') }}>
+      const logTarget = document.querySelector('[data-log]');
+      const resetButton = document.querySelector('[data-reset-button]');
+      const logLines = [];
+
+      function log(message) {
+        logLines.push(message);
+        if (logTarget) logTarget.textContent = logLines.join('\n');
+      }
+
+      function requestToPromise(request) {
+        return new Promise((resolve) => {
+          request.onsuccess = () => resolve(true);
+          request.onerror = () => resolve(false);
+          request.onblocked = () => resolve(false);
+        });
+      }
+
+      async function clearIndexedDb() {
+        if (!('indexedDB' in window)) {
+          log('IndexedDB no disponible.');
+          return;
+        }
+
+        if (typeof indexedDB.databases !== 'function') {
+          log('Este navegador no permite listar IndexedDB desde JavaScript.');
+          return;
+        }
+
+        const databases = await indexedDB.databases();
+        const names = databases.map((database) => database.name).filter(Boolean);
+        log(`IndexedDB encontradas: ${names.length}`);
+
+        await Promise.all(
+          names.map(async (name) => {
+            await requestToPromise(indexedDB.deleteDatabase(name));
+            log(`IndexedDB borrada: ${name}`);
+          }),
+        );
+      }
+
+      async function clearServiceWorkers() {
+        if (!('serviceWorker' in navigator)) {
+          log('Service workers no disponibles.');
+          return;
+        }
+
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        log(`Service workers encontrados: ${registrations.length}`);
+
+        await Promise.all(
+          registrations.map(async (registration) => {
+            await registration.unregister();
+            log(`Service worker eliminado: ${registration.scope}`);
+          }),
+        );
+      }
+
+      async function clearCaches() {
+        if (!('caches' in window)) {
+          log('Cache Storage no disponible.');
+          return;
+        }
+
+        const keys = await caches.keys();
+        log(`Caches encontradas: ${keys.length}`);
+
+        await Promise.all(
+          keys.map(async (key) => {
+            await caches.delete(key);
+            log(`Cache borrada: ${key}`);
+          }),
+        );
+      }
+
+      async function clearStorage() {
+        try {
+          localStorage.clear();
+          log('localStorage borrado.');
+        } catch {
+          log('No se pudo borrar localStorage.');
+        }
+
+        try {
+          sessionStorage.clear();
+          log('sessionStorage borrado.');
+        } catch {
+          log('No se pudo borrar sessionStorage.');
+        }
+      }
+
+      async function runReset() {
+        if (resetButton) resetButton.disabled = true;
+        logLines.length = 0;
+        log('Iniciando limpieza completa...');
+
+        await Promise.allSettled([
+          clearServiceWorkers(),
+          clearCaches(),
+          clearIndexedDb(),
+        ]);
+        await clearStorage();
+
+        try {
+          await fetch(swUrl, { cache: 'reload' });
+          log('sw.js refrescado sin caché.');
+        } catch {
+          log('No se pudo refrescar sw.js.');
+        }
+
+        log('Limpieza terminada. Redirigiendo...');
+        window.location.replace(`${dashboardUrl}?debug=1&reset=${Date.now()}`);
+      }
+
+      resetButton?.addEventListener('click', runReset);
+      void runReset();
+    </script>
+  </body>
+</html>
