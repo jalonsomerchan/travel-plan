@@ -22,7 +22,7 @@
   "tripAiPrompt.metaTitle": "Promp IA del viaje",
   "tripAiPrompt.metaDescription": "Genera un prompt con los datos del viaje, pásalo a una IA y pega el JSON para crear planes seleccionados.",
   "tripAiPrompt.eyebrow": "Promp IA",
-  "tripAiPrompt.title": "Genera planes con una IA externa",
+  "tripAiPrompt.title": "Prompt IA",
   "tripAiPrompt.description": "Configura el wizard, copia el prompt adaptado al viaje y pega el JSON devuelto para elegir qué planes guardar.",
   "tripAiPrompt.breadcrumb": "Promp IA",
   "tripAiPrompt.wizard.eyebrow": "Wizard",

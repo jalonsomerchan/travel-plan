@@ -21,6 +21,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
 
 <BaseLayout title={t('trip.metaTitle')} description={t('trip.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     title={t('trip.title')}
     description={t('trip.description')}
     loading
@@ -32,7 +33,7 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
 
     <div slot="body" class="pt-6">

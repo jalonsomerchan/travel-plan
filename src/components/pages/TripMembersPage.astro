@@ -17,6 +17,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('tripMembers.metaTitle')} description={t('tripMembers.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     eyebrow={t('tripMembers.eyebrow')}
     title={t('tripMembers.title')}
     description={t('tripMembers.description')}
@@ -30,7 +31,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div class="min-w-0">

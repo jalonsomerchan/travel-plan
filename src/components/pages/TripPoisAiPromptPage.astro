@@ -18,6 +18,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('tripPoisAiPrompt.metaTitle')} description={t('tripPoisAiPrompt.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     eyebrow={t('tripPoisAiPrompt.eyebrow')}
     title={t('tripPoisAiPrompt.title')}
     description={t('tripPoisAiPrompt.description')}
@@ -32,7 +33,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
 
     <TripPoisAiPromptBody slot="body" locale={locale} />
   </AppShell>

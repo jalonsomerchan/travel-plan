@@ -22,7 +22,7 @@
   "tripAiPrompt.metaTitle": "Trip AI prompt",
   "tripAiPrompt.metaDescription": "Generate a prompt with trip data, send it to an AI and paste the JSON to create selected plans.",
   "tripAiPrompt.eyebrow": "AI prompt",
-  "tripAiPrompt.title": "Generate plans with an external AI",
+  "tripAiPrompt.title": "AI prompt",
   "tripAiPrompt.description": "Configure the wizard, copy the trip-tailored prompt and paste the returned JSON to choose which plans to save.",
   "tripAiPrompt.breadcrumb": "AI prompt",
   "tripAiPrompt.wizard.eyebrow": "Wizard",

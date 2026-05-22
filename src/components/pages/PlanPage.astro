@@ -18,6 +18,7 @@ const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / 
 
 <BaseLayout title={t('plan.metaTitle')} description={t('plan.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     eyebrow={t('plan.eyebrow')}
     title={t('plan.title')}
     description={t('plan.description')}
@@ -31,7 +32,7 @@ const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / 
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <div class="mb-6 flex flex-wrap gap-3">
         <a

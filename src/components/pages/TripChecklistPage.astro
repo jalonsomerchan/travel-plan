@@ -20,6 +20,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('tripChecklist.metaTitle')} description={t('tripChecklist.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     title={t('tripChecklist.title')}
     loading
     loadingLabel={t('common.loading')}
@@ -31,7 +32,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>

@@ -16,6 +16,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
 <BaseLayout title={t('planCreate.metaTitle')} description={t('planCreate.metaDescription')} locale={locale}>
   <AppShell
+    tripContext
     eyebrow={t('planCreate.eyebrow')}
     title={t('planCreate.title')}
     description={t('planCreate.description')}
@@ -27,7 +28,7 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     ]}
   >
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
-    <TripActionsMenu locale={locale} fallbackHref={dashboardUrl} />
+    <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
       <h2 class="text-2xl font-black" data-plan-create-context>{t('trip.plansTitle')}</h2>
       <form class="mt-6 w-full space-y-4" id="plan-create-form">

@@ -2,6 +2,7 @@
 import Container from '../Container.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import LoadingState from './LoadingState.astro';
+import TripContextHeader from './TripContextHeader.astro';
 
 interface Props {
   eyebrow?: string;
@@ -11,6 +12,8 @@ interface Props {
   loading?: boolean;
   loadingLabel?: string;
   compactTop?: boolean;
+  tripContext?: boolean;
+  tripContextName?: string;
 }
 
 const {
@@ -20,6 +23,8 @@ const {
   loading = false,
   loadingLabel = 'Loading',
   compactTop = false,
+  tripContext = false,
+  tripContextName = '',
 } = Astro.props;
 const containerClass = compactTop ? 'pt-3 pb-8 md:pt-4 md:pb-12' : 'py-8 md:py-12';
 const shellClasses = [
@@ -41,6 +46,11 @@ const visibleBreadcrumbs = shouldStartAtDashboard ? breadcrumbs.slice(1) : bread
     <div data-app-content={loading ? 'loading' : undefined} hidden={loading}>
       <div class="app-shell-layout">
         <div class="app-shell-copy">
+          {tripContext && (
+            <TripContextHeader tripName={tripContextName}>
+              <slot name="trip-context-action" />
+            </TripContextHeader>
+          )}
           <h1 class="app-shell-title" data-app-title>{title}</h1>
           {description && (
             <p class="app-shell-description prose-copy" data-app-description>
@@ -49,9 +59,11 @@ const visibleBreadcrumbs = shouldStartAtDashboard ? breadcrumbs.slice(1) : bread
           )}
           <div class="app-shell-meta" data-app-meta hidden></div>
         </div>
-        <div class="app-shell-side">
-          <slot />
-        </div>
+        {!tripContext && (
+          <div class="app-shell-side">
+            <slot />
+          </div>
+        )}
       </div>
       <slot name="nav" />
       <slot name="body" />

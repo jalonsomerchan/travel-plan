@@ -231,6 +231,36 @@ dialog::backdrop {
   min-width: 0;
 }
 
+.trip-context-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.trip-context-header-name {
+  margin: 0;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.trip-context-header-action {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.trip-context-header-action:empty {
+  display: none;
+}
+
 .app-shell-side {
   display: flex;
   align-items: flex-start;
@@ -375,6 +405,11 @@ dialog::backdrop {
   color: var(--color-text);
   box-shadow: var(--shadow-xs);
   list-style: none;
+}
+
+.trip-context-header .app-actions-menu-trigger {
+  min-height: 2.9rem;
+  min-width: 2.9rem;
 }
 
 .app-actions-menu-trigger::-webkit-details-marker {

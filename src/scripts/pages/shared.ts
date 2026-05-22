@@ -193,6 +193,20 @@ export function setAppShellTitle(title: string) {
   }
 }
 
+export function setTripContextName(name?: string) {
+  const header = document.querySelector<HTMLElement>('[data-trip-context-header]');
+  const target = document.querySelector<HTMLElement>('[data-trip-context-name]');
+  const normalizedName = name?.trim() ?? '';
+
+  if (target) {
+    target.textContent = normalizedName;
+  }
+
+  if (header) {
+    header.hidden = normalizedName.length === 0;
+  }
+}
+
 export function setAppShellDescription(description?: string) {
   const target = document.querySelector<HTMLElement>('[data-app-description]');
 
@@ -289,7 +303,7 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
 }
 
 export function syncTripShell(locale: Locale, trip: TripRecord) {
-  setAppShellTitle(trip.name);
+  setTripContextName(trip.name);
   setAppShellDescription(`${trip.location} · ${formatTripDateRange(locale, trip)}`);
   setAppShellMeta([]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
@@ -300,12 +314,12 @@ export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
   const t = getPageTranslator(locale);
   const accommodationName = trip.accommodation?.name || t('accommodation.emptyTitle');
 
+  setTripContextName(trip.name);
   setAppShellTitle(accommodationName);
   setAppShellDescription(
     trip.accommodation ? getAccommodationLocationLabel(trip.accommodation) : t('accommodation.emptyDescription'),
   );
   setAppShellMeta([
-    trip.name,
     trip.location,
     trip.accommodation ? t('accommodation.status.configured') : t('accommodation.status.empty'),
   ]);
@@ -319,10 +333,10 @@ export function syncAccommodationShell(locale: Locale, trip: TripRecord) {
 }
 
 export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord) {
+  setTripContextName(trip.name);
   setAppShellTitle(plan.name);
   setAppShellDescription(plan.description || getCategoryLabel(locale, plan.category));
   setAppShellMeta([
-    trip.name,
     formatPlanMoment(plan, locale) || getPageTranslator(locale)('calendar.unscheduled'),
     getPlanStatusLabel(locale, plan.status),
     hasPlanLocation(plan) ? getPlanLocationLabel(plan) : '',
@@ -335,7 +349,8 @@ export function syncPlanShell(locale: Locale, trip: TripRecord, plan: PlanRecord
 export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCount: number, completedCount: number) {
   const t = getPageTranslator(locale);
 
-  setAppShellTitle(t('tripChecklist.titleWithTrip').replace('{trip}', trip.name));
+  setTripContextName(trip.name);
+  setAppShellTitle(t('tripChecklist.title'));
   setAppShellDescription('');
   setAppShellMeta([]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
@@ -349,7 +364,8 @@ export function syncChecklistShell(locale: Locale, trip: TripRecord, pendingCoun
 export function syncWeatherShell(locale: Locale, trip: TripRecord) {
   const t = getPageTranslator(locale);
 
-  setAppShellTitle(t('weather.titleWithTrip').replace('{trip}', trip.name));
+  setTripContextName(trip.name);
+  setAppShellTitle(t('weather.title'));
   setAppShellDescription(t('weather.pageDescription'));
   setAppShellMeta([trip.location, formatTripDateRange(locale, trip)]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
@@ -360,9 +376,10 @@ export function syncWeatherShell(locale: Locale, trip: TripRecord) {
 export function syncLuggageShell(locale: Locale, trip: TripRecord) {
   const t = getPageTranslator(locale);
 
-  setAppShellTitle(t('tripLuggage.titleWithTrip').replace('{trip}', trip.name));
+  setTripContextName(trip.name);
+  setAppShellTitle(t('tripLuggage.title'));
   setAppShellDescription(t('tripLuggage.privateHelper'));
-  setAppShellMeta([trip.name, t('tripLuggage.privateBadge')]);
+  setAppShellMeta([t('tripLuggage.privateBadge')]);
   setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
   setBreadcrumbItem(
     'trip-luggage',

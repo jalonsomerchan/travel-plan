@@ -20,6 +20,7 @@ import {
   setAppShellMeta,
   setAppShellTitle,
   setNavigationLinkHidden,
+  setTripContextName,
   syncLuggageShell,
   syncTripNavigation,
 } from './shared';
@@ -184,9 +185,10 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
 
         if (trip) {
           if (!canAccessTrip) {
+            setTripContextName(trip.name);
             setAppShellTitle(t('tripLuggage.title'));
             setAppShellDescription(t('tripLuggage.privateOnly'));
-            setAppShellMeta([trip.name]);
+            setAppShellMeta([t('tripLuggage.privateBadge')]);
             privateOnly.hidden = false;
             privateContent.hidden = true;
             revealAppShell();
@@ -195,6 +197,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
 
           syncShell();
         } else {
+          setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
           setAppShellMeta([]);

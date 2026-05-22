@@ -20,6 +20,7 @@ import {
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
+  setTripContextName,
   syncTripNavigation,
   syncChecklistShell,
 } from './shared';
@@ -176,6 +177,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
         if (trip) {
           syncShell();
         } else {
+          setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
           setAppShellMeta([]);

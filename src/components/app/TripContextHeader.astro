@@ -1,0 +1,15 @@
+---
+interface Props {
+  tripName?: string;
+}
+
+const { tripName = '' } = Astro.props;
+const hasTripName = tripName.trim().length > 0;
+---
+
+<div class="trip-context-header" data-trip-context-header hidden={!hasTripName}>
+  <p class="trip-context-header-name" data-trip-context-name>{tripName}</p>
+  <div class="trip-context-header-action">
+    <slot />
+  </div>
+</div>

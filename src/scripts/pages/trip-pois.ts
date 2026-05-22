@@ -28,6 +28,7 @@ import {
   setAppShellMeta,
   setAppShellTitle,
   setBreadcrumbItem,
+  setTripContextName,
   syncTripNavigation,
 } from './shared';
 
@@ -300,6 +301,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
     subscriptions.add(
       subscribeTrip(tripId, (trip) => {
         if (!trip) {
+          setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
           setAppShellMeta([]);
@@ -307,9 +309,10 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
           return;
         }
 
-        setAppShellTitle(t('tripPois.titleWithTrip').replace('{trip}', trip.name));
+        setTripContextName(trip.name);
+        setAppShellTitle(t('tripPois.title'));
         setAppShellDescription(t('tripPois.description'));
-        setAppShellMeta([trip.name]);
+        setAppShellMeta([]);
         setBreadcrumbItem('trip', trip.name, getAppUrl(locale, 'trip', { trip: trip.id }));
         revealAppShell();
         initLocationPickers();

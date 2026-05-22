@@ -51,6 +51,7 @@ import {
   setAppShellMeta,
   setAppShellTitle,
   setNavigationLinkHidden,
+  setTripContextName,
   syncTripNavigation,
   syncTripShell,
 } from './shared';
@@ -503,6 +504,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     guide: 'all',
   };
   if (!tripId) {
+    setTripContextName('');
     setAppShellTitle(t('trip.missingId'));
     setAppShellDescription('');
     setAppShellMeta([]);
@@ -812,6 +814,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         } else {
           currentTrip = null;
           setNavigationLinkHidden('trip-luggage-link', true);
+          setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
           setAppShellMeta([]);
