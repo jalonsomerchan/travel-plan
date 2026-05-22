@@ -1,12 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import {
-  getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-  type Firestore,
-} from 'firebase/firestore';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -18,21 +12,6 @@ const firebaseConfig = {
 };
 
 let firebaseDb: Firestore | null = null;
-
-function shouldUseSafeFirestoreMode() {
-  if (typeof navigator === 'undefined') {
-    return false;
-  }
-
-  const userAgent = navigator.userAgent;
-  const platform = navigator.platform ?? '';
-  const maxTouchPoints = navigator.maxTouchPoints ?? 0;
-  const isIosDevice = /iPad|iPhone|iPod/.test(userAgent) || /iPad|iPhone|iPod/.test(platform);
-  const isIpadOsDesktopMode = platform === 'MacIntel' && maxTouchPoints > 1;
-  const isAppleWebkit = /AppleWebKit\//.test(userAgent);
-
-  return isAppleWebkit && (isIosDevice || isIpadOsDesktopMode);
-}
 
 export function getMissingFirebaseConfig() {
   return Object.entries(firebaseConfig)
@@ -65,23 +44,7 @@ export function getFirebaseDb() {
     return firebaseDb;
   }
 
-  const app = getFirebaseApp();
-
-  if (shouldUseSafeFirestoreMode()) {
-    firebaseDb = getFirestore(app);
-    return firebaseDb;
-  }
-
-  try {
-    firebaseDb = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-      }),
-    });
-  } catch (error) {
-    console.warn('initializeFirestore.offlinePersistence', error);
-    firebaseDb = getFirestore(app);
-  }
+  firebaseDb = getFirestore(getFirebaseApp());
 
   return firebaseDb;
 }
