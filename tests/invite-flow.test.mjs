@@ -21,7 +21,11 @@ describe('trip invite privacy flow', () => {
     assert.doesNotMatch(inviteFunction, /where\(['"]emailLower['"], ['"]==['"]/);
     assert.match(inviteFunction, /tripInvites/);
     assert.match(inviteFunction, /getInviteId\(tripId, normalizedEmail\)/);
-    assert.match(inviteFunction, /setDoc\(inviteRef/);
+    assert.match(inviteFunction, /const batch = writeBatch\(db\)/);
+    assert.match(inviteFunction, /batch\.set\(inviteRef, inviteData\)/);
+    assert.match(inviteFunction, /batch\.set\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
+    assert.match(inviteFunction, /batch\.set\(\s*getRecipientInviteIndexRef\(normalizedEmail\)/);
+    assert.match(inviteFunction, /await batch\.commit\(\)/);
   });
 
   it('assigns the authenticated user when accepting an invite', () => {
@@ -29,9 +33,12 @@ describe('trip invite privacy flow', () => {
     const acceptFunction = tripsSource.slice(tripsSource.indexOf('export async function acceptInvite'));
 
     assert.match(acceptFunction, /userEmail !== invite\.emailLower/);
+    assert.match(acceptFunction, /const batch = writeBatch\(db\)/);
     assert.match(acceptFunction, /members', user\.uid/);
+    assert.match(acceptFunction, /batch\.set\(doc\(db, 'trips', invite\.tripId, 'members', user\.uid\)/);
     assert.match(acceptFunction, /memberIds: arrayUnion\(user\.uid\)/);
     assert.match(acceptFunction, /userId: user\.uid/);
+    assert.match(acceptFunction, /await batch\.commit\(\)/);
   });
 
   it('documents invite rules without exposing users lookups', () => {

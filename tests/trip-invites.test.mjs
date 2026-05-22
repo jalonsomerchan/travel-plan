@@ -21,9 +21,11 @@ describe('trip invite flow', () => {
     assert.doesNotMatch(inviteFunction, /getDoc\(/);
     assert.match(inviteFunction, /getInviteId\(tripId, normalizedEmail\)/);
     assert.match(inviteFunction, /const inviteRef = doc\(db, 'tripInvites', inviteId\)/);
-    assert.match(inviteFunction, /setDoc\(inviteRef, inviteData\)/);
-    assert.match(inviteFunction, /setDoc\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
-    assert.match(inviteFunction, /setDoc\(getRecipientInviteIndexRef\(normalizedEmail\)/);
+    assert.match(inviteFunction, /const batch = writeBatch\(db\)/);
+    assert.match(inviteFunction, /batch\.set\(inviteRef, inviteData\)/);
+    assert.match(inviteFunction, /batch\.set\(getRecipientInviteRef\(normalizedEmail, inviteId\), inviteData\)/);
+    assert.match(inviteFunction, /batch\.set\(\s*getRecipientInviteIndexRef\(normalizedEmail\)/);
+    assert.match(inviteFunction, /await batch\.commit\(\)/);
     assert.match(source, /doc\(getFirebaseDb\(\), 'userInvites', emailLower\)/);
   });
 

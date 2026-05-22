@@ -312,23 +312,31 @@ export function subscribeTripInvites(
 
 export async function createTrip(user: User, input: TripInput) {
   const db = getFirebaseDb();
-  const tripRef = await addDoc(collection(db, 'trips'), {
+  const tripData = {
     ...getTripWriteData(input),
     ownerId: user.uid,
     ownerEmail: user.email ?? '',
     memberIds: [user.uid],
+  };
+  const tripRef = await addDoc(collection(db, 'trips'), {
+    ...tripData,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
 
-  await setDoc(doc(db, 'trips', tripRef.id, 'members', user.uid), {
+  setCachedTrip({
+    id: tripRef.id,
+    ...tripData,
+  });
+
+  void setDoc(doc(db, 'trips', tripRef.id, 'members', user.uid), {
     userId: user.uid,
     email: user.email ?? '',
     role: 'editor',
     createdAt: serverTimestamp(),
+  }).catch((error) => {
+    console.error('createTrip.memberWrite', error);
   });
-
-  clearCachedTrip(tripRef.id);
 
   return tripRef.id;
 }
@@ -415,6 +423,7 @@ export async function inviteUserToTrip(
   role: TripMemberRole,
 ) {
   const db = getFirebaseDb();
+  const batch = writeBatch(db);
   const cleanEmail = email.trim();
   const normalizedEmail = normalizeEmail(email);
   const ownerEmail = normalizeEmail(user.email ?? '');
@@ -445,11 +454,15 @@ export async function inviteUserToTrip(
     updatedAt: serverTimestamp(),
   };
 
-  await setDoc(inviteRef, inviteData);
-  await setDoc(getRecipientInviteRef(normalizedEmail, inviteId), inviteData);
-  await setDoc(getRecipientInviteIndexRef(normalizedEmail), getRecipientInviteIndexData(inviteId, inviteData), {
-    merge: true,
-  });
+  batch.set(inviteRef, inviteData);
+  batch.set(getRecipientInviteRef(normalizedEmail, inviteId), inviteData);
+  batch.set(
+    getRecipientInviteIndexRef(normalizedEmail),
+    getRecipientInviteIndexData(inviteId, inviteData),
+    { merge: true },
+  );
+
+  await batch.commit();
 }
 
 export function subscribePendingInvites(
@@ -473,6 +486,7 @@ export function subscribePendingInvites(
 
 export async function acceptInvite(user: User, invite: TripInviteRecord) {
   const db = getFirebaseDb();
+  const batch = writeBatch(db);
   const userEmail = normalizeEmail(user.email ?? '');
 
   if (!userEmail || userEmail !== invite.emailLower) {
@@ -486,34 +500,36 @@ export async function acceptInvite(user: User, invite: TripInviteRecord) {
     updatedAt: serverTimestamp(),
   };
 
-  await setDoc(doc(db, 'trips', invite.tripId, 'members', user.uid), {
+  batch.set(doc(db, 'trips', invite.tripId, 'members', user.uid), {
     userId: user.uid,
     email: user.email ?? invite.email,
     role: invite.role,
     createdAt: serverTimestamp(),
   });
 
-  await updateDoc(doc(db, 'trips', invite.tripId), {
+  batch.update(doc(db, 'trips', invite.tripId), {
     memberIds: arrayUnion(user.uid),
     updatedAt: serverTimestamp(),
   });
 
-  await updateDoc(doc(db, 'tripInvites', invite.id), {
+  batch.update(doc(db, 'tripInvites', invite.id), {
     status: 'accepted',
     userId: user.uid,
     updatedAt: serverTimestamp(),
   });
 
-  await updateDoc(getRecipientInviteRef(invite.emailLower, invite.id), {
+  batch.update(getRecipientInviteRef(invite.emailLower, invite.id), {
     status: 'accepted',
     userId: user.uid,
     updatedAt: serverTimestamp(),
   });
 
-  await setDoc(
+  batch.set(
     getRecipientInviteIndexRef(invite.emailLower),
     getRecipientInviteIndexData(invite.id, acceptedInviteData),
     { merge: true },
   );
+
+  await batch.commit();
   clearCachedTrip(invite.tripId);
 }
