@@ -17,6 +17,81 @@ import {
   revealAppShell,
 } from './shared';
 
+type DashboardDebugState = {
+  enabled: boolean;
+  projectId: string;
+  authDomain: string;
+  uid: string;
+  email: string;
+  tripsStatus: string;
+  tripsCount: number | null;
+  tripIds: string[];
+  invitesStatus: string;
+  invitesCount: number | null;
+  error: string;
+};
+
+const dashboardDebugState: DashboardDebugState = {
+  enabled: false,
+  projectId: '',
+  authDomain: '',
+  uid: '',
+  email: '',
+  tripsStatus: 'waiting-session',
+  tripsCount: null,
+  tripIds: [],
+  invitesStatus: 'waiting-session',
+  invitesCount: null,
+  error: '',
+};
+
+function isDashboardDebugEnabled() {
+  return new URLSearchParams(window.location.search).get('debug') === '1';
+}
+
+function renderDashboardDebug() {
+  if (!dashboardDebugState.enabled) {
+    return;
+  }
+
+  let target = document.querySelector<HTMLElement>('[data-dashboard-debug]');
+
+  if (!target) {
+    const host = document.querySelector<HTMLElement>('[data-trip-list]')?.parentElement;
+
+    if (!host) {
+      return;
+    }
+
+    target = document.createElement('aside');
+    target.dataset.dashboardDebug = 'true';
+    target.className =
+      'mb-5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 text-xs text-[var(--color-text-muted)]';
+    host.prepend(target);
+  }
+
+  target.innerHTML = `
+    <h2 class="text-sm font-black text-[var(--color-text)]">Debug Firebase</h2>
+    <dl class="mt-3 grid gap-2 sm:grid-cols-2">
+      <div><dt class="font-bold text-[var(--color-text)]">projectId</dt><dd>${escapeHtml(dashboardDebugState.projectId || '-')}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">authDomain</dt><dd>${escapeHtml(dashboardDebugState.authDomain || '-')}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">uid</dt><dd>${escapeHtml(dashboardDebugState.uid || '-')}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">email</dt><dd>${escapeHtml(dashboardDebugState.email || '-')}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">tripsStatus</dt><dd>${escapeHtml(dashboardDebugState.tripsStatus)}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">tripsCount</dt><dd>${dashboardDebugState.tripsCount ?? '-'}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">invitesStatus</dt><dd>${escapeHtml(dashboardDebugState.invitesStatus)}</dd></div>
+      <div><dt class="font-bold text-[var(--color-text)]">invitesCount</dt><dd>${dashboardDebugState.invitesCount ?? '-'}</dd></div>
+    </dl>
+    <p class="mt-3 break-words"><strong>tripIds:</strong> ${escapeHtml(dashboardDebugState.tripIds.join(', ') || '-')}</p>
+    <p class="mt-2 break-words"><strong>error:</strong> ${escapeHtml(dashboardDebugState.error || '-')}</p>
+  `;
+}
+
+function updateDashboardDebug(partial: Partial<DashboardDebugState>) {
+  Object.assign(dashboardDebugState, partial);
+  renderDashboardDebug();
+}
+
 function renderStats(locale: Locale, trips: TripRecord[]) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-dashboard-stats]');
@@ -159,24 +234,52 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');
 
+  dashboardDebugState.enabled = isDashboardDebugEnabled();
+  if (dashboardDebugState.enabled) {
+    const config = getFirebasePublicConfig();
+    updateDashboardDebug({
+      projectId: config.projectId ?? '',
+      authDomain: config.authDomain ?? '',
+    });
+  }
+
   window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
 
   observeSession((user) => {
     subscriptions.clear();
 
     if (!user) {
+      updateDashboardDebug({ tripsStatus: 'no-user', invitesStatus: 'no-user' });
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
       return;
     }
     revealAppShell();
+    updateDashboardDebug({
+      uid: user.uid,
+      email: user.email ?? '',
+      tripsStatus: 'subscribing',
+      invitesStatus: user.email ? 'subscribing' : 'no-email',
+      error: '',
+    });
     subscriptions.add(
       subscribeUserTrips(
         user.uid,
         (trips) => {
+          updateDashboardDebug({
+            tripsStatus: 'received',
+            tripsCount: trips.length,
+            tripIds: trips.map((trip) => trip.id),
+          });
           renderStats(locale, trips);
           renderTrips(locale, trips);
         },
-        () => {
+        (error) => {
+          updateDashboardDebug({
+            tripsStatus: 'error',
+            tripsCount: null,
+            tripIds: [],
+            error: String(error),
+          });
           logTripsPermissionError(user);
           renderStats(locale, []);
           renderTripsError(locale);
@@ -188,8 +291,12 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
       subscriptions.add(
         subscribePendingInvites(
           user.email,
-          (invites) => renderInviteCount(locale, invites.length),
-          () => {
+          (invites) => {
+            updateDashboardDebug({ invitesStatus: 'received', invitesCount: invites.length });
+            renderInviteCount(locale, invites.length);
+          },
+          (error) => {
+            updateDashboardDebug({ invitesStatus: 'error', error: String(error) });
             logInvitesPermissionError(user);
             renderInvitesError(locale);
           },
