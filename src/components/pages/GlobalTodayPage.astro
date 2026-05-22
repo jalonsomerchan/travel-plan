@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppBackButton from '../app/AppBackButton.astro';
+import AppShell from '../app/AppShell.astro';
+import DashboardSectionNav from '../app/DashboardSectionNav.astro';
+import LoadingState from '../app/LoadingState.astro';
+import Button from '../Button.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('today.metaTitle')} description={t('today.metaDescription')} locale={locale}>
+  <AppShell
+    eyebrow={t('today.eyebrow')}
+    title={t('today.title')}
+    description={t('today.description')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('today.breadcrumb') },
+    ]}
+    compactTop
+  >
+    <AppBackButton slot="topbar" fallbackHref={dashboardUrl} label={t('common.goBack')} />
+    <DashboardSectionNav slot="nav" locale={locale} />
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <form
+        class="grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
+        data-today-filters
+      >
+        <div>
+          <span class="eyebrow">{t('today.filters.eyebrow')}</span>
+          <h2 class="mt-2 text-2xl font-black">{t('today.filters.title')}</h2>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('trip.filters.search')}</span>
+            <input
+              class="input"
+              type="search"
+              name="search"
+              autocomplete="off"
+              placeholder={t('today.filters.searchPlaceholder')}
+              data-today-filter-search
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('today.filters.trip')}</span>
+            <select class="select" name="trip" data-today-filter-trip>
+              <option value="all">{t('today.filters.allTrips')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('trip.filters.category')}</span>
+            <select class="select" name="category" data-today-filter-category>
+              <option value="all">{t('trip.filters.allCategories')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('trip.filters.status')}</span>
+            <select class="select" name="status" data-today-filter-status>
+              <option value="all">{t('trip.filters.allStatuses')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('trip.filters.dateMode')}</span>
+            <select class="select" name="date" data-today-filter-date>
+              <option value="all">{t('trip.filters.allDates')}</option>
+              <option value="today">{t('today.filters.datedToday')}</option>
+              <option value="no-date">{t('trip.filters.noDateOnly')}</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+            <span>{t('today.filters.location')}</span>
+            <select class="select" name="location" data-today-filter-location>
+              <option value="all">{t('today.filters.allLocations')}</option>
+              <option value="with-location">{t('today.filters.withLocation')}</option>
+              <option value="without-location">{t('today.filters.withoutLocation')}</option>
+            </select>
+          </label>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <Button type="button" variant="secondary" data-today-location-action>
+            {t('today.location.use')}
+          </Button>
+          <p
+            class="min-w-0 text-sm font-semibold text-[var(--color-text-muted)]"
+            data-today-location-status
+            role="status"
+            aria-live="polite"
+            hidden
+          >
+          </p>
+        </div>
+      </form>
+
+      <div class="mt-5" data-today-summary role="status" aria-live="polite"></div>
+
+      <div class="mt-6 grid gap-8" data-today-list>
+        <LoadingState label={t('common.loading')} />
+      </div>
+    </div>
+  </AppShell>
+
+  <script>
+    import { mountGlobalTodayPage } from '../../scripts/pages/global-today';
+
+    mountGlobalTodayPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

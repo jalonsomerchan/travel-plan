@@ -8,6 +8,8 @@ import checklistFormsEn from './feature-translations/checklist-forms/en.json';
 import checklistFormsEs from './feature-translations/checklist-forms/es.json';
 import geolocationEn from './feature-translations/geolocation/en.json';
 import geolocationEs from './feature-translations/geolocation/es.json';
+import globalTodayEn from './feature-translations/global-today/en.json';
+import globalTodayEs from './feature-translations/global-today/es.json';
 import invitesEn from './feature-translations/invites/en.json';
 import invitesEs from './feature-translations/invites/es.json';
 import mapEn from './feature-translations/map/en.json';
@@ -36,6 +38,7 @@ export type TranslationKey =
   | keyof typeof authLoadingEs
   | keyof typeof checklistFormsEs
   | keyof typeof geolocationEs
+  | keyof typeof globalTodayEs
   | keyof typeof invitesEs
   | keyof typeof mapEs
   | keyof typeof mapVisibilityEs
@@ -56,6 +59,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...authLoadingEs,
     ...checklistFormsEs,
     ...geolocationEs,
+    ...globalTodayEs,
     ...invitesEs,
     ...mapEs,
     ...mapVisibilityEs,
@@ -73,6 +77,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...authLoadingEn,
     ...checklistFormsEn,
     ...geolocationEn,
+    ...globalTodayEn,
     ...invitesEn,
     ...mapEn,
     ...mapVisibilityEn,
