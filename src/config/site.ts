@@ -1,3 +1,5 @@
+import packageJson from '../../package.json';
+
 export const defaultLocale = 'es' as const;
 export const locales = ['es', 'en'] as const;
 
@@ -15,6 +17,7 @@ export const siteConfig = {
   base: import.meta.env.ASTRO_BASE ?? '/',
   repositoryUrl:
     import.meta.env.PUBLIC_REPOSITORY_URL ?? 'https://github.com/jalonsomerchan/travel-plan',
+  version: packageJson.version,
   author: 'Jorge Alonso',
   defaultLocale,
   locales,

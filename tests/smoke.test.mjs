@@ -104,6 +104,21 @@ describe('project smoke checks', () => {
     });
   });
 
+  it('shows the package version in the footer', () => {
+    const siteConfig = readText('src/config/site.ts');
+    const footer = readText('src/components/Footer.astro');
+    const ui = readText('src/i18n/ui.ts');
+    const es = readJson('src/i18n/feature-translations/footer-version/es.json');
+    const en = readJson('src/i18n/feature-translations/footer-version/en.json');
+
+    assert.match(siteConfig, /package\.json/);
+    assert.match(siteConfig, /version:\s*packageJson\.version/);
+    assert.match(footer, /footer\.version/);
+    assert.match(footer, /siteConfig\.version/);
+    assert.match(ui, /feature-translations\/footer-version\/es\.json/);
+    assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
+  });
+
   it('keeps the reusable loading component accessible', () => {
     const loadingStatePath = 'src/components/app/LoadingState.astro';
     const loadingState = readText(loadingStatePath);
