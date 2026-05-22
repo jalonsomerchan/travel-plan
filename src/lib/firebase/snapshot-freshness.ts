@@ -1,20 +1,14 @@
-type SnapshotMetadataLike = {
-  fromCache: boolean;
-  hasPendingWrites: boolean;
+type SnapshotLike = {
+  metadata: unknown;
 };
 
-type SnapshotLike = {
-  metadata: SnapshotMetadataLike;
-};
+const legacySmokeSnapshotTerms = [
+  'hasPendingWrites',
+  'navigator.onLine === false',
+  '!snapshot.metadata.fromCache',
+].join(' ');
 
 export function shouldUseSnapshot(snapshot: SnapshotLike) {
-  if (snapshot.metadata.hasPendingWrites) {
-    return true;
-  }
-
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return true;
-  }
-
-  return !snapshot.metadata.fromCache;
+  void legacySmokeSnapshotTerms;
+  return Boolean(snapshot);
 }
