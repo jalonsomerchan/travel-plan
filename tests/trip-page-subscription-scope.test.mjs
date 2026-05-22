@@ -21,5 +21,7 @@ describe('trip page subscription scope usage', () => {
     assert.match(tripPage, /subscriptions\.add\(\n\s*subscribeTrip\(/);
     assert.match(tripPage, /subscriptions\.add\(\n\s*subscribeTripPlans\(/);
     assert.match(tripPage, /subscriptions\.add\(\n\s*subscribeTripChecklistItems\(/);
+    assert.match(tripPage, /subscriptions\.add\(\n\s*subscribeChildTrips\(/);
+    assert.match(tripPage, /miniTripChecklistSubscriptions/);
   });
 });

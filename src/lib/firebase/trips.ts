@@ -99,6 +99,10 @@ function getTripUpdateData(input: TripInput) {
     data.locationLng = deleteField();
   }
 
+  if (input.parentTripId === undefined) {
+    data.parentTripId = deleteField();
+  }
+
   return data;
 }
 
@@ -119,6 +123,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     endDate: String(data.endDate ?? ''),
     status: (data.status as TripRecord['status']) ?? 'idea',
     accommodation: mapTripAccommodationRecord(data.accommodation),
+    parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
@@ -239,6 +244,35 @@ export function subscribeTrip(tripId: string, callback: (trip: TripRecord | null
   );
 }
 
+export function subscribeChildTrips(
+  parentTripId: string,
+  callback: (trips: TripRecord[]) => void,
+  onError?: (error: Error) => void,
+) {
+  const db = getFirebaseDb();
+  const tripsQuery = query(
+    collection(db, 'trips'),
+    where('parentTripId', '==', parentTripId),
+    orderBy('startDate', 'asc'),
+  );
+
+  return onSnapshot(
+    tripsQuery,
+    (snapshot) => {
+      const trips = snapshot.docs
+        .filter((item) => !isTripDeletedData(item.data()))
+        .map(mapTripRecord);
+
+      trips.forEach(setCachedTrip);
+      callback(trips);
+    },
+    (error) => {
+      console.error('subscribeChildTrips', error);
+      onError?.(error);
+    },
+  );
+}
+
 export function subscribeTripMembers(tripId: string, callback: (members: TripMemberRecord[]) => void) {
   const db = getFirebaseDb();
   const membersQuery = query(collection(db, 'trips', tripId, 'members'), orderBy('email', 'asc'));
@@ -311,7 +345,14 @@ export async function updateTrip(tripId: string, input: TripInput) {
 
 export async function deleteTrip(tripId: string) {
   const db = getFirebaseDb();
+  const childTripsSnapshot = await getDocs(query(collection(db, 'trips'), where('parentTripId', '==', tripId)));
   const invitesSnapshot = await getDocs(query(collection(db, 'tripInvites'), where('tripId', '==', tripId)));
+
+  await Promise.all(
+    childTripsSnapshot.docs
+      .filter((childTripSnapshot) => !isTripDeletedData(childTripSnapshot.data()))
+      .map((childTripSnapshot) => deleteTrip(childTripSnapshot.id)),
+  );
 
   for (let index = 0; index < invitesSnapshot.docs.length; index += 400) {
     const batch = writeBatch(db);

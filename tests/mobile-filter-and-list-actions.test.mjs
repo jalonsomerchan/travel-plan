@@ -42,7 +42,7 @@ describe('mobile filters and list actions', () => {
   });
 
   it('uses icon-only remove buttons with accessible labels', () => {
-    const checklist = readText('src/scripts/pages/trip-checklist.ts');
+    const checklist = readText('src/scripts/pages/trip-checklist-groups.ts');
     const luggage = readText('src/scripts/pages/trip-luggage.ts');
 
     [checklist, luggage].forEach((source) => {

@@ -15,6 +15,7 @@ import {
   ensureFirebaseReady,
   formatTripDateRange,
   getPageTranslator,
+  syncTripParentNavigation,
   syncTripNavigation,
   syncTripShell,
 } from './shared';
@@ -29,6 +30,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const deleteButton = document.querySelector<HTMLButtonElement>('[data-trip-delete-button]');
   const t = getPageTranslator(locale);
+  let currentTrip: TripRecord | null = null;
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -69,12 +71,31 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
 
     void getTripOnce(tripId).then((trip) => {
       if (trip) {
+        currentTrip = trip;
         syncTripForm(trip);
+        if (trip.parentTripId) {
+          void getTripOnce(trip.parentTripId)
+            .then((parentTrip) =>
+              syncTripParentNavigation(
+                locale,
+                parentTrip ? { id: parentTrip.id, name: parentTrip.name } : null,
+                getAppUrl(locale, 'trip', { trip: trip.id }),
+              ),
+            )
+            .catch(() => {
+              syncTripParentNavigation(locale, null, getAppUrl(locale, 'trip', { trip: trip.id }));
+            });
+        } else {
+          syncTripParentNavigation(locale, null, getAppUrl(locale, 'trip', { trip: trip.id }));
+        }
       }
     });
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!currentTrip) {
+      return;
+    }
     const data = new FormData(form);
     const startDate = String(data.get('startDate') ?? '');
     const endDate = String(data.get('endDate') ?? '');
@@ -103,6 +124,7 @@ export function mountTripEditPage({ locale }: { locale: Locale }) {
         endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
         accommodation: getAccommodationInputFromForm(form),
+        parentTripId: currentTrip?.parentTripId,
       });
       window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
       return;

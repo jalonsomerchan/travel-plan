@@ -20,7 +20,7 @@ describe('trip members subscription scope usage', () => {
     assert.match(members, /observeSession\(\(user\) => \{\n\s*clearSubscriptions\(\);\n\s*resetState\(\);/);
     assert.match(members, /subscriptions\.add\(\n\s*subscribeTrip\(/);
     assert.match(members, /subscriptions\.add\(\n\s*subscribeTripMembers\(/);
-    assert.match(members, /inviteSubscriptions\.clear\(\);\n\s*currentInvites = \[\];/);
+    assert.match(members, /inviteSubscriptions\.clear\(\);\n\s*inheritedMemberSubscriptions\.clear\(\);\n\s*currentInvites = \[\];/);
     assert.match(members, /inviteSubscriptions\.add\(\n\s*subscribeTripInvites\(/);
   });
 });

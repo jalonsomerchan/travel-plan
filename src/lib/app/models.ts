@@ -39,6 +39,7 @@ export interface TripRecord {
   endDate: string;
   status: TripStatus;
   accommodation?: TripAccommodationRecord;
+  parentTripId?: string;
   ownerId: string;
   ownerEmail: string;
   memberIds: string[];
@@ -53,6 +54,7 @@ export interface TripInput {
   endDate: string;
   status: TripStatus;
   accommodation?: TripAccommodationRecord;
+  parentTripId?: string;
 }
 
 export interface TripMemberRecord {

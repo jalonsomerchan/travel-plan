@@ -37,6 +37,22 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
     <TripSectionNav slot="nav" locale={locale} fallbackHref={dashboardUrl} />
 
     <div slot="body" class="pt-6">
+      <section
+        class="mb-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-4 shadow-[var(--shadow-xs)]"
+        data-parent-trip-banner
+        hidden
+      >
+        <p class="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]">{t('trip.miniTrips.parentEyebrow')}</p>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-sm text-[var(--color-text-muted)]">
+            {t('trip.miniTrips.parentDescription')}
+            <a class="font-bold text-[var(--color-primary)]" data-parent-trip-link href="#">
+              <span data-parent-trip-name></span>
+            </a>
+          </p>
+          <a class="app-card-link" data-parent-trip-action hidden href="#">{t('trip.miniTrips.backToParent')}</a>
+        </div>
+      </section>
       <div class="mb-6" data-trip-weather-card>
         <LoadingState label={t('common.loading')} />
       </div>
@@ -188,6 +204,19 @@ const plansTitle = locale === 'es' ? 'Planes y lugares' : 'Plans and places';
           </label>
         </form>
       </div>
+      <section class="mt-8 border-t border-[var(--color-border)] pt-8" data-mini-trips-section>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]">{t('trip.miniTrips.eyebrow')}</p>
+            <h2 class="mt-2 text-2xl font-black text-[var(--color-text)]">{t('trip.miniTrips.title')}</h2>
+            <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-mini-trip-count>{t('trip.miniTrips.count').replace('{count}', '0')}</p>
+          </div>
+          <Button href={dashboardUrl} id="trip-create-mini-trip-link">{t('trip.miniTrips.createAction')}</Button>
+        </div>
+        <div class="mt-6 grid gap-4" data-mini-trip-list>
+          <LoadingState label={t('common.loading')} />
+        </div>
+      </section>
       <div class="mt-6 grid gap-4" data-plan-list>
         <LoadingState label={t('common.loading')} />
       </div>

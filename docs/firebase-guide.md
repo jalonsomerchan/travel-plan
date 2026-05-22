@@ -67,6 +67,7 @@ Reglas prácticas:
 
 - `users/{uid}`: perfil básico del usuario autenticado. Solo puede leerlo o escribirlo el propio usuario.
 - `trips/{tripId}`: viaje principal con fechas, estado, dueño y `memberIds`.
+- `trips/{tripId}` con `parentTripId`: Mini Viaje anidado dentro de otro viaje, reutilizando exactamente la misma estructura, vistas y subcolecciones que un viaje normal.
 - `trips/{tripId}/members/{uid}`: permisos de cada usuario invitado.
 - `trips/{tripId}/plans/{planId}`: planes del viaje.
 - `trips/{tripId}/pointsOfInterest/{pointId}`: puntos de interés guardados del viaje.
@@ -156,6 +157,45 @@ Campos esperados:
 - `createdAt` y `updatedAt`: timestamps de servidor para trazabilidad.
 
 Mantener esta estructura pequeña evita mezclar lógica de preparación con la de `plans`, que ya tiene fechas, ubicaciones y categorías propias.
+
+## Decisión de arquitectura para Mini Viajes
+
+Los Mini Viajes se modelan en la misma colección `trips` usando un campo opcional `parentTripId`.
+
+Ejemplo:
+
+```json
+{
+  "name": "Escapada a Sintra",
+  "location": "Sintra",
+  "startDate": "2026-08-17",
+  "endDate": "2026-08-18",
+  "status": "planned",
+  "parentTripId": "trip-principal-id",
+  "ownerId": "uid-creador",
+  "memberIds": ["uid-creador"]
+}
+```
+
+Motivos de esta decisión:
+
+- Reutiliza la misma UI de detalle, planes, miembros, calendario, mapa y checklist sin duplicar lógica.
+- Mantiene compatibilidad con los datos existentes, porque `parentTripId` es opcional y los viajes actuales siguen funcionando sin migración.
+- Permite que cada Mini Viaje tenga sus propias subcolecciones `plans`, `checklistItems`, `pointsOfInterest` y `luggageItems`.
+- Mantiene el modelo pequeño: no hace falta una segunda colección ni replicar estructuras completas.
+
+Reglas funcionales:
+
+- Un viaje sin `parentTripId` sigue siendo un viaje normal.
+- Un viaje con `parentTripId` se considera un Mini Viaje.
+- Los miembros del viaje padre pueden leer y editar el Mini Viaje aunque no aparezcan en el `memberIds` directo del hijo.
+- El Mini Viaje puede añadir además miembros propios mediante su subcolección `members` y su `memberIds`.
+- En el viaje padre, la checklist puede agregar también los ítems de checklist de sus Mini Viajes para dar una vista conjunta.
+
+Qué evitamos deliberadamente:
+
+- No usamos una subcolección `trips/{tripId}/miniTrips` porque habría que duplicar buena parte de las consultas, rutas y helpers ya centrados en `trips/{tripId}`.
+- No duplicamos planes o checklist del hijo dentro del padre; cada Mini Viaje mantiene sus propios datos y el padre solo los agrega en la UI cuando hace falta.
 
 ## Estructura recomendada para equipaje privado por persona
 

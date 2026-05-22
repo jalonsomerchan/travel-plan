@@ -25,9 +25,10 @@ import {
 } from '../../lib/app/weather';
 import { subscribeTripChecklistItems } from '../../lib/firebase/checklists';
 import { deletePlan, subscribeTripPlans, updatePlan } from '../../lib/firebase/plans';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip } from '../../lib/firebase/trips';
+import { subscribeChildTrips, subscribeTrip } from '../../lib/firebase/trips';
 import {
   openPlanAiTourGenerator,
   renderPlanAiTourGenerateMenuAction,
@@ -52,9 +53,11 @@ import {
   setAppShellTitle,
   setNavigationLinkHidden,
   setTripContextName,
+  syncTripParentNavigation,
   syncTripNavigation,
   syncTripShell,
 } from './shared';
+import { renderMiniTrips } from './trip-mini-trips';
 
 interface PlanFilters {
   search: string;
@@ -475,6 +478,8 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const createPlanLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-link');
   const aiInlineLink = document.querySelector<HTMLAnchorElement>('#trip-ai-inline-link');
   const createPlanInlineLink = document.querySelector<HTMLAnchorElement>('#trip-create-plan-inline-link');
+  const createMiniTripLink = document.querySelector<HTMLAnchorElement>('#trip-create-mini-trip-link');
+  const miniTripsSection = document.querySelector<HTMLElement>('[data-mini-trips-section]');
   const currentLocationButton = document.querySelector<HTMLButtonElement>('[data-current-location-action]');
   const planList = document.querySelector<HTMLElement>('[data-plan-list]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-plan-filter-search]');
@@ -489,10 +494,15 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   const filtersForm = document.querySelector<HTMLFormElement>('[data-plan-filters]');
   const t = getPageTranslator(locale);
   const subscriptions = createSubscriptionScope();
+  const miniTripChecklistSubscriptions = createSubscriptionScope();
   let allPlans: PlanRecord[] = [];
   let currentTrip: TripRecord | null = null;
+  let currentMiniTrips: TripRecord[] = [];
+  let currentChecklistItems: ChecklistItemRecord[] = [];
+  let parentLookupToken = 0;
   let weatherRequestId = 0;
   const geolocation: GeolocationState = { isLoading: false, errorKey: null, location: null };
+  const miniTripChecklistItems = new Map<string, ChecklistItemRecord[]>();
   const filters: PlanFilters = {
     search: '',
     category: 'all',
@@ -524,6 +534,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   if (createPlanLink) createPlanLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
   if (aiInlineLink) aiInlineLink.href = getAppUrl(locale, 'trip-plan-suggestions', { trip: tripId });
   if (createPlanInlineLink) createPlanInlineLink.href = getAppUrl(locale, 'plan-create', { trip: tripId });
+  if (createMiniTripLink) createMiniTripLink.href = getAppUrl(locale, 'trip-create', { parent: tripId });
   if (categorySelect) {
     categorySelect.innerHTML += getCategoryOptions(locale)
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
@@ -545,9 +556,74 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     renderPlans(locale, tripId, currentTrip, filterPlans(allPlans, filters), geolocation);
   };
 
+  const syncChecklistNotice = () => {
+    renderChecklistNotice(locale, tripId, [
+      ...currentChecklistItems,
+      ...Array.from(miniTripChecklistItems.values()).flat(),
+    ]);
+  };
+
+  const syncMiniTrips = () => {
+    renderMiniTrips(locale, currentMiniTrips);
+  };
+
+  const syncParentNavigation = (trip: TripRecord | null) => {
+    const fallbackHref = getAppUrl(locale, 'dashboard');
+
+    if (!trip?.parentTripId) {
+      syncTripParentNavigation(locale, null, fallbackHref);
+      return;
+    }
+
+    const lookupToken = parentLookupToken + 1;
+    parentLookupToken = lookupToken;
+
+    void getTripOnce(trip.parentTripId)
+      .then((parentTrip) => {
+        if (lookupToken !== parentLookupToken) {
+          return;
+        }
+
+        syncTripParentNavigation(
+          locale,
+          parentTrip ? { id: parentTrip.id, name: parentTrip.name } : null,
+          fallbackHref,
+        );
+      })
+      .catch(() => {
+        if (lookupToken !== parentLookupToken) {
+          return;
+        }
+
+        syncTripParentNavigation(locale, null, fallbackHref);
+      });
+  };
+
+  const syncMiniTripChecklistSubscriptions = () => {
+    miniTripChecklistSubscriptions.clear();
+    miniTripChecklistItems.clear();
+
+    currentMiniTrips.forEach((miniTrip) => {
+      miniTripChecklistSubscriptions.add(
+        subscribeTripChecklistItems(miniTrip.id, (items) => {
+          miniTripChecklistItems.set(miniTrip.id, items);
+          syncChecklistNotice();
+        }),
+      );
+    });
+
+    syncChecklistNotice();
+  };
+
   const resetState = () => {
     allPlans = [];
     currentTrip = null;
+    currentMiniTrips = [];
+    currentChecklistItems = [];
+    parentLookupToken += 1;
+    miniTripChecklistItems.clear();
+    syncMiniTrips();
+    syncChecklistNotice();
     weatherRequestId += 1;
     geolocation.isLoading = false;
     geolocation.errorKey = null;
@@ -701,6 +777,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   window.addEventListener('pagehide', () => {
     stopPlanAiGuidePlayer();
     subscriptions.clear();
+    miniTripChecklistSubscriptions.clear();
   }, { once: true });
 
   planList?.addEventListener('click', async (event) => {
@@ -780,6 +857,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
   });
   observeSession((user) => {
     subscriptions.clear();
+    miniTripChecklistSubscriptions.clear();
     resetState();
 
     if (!user) {
@@ -792,8 +870,15 @@ export function mountTripPage({ locale }: { locale: Locale }) {
         if (trip) {
           currentTrip = trip;
           syncTripShell(locale, trip);
+          syncParentNavigation(trip);
           void syncWeatherCard();
           setNavigationLinkHidden('trip-luggage-link', !trip.memberIds.includes(user.uid));
+          if (miniTripsSection) {
+            miniTripsSection.hidden = Boolean(trip.parentTripId);
+          }
+          if (createMiniTripLink) {
+            createMiniTripLink.hidden = Boolean(trip.parentTripId);
+          }
           if (accommodationMapsLink) {
             const hasLocation = hasAccommodationLocation(trip.accommodation);
             const mapUrl = hasLocation
@@ -813,6 +898,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
           syncPlans();
         } else {
           currentTrip = null;
+          syncParentNavigation(null);
           setNavigationLinkHidden('trip-luggage-link', true);
           setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
@@ -831,7 +917,16 @@ export function mountTripPage({ locale }: { locale: Locale }) {
 
     subscriptions.add(
       subscribeTripChecklistItems(tripId, (items) => {
-        renderChecklistNotice(locale, tripId, items);
+        currentChecklistItems = items;
+        syncChecklistNotice();
+      }),
+    );
+
+    subscriptions.add(
+      subscribeChildTrips(tripId, (miniTrips) => {
+        currentMiniTrips = miniTrips;
+        syncMiniTrips();
+        syncMiniTripChecklistSubscriptions();
       }),
     );
   });

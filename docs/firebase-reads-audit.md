@@ -26,6 +26,7 @@ Estas vistas pueden mantener listeners porque su valor depende de cambios en viv
 - `dashboard.ts`: lista de viajes del usuario e invitaciones pendientes.
 - `trip-invites.ts`: invitaciones pendientes del usuario.
 - Vistas de detalle de viaje y plan: deben reflejar cambios de planes, puntos de interés, alojamiento o metadatos mientras el usuario consulta la vista.
+- El detalle de viaje padre y su checklist pueden añadir listeners extra a sus Mini Viajes para reflejar cambios en vivo de la relación padre-hijo y de los checklist anidados.
 - Vistas de mapa: deben reflejar cambios de planes, alojamiento, puntos de interés y configuración visual compartida.
 - `global-calendar.ts`: agrega planes de varios viajes y debe actualizarse si cambian planes o viajes.
 - Páginas colaborativas como checklist, equipaje, miembros, puntos de interés o notas, cuando existan listeners de colecciones editables.

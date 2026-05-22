@@ -34,9 +34,11 @@ describe('Firebase subscription scope helper', () => {
 
     assert.match(checklist, /createSubscriptionScope/);
     assert.match(checklist, /const subscriptions = createSubscriptionScope\(\)/);
+    assert.match(checklist, /const miniTripChecklistSubscriptions = createSubscriptionScope\(\)/);
     assert.match(checklist, /window\.addEventListener\('pagehide', \(\) => subscriptions\.clear\(\), \{ once: true \}\)/);
     assert.match(checklist, /observeSession\(\(user\) => \{\n\s*subscriptions\.clear\(\)/);
     assert.match(checklist, /subscriptions\.add\(\n\s*subscribeTrip\(/);
     assert.match(checklist, /subscriptions\.add\(\n\s*subscribeTripChecklistItems\(/);
+    assert.match(checklist, /subscriptions\.add\(\n\s*subscribeChildTrips\(/);
   });
 });

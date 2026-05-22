@@ -34,6 +34,22 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
     <TripNavigationTopbar slot="topbar" locale={locale} fallbackHref={dashboardUrl} />
     <TripActionsMenu slot="trip-context-action" locale={locale} fallbackHref={dashboardUrl} />
     <div slot="body" class="pt-6">
+      <section
+        class="mb-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-4 shadow-[var(--shadow-xs)]"
+        data-parent-trip-banner
+        hidden
+      >
+        <p class="text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]">{t('trip.miniTrips.parentEyebrow')}</p>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-sm text-[var(--color-text-muted)]">
+            {t('trip.miniTrips.parentDescription')}
+            <a class="font-bold text-[var(--color-primary)]" data-parent-trip-link href="#">
+              <span data-parent-trip-name></span>
+            </a>
+          </p>
+          <a class="app-card-link" data-parent-trip-action hidden href="#">{t('trip.miniTrips.backToParent')}</a>
+        </div>
+      </section>
       <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
         <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
         <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>

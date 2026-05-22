@@ -6,13 +6,15 @@ import type { TripRecord } from '../../lib/app/models';
 import { getTripLocationInputFromForm, getTripLocationValidationKey } from '../../lib/app/trip-location';
 import { getAppUrl } from '../../lib/app/routes';
 import { validateTripDateRange } from '../../lib/app/trip-date-range';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { observeSession } from '../../lib/firebase/session';
 import { createTrip } from '../../lib/firebase/trips';
-import { ensureFirebaseReady, getPageTranslator } from './shared';
+import { ensureFirebaseReady, getPageTranslator, syncTripParentNavigation } from './shared';
 import { initLocationPickers } from './plan-location-picker';
 
 export function mountTripCreatePage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
+  const parentTripId = new URL(window.location.href).searchParams.get('parent') ?? '';
   const form = document.querySelector<HTMLFormElement>('#trip-create-form');
   const message = document.querySelector<HTMLElement>('#trip-create-message');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
@@ -23,6 +25,13 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
     if (!user) window.location.href = locale === 'es' ? '/' : `/${locale}/`;
   });
   initLocationPickers();
+  if (parentTripId) {
+    void getTripOnce(parentTripId)
+      .then((trip) => syncTripParentNavigation(locale, trip ? { id: trip.id, name: trip.name } : null))
+      .catch(() => {
+        syncTripParentNavigation(locale, null);
+      });
+  }
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!currentUser) return;
@@ -54,6 +63,7 @@ export function mountTripCreatePage({ locale }: { locale: Locale }) {
         endDate,
         status: String(data.get('status') ?? 'idea') as TripRecord['status'],
         accommodation: getAccommodationInputFromForm(form),
+        parentTripId: parentTripId || undefined,
       });
       setMessage(message, t('dashboard.created'), 'success');
       window.location.href = getAppUrl(locale, 'trip', { trip: tripId });

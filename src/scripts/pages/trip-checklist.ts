@@ -1,5 +1,5 @@
 import type { Locale } from '../../config/site';
-import { escapeHtml, setButtonBusy, setMessage } from '../../lib/app/dom';
+import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import type { ChecklistItemRecord, TripRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import {
@@ -8,108 +8,28 @@ import {
   subscribeTripChecklistItems,
   updateTripChecklistItem,
 } from '../../lib/firebase/checklists';
+import { getTripOnce } from '../../lib/firebase/trip-reads';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
-import { subscribeTrip } from '../../lib/firebase/trips';
+import { subscribeChildTrips, subscribeTrip } from '../../lib/firebase/trips';
 import {
   ensureFirebaseReady,
-  getChecklistStatusLabel,
-  getChecklistStatusTone,
   getPageTranslator,
   revealAppShell,
   setAppShellDescription,
   setAppShellMeta,
   setAppShellTitle,
   setTripContextName,
-  syncTripNavigation,
   syncChecklistShell,
+  syncTripNavigation,
+  syncTripParentNavigation,
 } from './shared';
-
-function getPendingChecklistCount(items: ChecklistItemRecord[]) {
-  return items.filter((item) => item.status === 'pending').length;
-}
-
-function getTrashIcon() {
-  return `
-    <svg aria-hidden="true" class="h-4 w-4" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v5" />
-      <path d="M14 11v5" />
-    </svg>
-  `;
-}
-
-function renderChecklistItems(locale: Locale, items: ChecklistItemRecord[]) {
-  const target = document.querySelector<HTMLElement>('[data-checklist-list]');
-  const pendingTarget = document.querySelector<HTMLElement>('[data-checklist-pending-count]');
-  const completedTarget = document.querySelector<HTMLElement>('[data-checklist-completed-count]');
-  const t = getPageTranslator(locale);
-  const pendingCount = getPendingChecklistCount(items);
-  const completedCount = items.length - pendingCount;
-
-  if (pendingTarget) {
-    pendingTarget.textContent = t('tripChecklist.pendingSummary').replace('{count}', String(pendingCount));
-  }
-
-  if (completedTarget) {
-    completedTarget.textContent = t('tripChecklist.completedSummary').replace('{count}', String(completedCount));
-  }
-
-  if (!target) {
-    return;
-  }
-
-  if (items.length === 0) {
-    target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('tripChecklist.empty'))}</article>`;
-    return;
-  }
-
-  target.innerHTML = items
-    .map((item) => {
-      const isCompleted = item.status === 'completed';
-
-      return `
-        <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4">
-          <div class="flex items-start justify-between gap-3">
-            <label class="flex min-w-0 flex-1 items-start gap-3">
-              <input
-                ${isCompleted ? 'checked' : ''}
-                aria-label="${escapeHtml(
-                  isCompleted ? t('tripChecklist.markPending') : t('tripChecklist.markCompleted'),
-                )}"
-                class="mt-1 h-4 w-4 accent-[var(--color-primary)]"
-                data-checklist-toggle="${escapeHtml(item.id)}"
-                type="checkbox"
-              />
-              <span class="min-w-0">
-                <span class="block font-semibold text-[var(--color-text)] ${isCompleted ? 'line-through opacity-70' : ''}">
-                  ${escapeHtml(item.title)}
-                </span>
-                <span class="mt-1 inline-flex">
-                  <span class="status-pill" data-tone="${getChecklistStatusTone(item.status)}">${escapeHtml(
-                    getChecklistStatusLabel(locale, item.status),
-                  )}</span>
-                </span>
-              </span>
-            </label>
-            <button
-              aria-label="${escapeHtml(t('tripChecklist.remove'))}"
-              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-text-muted)] transition hover:border-[var(--color-danger)] hover:text-[var(--color-danger)]"
-              data-checklist-remove="${escapeHtml(item.id)}"
-              title="${escapeHtml(t('tripChecklist.remove'))}"
-              type="button"
-            >
-              ${getTrashIcon()}
-              <span class="sr-only">${escapeHtml(t('tripChecklist.remove'))}</span>
-            </button>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
-}
+import {
+  type ChecklistGroup,
+  getCompletedChecklistCount,
+  getPendingChecklistCount,
+  renderChecklistGroups,
+} from './trip-checklist-groups';
 
 export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -121,10 +41,14 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const t = getPageTranslator(locale);
   const addLabel = t('tripChecklist.form.addShort');
   const subscriptions = createSubscriptionScope();
+  const miniTripChecklistSubscriptions = createSubscriptionScope();
   let currentTrip: TripRecord | null = null;
   let currentItems: ChecklistItemRecord[] = [];
+  let currentMiniTrips: TripRecord[] = [];
+  let parentLookupToken = 0;
   let tripLoaded = false;
   let itemsLoaded = false;
+  const miniTripChecklistItems = new Map<string, ChecklistItemRecord[]>();
 
   if (!tripId || !form || !list) {
     return;
@@ -140,29 +64,102 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     backLink.href = getAppUrl(locale, 'trip', { trip: tripId });
   }
 
-  const syncShell = () => {
-    if (currentTrip) {
-      syncChecklistShell(
-        locale,
-        currentTrip,
-        getPendingChecklistCount(currentItems),
-        currentItems.length - getPendingChecklistCount(currentItems),
-      );
+  const getChecklistGroups = (): ChecklistGroup[] => [
+    {
+      isParentTrip: true,
+      items: currentItems,
+      tripId,
+      tripName: currentTrip?.name ?? t('tripChecklist.group.currentTripFallback'),
+    },
+    ...currentMiniTrips.map((miniTrip) => ({
+      isParentTrip: false,
+      items: miniTripChecklistItems.get(miniTrip.id) ?? [],
+      tripId: miniTrip.id,
+      tripName: miniTrip.name,
+    })),
+  ];
 
-      if (tripLoaded && itemsLoaded) {
-        revealAppShell();
-      }
+  const syncParentNavigation = (trip: TripRecord | null) => {
+    const fallbackHref = getAppUrl(locale, 'trip', { trip: tripId });
+
+    if (!trip?.parentTripId) {
+      syncTripParentNavigation(locale, null, fallbackHref);
+      return;
+    }
+
+    const lookupToken = parentLookupToken + 1;
+    parentLookupToken = lookupToken;
+
+    void getTripOnce(trip.parentTripId)
+      .then((parentTrip) => {
+        if (lookupToken !== parentLookupToken) {
+          return;
+        }
+
+        syncTripParentNavigation(
+          locale,
+          parentTrip ? { id: parentTrip.id, name: parentTrip.name } : null,
+          fallbackHref,
+        );
+      })
+      .catch(() => {
+        if (lookupToken !== parentLookupToken) {
+          return;
+        }
+
+        syncTripParentNavigation(locale, null, fallbackHref);
+      });
+  };
+
+  const syncShell = () => {
+    if (!currentTrip) {
+      return;
+    }
+
+    const groups = getChecklistGroups();
+    syncChecklistShell(
+      locale,
+      currentTrip,
+      getPendingChecklistCount(groups),
+      getCompletedChecklistCount(groups),
+    );
+
+    if (tripLoaded && itemsLoaded) {
+      revealAppShell();
     }
   };
 
+  const syncMiniTripChecklistSubscriptions = () => {
+    miniTripChecklistSubscriptions.clear();
+    miniTripChecklistItems.clear();
+
+    currentMiniTrips.forEach((miniTrip) => {
+      miniTripChecklistSubscriptions.add(
+        subscribeTripChecklistItems(miniTrip.id, (items) => {
+          miniTripChecklistItems.set(miniTrip.id, items);
+          renderChecklistGroups(locale, getChecklistGroups());
+          syncShell();
+        }),
+      );
+    });
+
+    renderChecklistGroups(locale, getChecklistGroups());
+    syncShell();
+  };
+
   window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  window.addEventListener('pagehide', () => miniTripChecklistSubscriptions.clear(), { once: true });
 
   observeSession((user) => {
     subscriptions.clear();
+    miniTripChecklistSubscriptions.clear();
     currentTrip = null;
     currentItems = [];
+    currentMiniTrips = [];
     tripLoaded = false;
     itemsLoaded = false;
+    parentLookupToken += 1;
+    miniTripChecklistItems.clear();
 
     if (!user) {
       window.location.href = locale === 'es' ? '/' : `/${locale}/`;
@@ -175,8 +172,10 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
         tripLoaded = true;
 
         if (trip) {
+          syncParentNavigation(trip);
           syncShell();
         } else {
+          syncParentNavigation(null);
           setTripContextName('');
           setAppShellTitle(t('trip.notFound'));
           setAppShellDescription('');
@@ -190,8 +189,15 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
       subscribeTripChecklistItems(tripId, (items) => {
         currentItems = items;
         itemsLoaded = true;
-        renderChecklistItems(locale, items);
+        renderChecklistGroups(locale, getChecklistGroups());
         syncShell();
+      }),
+    );
+
+    subscriptions.add(
+      subscribeChildTrips(tripId, (miniTrips) => {
+        currentMiniTrips = miniTrips;
+        syncMiniTripChecklistSubscriptions();
       }),
     );
   });
@@ -212,11 +218,11 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     titleInput?.focus();
 
     void createTripChecklistItem(tripId, {
-        title,
-        status: 'pending',
-      })
+      title,
+      status: 'pending',
+    })
       .then(() => {
-      setMessage(message, t('tripChecklist.form.created'), 'success');
+        setMessage(message, t('tripChecklist.form.created'), 'success');
       })
       .catch((error) => {
         if (titleInput && !titleInput.value.trim()) {
@@ -236,19 +242,23 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     }
 
     const checklistItemId = toggle.dataset.checklistToggle;
+    const checklistTripId = toggle.dataset.checklistTripId ?? tripId;
 
     if (!checklistItemId) {
       return;
     }
 
-    const checklistItem = currentItems.find((item) => item.id === checklistItemId);
+    const checklistItem =
+      (checklistTripId === tripId ? currentItems : miniTripChecklistItems.get(checklistTripId) ?? []).find(
+        (item) => item.id === checklistItemId,
+      ) ?? null;
 
     if (!checklistItem) {
       return;
     }
 
     try {
-      await updateTripChecklistItem(tripId, checklistItemId, {
+      await updateTripChecklistItem(checklistTripId, checklistItemId, {
         title: checklistItem.title,
         status: toggle.checked ? 'completed' : 'pending',
       });
@@ -268,6 +278,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     }
 
     const checklistItemId = removeButton.dataset.checklistRemove;
+    const checklistTripId = removeButton.dataset.checklistTripId ?? tripId;
 
     if (!checklistItemId) {
       return;
@@ -276,7 +287,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     removeButton.disabled = true;
 
     try {
-      await deleteTripChecklistItem(tripId, checklistItemId);
+      await deleteTripChecklistItem(checklistTripId, checklistItemId);
     } catch (error) {
       removeButton.disabled = false;
       setMessage(message, error instanceof Error ? error.message : t('tripChecklist.form.error'), 'danger');

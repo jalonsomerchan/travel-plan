@@ -22,6 +22,7 @@ describe('trip delete flow', () => {
     assert.match(tripsService, /deletedAt: serverTimestamp\(\)/);
     assert.match(tripsService, /status: 'deleted'/);
     assert.match(tripsService, /tripInvites/);
+    assert.match(tripsService, /parentTripId/);
     assert.match(tripsService, /isTripDeletedData/);
   });
 });

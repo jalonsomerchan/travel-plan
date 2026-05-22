@@ -264,6 +264,12 @@ function setNavigationLinkHref(id: string, href: string) {
   }
 }
 
+function setBackButtonFallback(href: string) {
+  document.querySelectorAll<HTMLButtonElement>('[data-trip-back-button]').forEach((button) => {
+    button.dataset.fallbackHref = href;
+  });
+}
+
 export function setNavigationLinkHidden(id: string, hidden: boolean) {
   const link = document.querySelector<HTMLAnchorElement>(`#${id}`);
 
@@ -276,9 +282,7 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
   const tripUrl = getAppUrl(locale, 'trip', { trip: tripId });
   const accommodationMapsLink = document.querySelector<HTMLAnchorElement>('#trip-accommodation-maps-link');
 
-  document.querySelectorAll<HTMLButtonElement>('[data-trip-back-button]').forEach((button) => {
-    button.dataset.fallbackHref = tripUrl;
-  });
+  setBackButtonFallback(tripUrl);
 
   setNavigationLinkHref('trip-plans-link', tripUrl);
   setNavigationLinkHref('trip-create-plan-link', getAppUrl(locale, 'plan-create', { trip: tripId }));
@@ -299,6 +303,61 @@ export function syncTripNavigation(locale: Locale, tripId: string) {
   if (accommodationMapsLink) {
     accommodationMapsLink.href = getAppUrl(locale, 'trip-accommodation', { trip: tripId });
     accommodationMapsLink.hidden = true;
+  }
+}
+
+export function syncTripParentNavigation(
+  locale: Locale,
+  parentTrip?: Pick<TripRecord, 'id' | 'name'> | null,
+  fallbackHref?: string,
+) {
+  const parentTripLink = document.querySelector<HTMLAnchorElement>('[data-parent-trip-link]');
+  const parentTripName = document.querySelector<HTMLElement>('[data-parent-trip-name]');
+  const parentTripAction = document.querySelector<HTMLAnchorElement>('[data-parent-trip-action]');
+  const parentTripBanner = document.querySelector<HTMLElement>('[data-parent-trip-banner]');
+  const defaultHref = fallbackHref ?? getAppUrl(locale, 'dashboard');
+
+  if (!parentTrip) {
+    setBackButtonFallback(defaultHref);
+
+    if (parentTripBanner) {
+      parentTripBanner.hidden = true;
+    }
+
+    if (parentTripLink) {
+      parentTripLink.removeAttribute('href');
+    }
+
+    if (parentTripAction) {
+      parentTripAction.hidden = true;
+      parentTripAction.removeAttribute('href');
+    }
+
+    if (parentTripName) {
+      parentTripName.textContent = '';
+    }
+
+    return;
+  }
+
+  const parentTripUrl = getAppUrl(locale, 'trip', { trip: parentTrip.id });
+  setBackButtonFallback(parentTripUrl);
+
+  if (parentTripBanner) {
+    parentTripBanner.hidden = false;
+  }
+
+  if (parentTripLink) {
+    parentTripLink.href = parentTripUrl;
+  }
+
+  if (parentTripAction) {
+    parentTripAction.hidden = false;
+    parentTripAction.href = parentTripUrl;
+  }
+
+  if (parentTripName) {
+    parentTripName.textContent = parentTrip.name;
   }
 }
 

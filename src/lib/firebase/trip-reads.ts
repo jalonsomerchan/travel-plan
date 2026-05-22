@@ -36,6 +36,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     endDate: String(data.endDate ?? ''),
     status: (data.status as TripRecord['status']) ?? 'idea',
     accommodation: mapTripAccommodationRecord(data.accommodation),
+    parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
