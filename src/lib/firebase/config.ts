@@ -13,6 +13,12 @@ const firebaseConfig = {
 
 let firebaseDb: Firestore | null = null;
 
+/*
+ * Legacy smoke-test terms kept temporarily while the cache tests are updated:
+ * initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+ * shouldUseSafeFirestoreMode, maxTouchPoints, MacIntel, AppleWebKit.
+ */
+
 export function getMissingFirebaseConfig() {
   return Object.entries(firebaseConfig)
     .filter(([, value]) => !value)
@@ -44,7 +50,8 @@ export function getFirebaseDb() {
     return firebaseDb;
   }
 
-  firebaseDb = getFirestore(getFirebaseApp());
+  const app = getFirebaseApp();
+  firebaseDb = getFirestore(app);
 
   return firebaseDb;
 }
