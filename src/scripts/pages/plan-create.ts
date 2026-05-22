@@ -1,6 +1,8 @@
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
+import { getForcedPlanDateForTrip, normalizePlanInputForTrip, validatePlanDateForTrip } from '../../lib/app/plan-dates';
+import type { TripRecord } from '../../lib/app/models';
 import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-links';
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
@@ -19,6 +21,8 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
   const backLink = document.querySelector<HTMLAnchorElement>('#plan-create-back-link');
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
+  let currentTrip: TripRecord | null = null;
+  let currentParentTrip: TripRecord | null = null;
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
   syncTripNavigation(locale, tripId);
@@ -34,13 +38,31 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
 
     void getTripOnce(tripId).then((trip) => {
       if (!trip) return;
+      currentTrip = trip;
       syncTripShell(locale, trip);
       initLocationPickers();
       if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+      const dateInput = form.elements.namedItem('date') as HTMLInputElement | null;
+      const forcedDate = getForcedPlanDateForTrip(trip);
+
+      if (dateInput && forcedDate) {
+        dateInput.value = forcedDate;
+      }
+
+      if (trip.parentTripId) {
+        void getTripOnce(trip.parentTripId).then((parentTrip) => {
+          currentParentTrip = parentTrip;
+        });
+      } else {
+        currentParentTrip = null;
+      }
     });
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (!currentTrip) {
+      return;
+    }
     const locationValidationKey = getPlanLocationValidationKey(form);
 
     if (locationValidationKey) {
@@ -48,7 +70,17 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const planInput = withPlanLinksFromForm(form, getPlanInputFromForm(form));
+    const planInput = normalizePlanInputForTrip(
+      withPlanLinksFromForm(form, getPlanInputFromForm(form)),
+      currentTrip,
+    );
+    const dateValidation = validatePlanDateForTrip(planInput.date, currentTrip, currentParentTrip);
+
+    if (!dateValidation.valid) {
+      setMessage(message, t(dateValidation.errorKey ?? 'plan.form.dateOutsideParentTripRange'), 'danger');
+      return;
+    }
+
     const linksValidation = validatePlanLinks(planInput.links ?? []);
 
     if (!linksValidation.valid) {

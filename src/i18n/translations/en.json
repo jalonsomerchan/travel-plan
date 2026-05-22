@@ -393,6 +393,7 @@
   "plan.form.category": "Category",
   "plan.form.location": "Location",
   "plan.form.date": "Optional date",
+  "plan.form.dateOutsideParentTripRange": "The plan date must stay within the parent trip dates.",
   "plan.form.time": "Optional time",
   "plan.form.status": "Status",
   "plan.form.flags": "Plan markers",

@@ -1,6 +1,7 @@
 import type { Locale } from '../../config/site';
 import { setButtonBusy, setMessage } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
+import { getForcedPlanDateForTrip, normalizePlanInputForTrip, validatePlanDateForTrip } from '../../lib/app/plan-dates';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { validatePlanLinks, withPlanLinksFromForm } from '../../lib/app/plan-links';
 import { getPlanInputFromForm, getPlanLocationValidationKey } from '../../lib/app/plan-location';
@@ -24,6 +25,7 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]') ?? null;
   const t = getPageTranslator(locale);
   let currentTrip: TripRecord | null = null;
+  let currentParentTrip: TripRecord | null = null;
   let currentPlan: PlanRecord | null = null;
 
   if (!tripId || !planId || !form) return;
@@ -55,7 +57,8 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
     (form.elements.namedItem('locationName') as HTMLInputElement).value = plan.locationName ?? '';
     (form.elements.namedItem('locationLat') as HTMLInputElement).value = plan.locationLat !== undefined ? String(plan.locationLat) : '';
     (form.elements.namedItem('locationLng') as HTMLInputElement).value = plan.locationLng !== undefined ? String(plan.locationLng) : '';
-    (form.elements.namedItem('date') as HTMLInputElement).value = plan.date ?? '';
+    (form.elements.namedItem('date') as HTMLInputElement).value =
+      currentTrip ? getForcedPlanDateForTrip(currentTrip) ?? plan.date ?? '' : plan.date ?? '';
     (form.elements.namedItem('time') as HTMLInputElement).value = plan.time ?? '';
     setPlanLinkRows(form, plan.links);
     initLocationPickers();
@@ -75,6 +78,13 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
         currentTrip = trip;
         syncShell();
         if (context) context.textContent = `${trip.name} · ${formatDateRange(trip.startDate, trip.endDate, locale)}`;
+        if (trip.parentTripId) {
+          void getTripOnce(trip.parentTripId).then((parentTrip) => {
+            currentParentTrip = parentTrip;
+          });
+        } else {
+          currentParentTrip = null;
+        }
       }
 
       if (plan) {
@@ -86,6 +96,9 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (!currentTrip) {
+      return;
+    }
     const locationValidationKey = getPlanLocationValidationKey(form);
 
     if (locationValidationKey) {
@@ -93,7 +106,16 @@ export function mountPlanEditPage({ locale }: { locale: Locale }) {
       return;
     }
 
-    const planInput = withPlanLinksFromForm(form, getPlanInputFromForm(form));
+    const planInput = normalizePlanInputForTrip(
+      withPlanLinksFromForm(form, getPlanInputFromForm(form)),
+      currentTrip,
+    );
+    const dateValidation = validatePlanDateForTrip(planInput.date, currentTrip, currentParentTrip);
+
+    if (!dateValidation.valid) {
+      setMessage(message, t(dateValidation.errorKey ?? 'plan.form.dateOutsideParentTripRange'), 'danger');
+      return;
+    }
 
     if (currentPlan?.aiGuide) {
       planInput.aiGuide = currentPlan.aiGuide;

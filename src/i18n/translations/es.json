@@ -393,6 +393,7 @@
   "plan.form.category": "Categoría",
   "plan.form.location": "Localización",
   "plan.form.date": "Fecha opcional",
+  "plan.form.dateOutsideParentTripRange": "La fecha del plan debe estar dentro de las fechas del viaje padre.",
   "plan.form.time": "Hora opcional",
   "plan.form.status": "Estado",
   "plan.form.flags": "Marcadores del plan",
