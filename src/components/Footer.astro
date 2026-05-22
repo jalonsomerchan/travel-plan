@@ -13,6 +13,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const publicPages = getPublicPages(locale);
 const publicPageUi = getPublicPageUi(locale);
+const versionLabel = t('footer.version').replace('{version}', siteConfig.version);
 ---
 
 <footer class="border-t border-[var(--color-border)] bg-gradient-to-b from-transparent to-[color-mix(in_srgb,var(--color-surface-soft),transparent_50%)] py-12 md:py-16 text-sm text-[var(--color-text-soft)]">
@@ -25,9 +26,10 @@ const publicPageUi = getPublicPageUi(locale);
         <p class="text-xs leading-relaxed text-[var(--color-text-soft)]">
           {t('footer.createdWith')}
         </p>
-        <p class="text-[10px] text-[var(--color-text-soft)] opacity-70 mt-3 pt-3 border-t border-[var(--color-border)] w-fit">
-          &copy; {new Date().getFullYear()} {siteConfig.name}.
-        </p>
+        <div class="text-[10px] text-[var(--color-text-soft)] opacity-70 mt-3 pt-3 border-t border-[var(--color-border)] w-fit">
+          <p>&copy; {new Date().getFullYear()} {siteConfig.name}.</p>
+          <p class="mt-1" title={versionLabel}>{versionLabel}</p>
+        </div>
       </div>
 
       <div class="flex flex-col gap-3">
