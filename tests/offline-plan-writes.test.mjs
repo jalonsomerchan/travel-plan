@@ -30,8 +30,9 @@ describe('offline plan writes', () => {
     assert.match(editPage, /queueUpdatePlan/);
     assert.doesNotMatch(createPage, /await createPlan/);
     assert.doesNotMatch(editPage, /await updatePlan/);
-    assert.match(createPage, /window\.location\.href = getAppUrl/);
-    assert.match(editPage, /window\.location\.href = getAppUrl/);
+    assert.match(createPage, /const planId = queueCreatePlan\(tripId, planInput\)/);
+    assert.match(createPage, /window\.location\.href = getAppUrl\(locale, 'plan', \{ trip: tripId, plan: planId \}\)/);
+    assert.match(editPage, /window\.location\.href = getAppUrl\(locale, 'plan', \{ trip: tripId, plan: planId \}\)/);
   });
 
   it('documents queued offline plan writes', () => {

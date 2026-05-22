@@ -89,8 +89,8 @@ export function mountPlanCreatePage({ locale }: { locale: Locale }) {
     }
 
     setButtonBusy(button, true, t('trip.plansAction'), t('trip.plansCreating'));
-    queueCreatePlan(tripId, planInput);
+    const planId = queueCreatePlan(tripId, planInput);
     setMessage(message, t('trip.plansCreated'), 'success');
-    window.location.href = getAppUrl(locale, 'trip', { trip: tripId });
+    window.location.href = getAppUrl(locale, 'plan', { trip: tripId, plan: planId });
   });
 }
