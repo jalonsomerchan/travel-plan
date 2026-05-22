@@ -13,7 +13,10 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const publicPages = getPublicPages(locale);
 const publicPageUi = getPublicPageUi(locale);
-const versionLabel = t('footer.version').replace('{version}', siteConfig.releaseLabel);
+const versionLabel = t('footer.version').replace(
+  '{version}',
+  siteConfig.releaseLabel || siteConfig.version,
+);
 ---
 
 <footer class="border-t border-[var(--color-border)] bg-gradient-to-b from-transparent to-[color-mix(in_srgb,var(--color-surface-soft),transparent_50%)] py-12 md:py-16 text-sm text-[var(--color-text-soft)]">
