@@ -1,0 +1,15 @@
+{
+  "appNav.checklists": "Checklists",
+  "dashboard.checklistsPending.one": "Tienes 1 tarea de checklist pendiente. Ver todas",
+  "dashboard.checklistsPending.other": "Tienes {count} tareas de checklist pendientes. Ver todas",
+  "globalChecklists.metaTitle": "Checklists de todos los viajes",
+  "globalChecklists.metaDescription": "Revisa y completa las tareas pendientes de checklist en todos tus viajes.",
+  "globalChecklists.title": "Checklists de todos los viajes",
+  "globalChecklists.description": "Una vista única para revisar tareas de preparación pendientes y completadas en todos tus viajes y Mini Viajes.",
+  "globalChecklists.breadcrumb": "Checklists",
+  "globalChecklists.tripEyebrow": "Viaje",
+  "globalChecklists.openTripChecklist": "Abrir checklist del viaje",
+  "globalChecklists.tripSummary": "{count} viajes",
+  "globalChecklists.summary": "{pending} tareas pendientes y {completed} completadas en total.",
+  "globalChecklists.empty": "No hay tareas de checklist en tus viajes todavía."
+}

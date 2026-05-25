@@ -5,8 +5,11 @@ import { getAppUrl } from '../../lib/app/routes';
 import { getChecklistStatusLabel, getChecklistStatusTone, getPageTranslator } from './shared';
 
 export interface ChecklistGroup {
+  actionLabel?: string;
+  eyebrow?: string;
   isParentTrip: boolean;
   items: ChecklistItemRecord[];
+  showOpenLink?: boolean;
   tripId: string;
   tripName: string;
 }
@@ -31,7 +34,11 @@ export function getCompletedChecklistCount(groups: ChecklistGroup[]) {
   return groups.flatMap((group) => group.items).filter((item) => item.status === 'completed').length;
 }
 
-export function renderChecklistGroups(locale: Locale, groups: ChecklistGroup[]) {
+export function renderChecklistGroups(
+  locale: Locale,
+  groups: ChecklistGroup[],
+  options: { emptyLabel?: string } = {},
+) {
   const target = document.querySelector<HTMLElement>('[data-checklist-list]');
   const pendingTarget = document.querySelector<HTMLElement>('[data-checklist-pending-count]');
   const completedTarget = document.querySelector<HTMLElement>('[data-checklist-completed-count]');
@@ -52,14 +59,17 @@ export function renderChecklistGroups(locale: Locale, groups: ChecklistGroup[]) 
   }
 
   if (groups.every((group) => group.items.length === 0)) {
-    target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('tripChecklist.empty'))}</article>`;
+    target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(options.emptyLabel ?? t('tripChecklist.empty'))}</article>`;
     return;
   }
 
   target.innerHTML = groups
     .filter((group) => group.items.length > 0)
     .map((group) => {
-      const headerLabel = group.isParentTrip ? t('tripChecklist.group.currentTrip') : t('tripChecklist.group.miniTrip');
+      const headerLabel =
+        group.eyebrow ?? (group.isParentTrip ? t('tripChecklist.group.currentTrip') : t('tripChecklist.group.miniTrip'));
+      const showOpenLink = group.showOpenLink ?? !group.isParentTrip;
+      const actionLabel = group.actionLabel ?? t('tripChecklist.group.openMiniTrip');
 
       return `
         <section class="grid gap-4">
@@ -68,7 +78,7 @@ export function renderChecklistGroups(locale: Locale, groups: ChecklistGroup[]) 
               <p class="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-soft)]">${escapeHtml(headerLabel)}</p>
               <h3 class="mt-2 text-lg font-black text-[var(--color-text)]">${escapeHtml(group.tripName)}</h3>
             </div>
-            ${group.isParentTrip ? '' : `<a class="app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'trip-checklist', { trip: group.tripId })}">${escapeHtml(t('tripChecklist.group.openMiniTrip'))}</a>`}
+            ${showOpenLink ? `<a class="app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'trip-checklist', { trip: group.tripId })}">${escapeHtml(actionLabel)}</a>` : ''}
           </header>
           <div class="grid gap-4">
             ${group.items

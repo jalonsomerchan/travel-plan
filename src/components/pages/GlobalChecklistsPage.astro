@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppBackButton from '../app/AppBackButton.astro';
+import AppShell from '../app/AppShell.astro';
+import DashboardSectionNav from '../app/DashboardSectionNav.astro';
+import LoadingState from '../app/LoadingState.astro';
+import { type Locale } from '../../config/site';
+import { getLocalizedPath, useTranslations } from '../../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardUrl = getLocalizedPath('/app/', locale);
+---
+
+<BaseLayout title={t('globalChecklists.metaTitle')} description={t('globalChecklists.metaDescription')} locale={locale}>
+  <AppShell
+    title={t('globalChecklists.title')}
+    description={t('globalChecklists.description')}
+    breadcrumbs={[
+      { label: t('nav.home'), href: getLocalizedPath('/', locale) },
+      { label: t('dashboard.breadcrumb'), href: dashboardUrl },
+      { label: t('globalChecklists.breadcrumb') },
+    ]}
+    compactTop
+    loading
+    loadingLabel={t('common.loading')}
+  >
+    <AppBackButton slot="topbar" fallbackHref={dashboardUrl} label={t('common.goBack')} />
+    <DashboardSectionNav slot="nav" locale={locale} />
+    <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <div class="flex flex-wrap gap-3 text-sm font-semibold text-[var(--color-text-muted)]">
+        <span class="status-pill" data-tone="primary" data-global-checklists-trip-count>0</span>
+        <span class="status-pill" data-tone="warning" data-checklist-pending-count>0</span>
+        <span class="status-pill" data-tone="success" data-checklist-completed-count>0</span>
+      </div>
+      <p
+        class="mt-5 text-sm font-semibold text-[var(--color-text-muted)]"
+        data-global-checklists-message
+        role="status"
+        aria-live="polite"
+      >
+      </p>
+      <div class="mt-6 grid gap-8" data-checklist-list>
+        <LoadingState label={t('common.loading')} />
+      </div>
+    </div>
+  </AppShell>
+
+  <script>
+    import { mountGlobalChecklistsPage } from '../../scripts/pages/global-checklists';
+
+    mountGlobalChecklistsPage({ locale: document.documentElement.lang });
+  </script>
+</BaseLayout>

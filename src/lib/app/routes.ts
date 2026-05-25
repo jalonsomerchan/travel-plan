@@ -3,6 +3,7 @@ import { joinPathSegments, withBasePath } from '../../utils/paths';
 
 export type AppView =
   | 'dashboard'
+  | 'checklists'
   | 'today'
   | 'trip'
   | 'trip-plan-suggestions'
@@ -26,6 +27,7 @@ export type AppView =
 
 const appPaths: Record<AppView, string> = {
   dashboard: 'app',
+  checklists: 'app/checklists',
   today: 'app/today',
   trip: 'app/trip',
   'trip-plan-suggestions': 'app/trip-plan-suggestions',

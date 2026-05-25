@@ -11,6 +11,10 @@ import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { fetchUserTripsDirect } from '../../lib/firebase/trip-rest';
 import { subscribePendingInvites, subscribeUserTrips } from '../../lib/firebase/trips';
 import {
+  getPendingChecklistItemsCount,
+  subscribeTripsChecklistItems,
+} from './checklist-summary';
+import {
   bindSignOut,
   ensureFirebaseReady,
   getPageTranslator,
@@ -265,6 +269,30 @@ function renderInvitesError(locale: Locale) {
   }
 }
 
+function renderPendingChecklistNotice(locale: Locale, count: number) {
+  const t = getPageTranslator(locale);
+  const target = document.querySelector<HTMLElement>('[data-dashboard-checklist-count]');
+
+  if (!target) {
+    return;
+  }
+
+  target.hidden = count === 0;
+
+  if (count === 0) {
+    target.innerHTML = '';
+    return;
+  }
+
+  const href = target.dataset.checklistsUrl || getAppUrl(locale, 'checklists');
+  const label = t(count === 1 ? 'dashboard.checklistsPending.one' : 'dashboard.checklistsPending.other').replace(
+    '{count}',
+    String(count),
+  );
+
+  target.innerHTML = `<span class="mt-0.5 shrink-0" aria-hidden="true">!</span><a class="min-w-0 flex-1 break-words underline decoration-current/40 underline-offset-4" href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
+}
+
 function logTripsPermissionError(user: User | null) {
   const config = getFirebasePublicConfig();
 
@@ -292,6 +320,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   const createTripLink = document.querySelector<HTMLAnchorElement>('#dashboard-create-trip-link');
   const invitesLink = document.querySelector<HTMLAnchorElement>('#dashboard-invites-link');
   const subscriptions = createSubscriptionScope();
+  const checklistSubscriptions = createSubscriptionScope();
   if (!ensureFirebaseReady(locale)) return;
   bindSignOut(signOutButton, locale);
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
@@ -308,12 +337,26 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
     });
   }
 
-  window.addEventListener('pagehide', () => subscriptions.clear(), { once: true });
+  window.addEventListener(
+    'pagehide',
+    () => {
+      subscriptions.clear();
+      checklistSubscriptions.clear();
+    },
+    { once: true },
+  );
 
   observeSession((user) => {
     subscriptions.clear();
+    checklistSubscriptions.clear();
     const activeSessionRequest = ++sessionRequest;
     let directFallbackRequest = 0;
+
+    const syncPendingChecklists = (trips: TripRecord[]) => {
+      subscribeTripsChecklistItems(trips, checklistSubscriptions, (itemsByTrip) => {
+        renderPendingChecklistNotice(locale, getPendingChecklistItemsCount(itemsByTrip));
+      });
+    };
 
     if (!user) {
       updateDashboardDebug({ tripsStatus: 'no-user', invitesStatus: 'no-user' });
@@ -360,6 +403,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
         });
         renderStats(locale, trips);
         renderTrips(locale, trips);
+        syncPendingChecklists(trips);
 
         return true;
       } catch (error) {
@@ -380,6 +424,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
           });
           renderStats(locale, trips);
           renderTrips(locale, trips);
+          syncPendingChecklists(trips);
 
           if (trips.length === 0) {
             void renderDirectTripsFallback();

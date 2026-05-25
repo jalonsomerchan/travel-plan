@@ -1,0 +1,15 @@
+{
+  "appNav.checklists": "Checklists",
+  "dashboard.checklistsPending.one": "You have 1 pending checklist task. View all",
+  "dashboard.checklistsPending.other": "You have {count} pending checklist tasks. View all",
+  "globalChecklists.metaTitle": "Checklists across all trips",
+  "globalChecklists.metaDescription": "Review and complete pending checklist tasks across all your trips.",
+  "globalChecklists.title": "Checklists across all trips",
+  "globalChecklists.description": "A single view to review pending and completed preparation tasks across all your trips and Mini Trips.",
+  "globalChecklists.breadcrumb": "Checklists",
+  "globalChecklists.tripEyebrow": "Trip",
+  "globalChecklists.openTripChecklist": "Open trip checklist",
+  "globalChecklists.tripSummary": "{count} trips",
+  "globalChecklists.summary": "{pending} pending tasks and {completed} completed in total.",
+  "globalChecklists.empty": "There are no checklist tasks across your trips yet."
+}
