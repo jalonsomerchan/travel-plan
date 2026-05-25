@@ -219,6 +219,18 @@ function syncCurrentLocationAction(plans: PlanRecord[], geolocation: Geolocation
   button.setAttribute('aria-busy', geolocation.isLoading ? 'true' : 'false');
 }
 
+function getPlanTitleToneClass(status: PlanRecord['status']) {
+  if (status === 'proposed') {
+    return 'text-[var(--color-text-soft)]';
+  }
+
+  if (status === 'visited') {
+    return 'text-[var(--color-success)]';
+  }
+
+  return 'text-[var(--color-text)]';
+}
+
 function renderPlans(
   locale: Locale,
   tripId: string,
@@ -247,13 +259,19 @@ function renderPlans(
       const planEditUrl = getAppUrl(locale, 'plan-edit', { trip: tripId, plan: plan.id });
       const flags = getPlanFlagsHtml(plan, t);
       const aiGuideIndicator = renderPlanAiGuideIndicator(locale, plan);
+      const titleIndicators = [flags, aiGuideIndicator].filter(Boolean).join('');
 
       return `
         <article class="app-card-shell min-w-0 overflow-hidden" data-list-card>
           <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
             <span class="plan-category-dot mt-2" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
             <a class="min-w-0" href="${planUrl}">
-              <h3 class="min-w-0 break-words text-lg font-bold leading-tight text-[var(--color-text)] [overflow-wrap:anywhere]">${escapeHtml(plan.name)}</h3>
+              <h3 class="min-w-0 break-words text-lg font-bold leading-tight ${getPlanTitleToneClass(plan.status)} [overflow-wrap:anywhere]">
+                <span class="flex min-w-0 flex-wrap items-center gap-2">
+                  <span class="min-w-0 break-words [overflow-wrap:anywhere]">${escapeHtml(plan.name)}</span>
+                  ${titleIndicators ? `<span class="inline-flex shrink-0 items-center gap-1">${titleIndicators}</span>` : ''}
+                </span>
+              </h3>
             </a>
             <details class="app-actions-menu">
               <summary aria-label="${escapeHtml(t('trip.planCard.actions'))}" class="app-actions-menu-trigger" title="${escapeHtml(t('trip.planCard.actions'))}">
@@ -283,9 +301,6 @@ function renderPlans(
             <p class="min-w-0 break-words text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(t('trip.planCard.type'))} · ${escapeHtml(categoryLabel)}</p>
             ${renderPlanStatusIndicator(locale, plan.status)}
           </div>
-          ${(flags || aiGuideIndicator)
-            ? `<div class="mt-2 flex min-w-0 flex-wrap items-center gap-2" data-list-detail>${flags}${aiGuideIndicator}</div>`
-            : ''}
           ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]" data-list-detail>${escapeHtml(description)}</p>` : ''}
           <div class="mt-3 grid min-w-0 gap-x-4 gap-y-1 text-sm text-[var(--color-text-soft)] sm:grid-cols-2" data-list-detail>
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>

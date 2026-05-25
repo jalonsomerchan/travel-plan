@@ -47,6 +47,12 @@ describe('plan statuses', () => {
     assert.match(tripPage, /grid min-w-0 grid-cols-\[auto_minmax\(0,1fr\)_auto\] items-start gap-3/);
     assert.match(tripPage, /plan-category-dot mt-2/);
     assert.match(tripPage, /<h3 class="min-w-0 break-words text-lg font-bold leading-tight/);
+    assert.match(tripPage, /getPlanTitleToneClass\(plan\.status\)/);
+    assert.match(tripPage, /status === 'proposed'/);
+    assert.match(tripPage, /text-\[var\(--color-text-soft\)\]/);
+    assert.match(tripPage, /status === 'visited'/);
+    assert.match(tripPage, /text-\[var\(--color-success\)\]/);
+    assert.match(tripPage, /titleIndicators/);
     assert.match(tripPage, /<summary[^>]+>\s*⋮\s*<\/summary>/);
     assert.match(tripPage, /getPlanFlagsHtml\(plan, t\)/);
     assert.match(tripPage, /renderPlanAiGuideIndicator\(locale, plan\)/);
