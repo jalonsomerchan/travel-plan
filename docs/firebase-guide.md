@@ -53,9 +53,9 @@ Toda la app debe obtener Firestore desde `src/lib/firebase/config.ts` mediante `
 
 Motivo:
 
-- El proyecto usa caché local persistente cuando el navegador la soporta bien.
-- Safari iOS / iPadOS puede dar problemas silenciosos con la persistencia avanzada de Firestore.
-- Para esos navegadores la app cae automáticamente a un modo seguro sin esa persistencia, reutilizando la misma API `getFirebaseDb()`.
+- El proyecto evita inicializaciones duplicadas o configuraciones incompatibles entre pantallas.
+- La app no usa persistencia offline avanzada de Firestore, porque puede dejar el SDK en estados de caché vacía u offline falso en algunos navegadores.
+- El dashboard tiene una lectura directa autenticada por REST como respaldo cuando el SDK devuelve una lista vacía o falla con estado offline.
 
 Reglas prácticas:
 

@@ -8,6 +8,7 @@ import { getAppUrl } from '../../lib/app/routes';
 import { getFirebaseDb, getFirebasePublicConfig } from '../../lib/firebase/config';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
+import { fetchUserTripsDirect } from '../../lib/firebase/trip-rest';
 import { subscribePendingInvites, subscribeUserTrips } from '../../lib/firebase/trips';
 import {
   bindSignOut,
@@ -36,8 +37,6 @@ type DashboardDebugState = {
   invitesCount: number | null;
   error: string;
 };
-
-const knownDebugTripIds = ['RvuckAz3cvuKPeV0hjJe', 'ezyPsTtbEA6sk5RHQUDI'];
 
 const dashboardDebugState: DashboardDebugState = {
   enabled: false,
@@ -145,18 +144,11 @@ async function runTripsSdkDebug(user: User) {
   }
 
   try {
-    const db = getFirebaseDb();
-    const { doc, getDocFromServer } = await import('firebase/firestore');
-    const results = await Promise.all(
-      knownDebugTripIds.map(async (tripId) => {
-        const snapshot = await getDocFromServer(doc(db, 'trips', tripId));
-        return snapshot.exists() ? tripId : '';
-      }),
-    );
+    const trips = await fetchUserTripsDirect(user);
 
     updateDashboardDebug({
       directStatus: 'received',
-      directTripIds: results.filter(Boolean),
+      directTripIds: trips.map((trip) => trip.id),
     });
   } catch (error) {
     updateDashboardDebug({ directStatus: 'error', error: String(error) });
@@ -306,6 +298,8 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');
 
   dashboardDebugState.enabled = isDashboardDebugEnabled();
+  let sessionRequest = 0;
+
   if (dashboardDebugState.enabled) {
     const config = getFirebasePublicConfig();
     updateDashboardDebug({
@@ -318,6 +312,8 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
 
   observeSession((user) => {
     subscriptions.clear();
+    const activeSessionRequest = ++sessionRequest;
+    let directFallbackRequest = 0;
 
     if (!user) {
       updateDashboardDebug({ tripsStatus: 'no-user', invitesStatus: 'no-user' });
@@ -334,6 +330,44 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
       invitesStatus: user.email ? 'subscribing' : 'no-email',
       error: '',
     });
+
+    async function renderDirectTripsFallback() {
+      const requestId = ++directFallbackRequest;
+      updateDashboardDebug({ directStatus: 'loading', directTripIds: [] });
+
+      try {
+        const trips = await fetchUserTripsDirect(user);
+
+        if (activeSessionRequest !== sessionRequest || requestId !== directFallbackRequest) {
+          return true;
+        }
+
+        updateDashboardDebug({
+          directStatus: 'received',
+          directTripIds: trips.map((trip) => trip.id),
+        });
+
+        if (trips.length === 0) {
+          renderStats(locale, []);
+          renderTrips(locale, []);
+          return true;
+        }
+
+        updateDashboardDebug({
+          tripsStatus: 'received-direct',
+          tripsCount: trips.length,
+          tripIds: trips.map((trip) => trip.id),
+        });
+        renderStats(locale, trips);
+        renderTrips(locale, trips);
+
+        return true;
+      } catch (error) {
+        updateDashboardDebug({ directStatus: 'error', error: String(error) });
+        return false;
+      }
+    }
+
     void runTripsSdkDebug(user);
     subscriptions.add(
       subscribeUserTrips(
@@ -346,8 +380,12 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
           });
           renderStats(locale, trips);
           renderTrips(locale, trips);
+
+          if (trips.length === 0) {
+            void renderDirectTripsFallback();
+          }
         },
-        (error) => {
+        async (error) => {
           updateDashboardDebug({
             tripsStatus: 'error',
             tripsCount: null,
@@ -355,6 +393,9 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
             error: String(error),
           });
           logTripsPermissionError(user);
+          if (await renderDirectTripsFallback()) {
+            return;
+          }
           renderStats(locale, []);
           renderTripsError(locale);
         },

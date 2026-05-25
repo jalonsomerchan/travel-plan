@@ -6,21 +6,19 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 
 - Manifest web mejorado con `id`, `scope`, `start_url`, categorías y modo `standalone`.
 - Metadatos móviles en `BaseLayout.astro`.
-- Service worker registrado desde el layout base.
+- Service worker de limpieza para desregistrar versiones antiguas y borrar cachés heredadas.
 - Indicador accesible de conexión para avisar cuando la app está offline o vuelve a estar online.
-- Caché de shell inicial para la home, dashboard, pantallas internas principales, manifest e iconos básicos.
-- Fallback de navegación a la shell cacheada cuando no hay red, incluyendo rutas internas con parámetros como `?trip=...`.
-- Caché de assets estáticos visitados, como imágenes y fuentes.
-- Actualización network-first de scripts, estilos y manifest para evitar servir versiones antiguas cuando hay conexión.
-- Persistencia offline de Firestore con caché local persistente y soporte multi-pestaña cuando el navegador lo soporta con suficiente estabilidad.
-- Caché propia persistente en `localStorage` para viajes y planes ya visitados, usada como respaldo en Safari iOS.
+- Sin caché de shell ni fallback de navegación offline: se prioriza servir la versión online real para evitar estados obsoletos.
+- Sin persistencia offline avanzada de Firestore: `getFirebaseDb()` usa solo la inicialización central con fallback de transporte.
+- Caché propia breve en `localStorage` para viajes y planes ya visitados, usada solo como respaldo inicial limitado.
+- Lectura directa autenticada por REST en el dashboard cuando el SDK de Firestore responde con caché vacía o estado offline.
 - Escrituras no bloqueantes para crear y editar planes, apoyadas en la cola local de Firestore cuando el navegador está offline.
 
 ## Datos sin conexión
 
-Firestore mantiene en el dispositivo los documentos que ya se han leído en sesiones anteriores. Esto permite abrir vistas con datos visitados previamente incluso si la red falla, siempre que Firebase haya podido guardarlos en la caché local del navegador.
+La prioridad actual es cargar datos reales desde servidor cuando hay conexión. Por eso no se usa persistencia offline avanzada de Firestore ni caché de navegación de service worker.
 
-La caché compartida propia de la app funciona como valor inicial de UI, se guarda en `localStorage` para sobrevivir a cierres de la PWA en iPhone y se limpia al cambiar usuario o cerrar sesión.
+La caché compartida propia de la app funciona como valor inicial breve de UI, se guarda en `localStorage` con caducidad corta y se limpia al cambiar usuario o cerrar sesión. Si el dashboard recibe una lista vacía desde el SDK pero el usuario está conectado, intenta una lectura directa autenticada por REST contra Firestore antes de dar por hecho que no hay viajes.
 
 ## Escrituras offline
 
@@ -45,10 +43,10 @@ Safari iOS e iPadOS puede fallar de forma silenciosa con IndexedDB persistente y
 
 Por eso la app centraliza toda la inicialización de Firestore en `src/lib/firebase/config.ts`:
 
-- Navegadores compatibles: usan `initializeFirestore(...)` con `persistentLocalCache(...)`.
-- Safari iOS / iPadOS: usan un modo seguro con `getFirestore(app)` sin esa persistencia avanzada.
+- Todos los navegadores usan `initializeFirestore(...)` centralizado sin `persistentLocalCache(...)`.
+- Se mantienen `experimentalAutoDetectLongPolling` y `useFetchStreams: false` para mejorar compatibilidad de transporte.
 
-Como ese modo seguro no garantiza datos tras cerrar la PWA, la app mantiene una caché propia en `localStorage` para los viajes y planes visitados. Para que esa caché pueda verse sin red, el service worker precachea las rutas internas más usadas y, al navegar offline a una URL con query params, busca también la misma ruta sin parámetros.
+Como el objetivo principal es evitar estados offline falsos, el service worker ya no precachea rutas internas ni intercepta navegación. Su función actual es limpiar caches heredadas y desregistrarse.
 
 Regla obligatoria para el proyecto:
 
@@ -62,19 +60,17 @@ Regla obligatoria para el proyecto:
 
 ## Estrategia del service worker
 
-- En `install`, precachea la shell mínima y las rutas internas principales con rutas compatibles con `BASE_URL`.
-- En navegación, usa estrategia network-first y vuelve a la caché si falla la red.
-- En rutas con parámetros, como `/app/trip/?trip=...`, busca también la misma ruta sin query para poder servir la shell cacheada.
-- En scripts, estilos y manifest, usa estrategia network-first para servir versiones nuevas cuando hay conexión y solo usar caché como respaldo offline.
-- En imágenes y fuentes, usa cache-first y guarda respuestas válidas para siguientes visitas.
-- Ignora peticiones externas y métodos distintos de `GET`.
+- En `install`, llama a `self.skipWaiting()` y limpia caches heredadas.
+- En `activate`, borra caches, se desregistra y reclama clientes para dejar de interceptar tráfico.
+- En `fetch`, no intercepta peticiones.
+- La respuesta de `sw.js` usa `Cache-Control: no-store, max-age=0`.
 
 ## Límites actuales
 
-- El service worker no intenta cachear llamadas externas ni APIs de Firebase.
-- Todavía no hay una cola visual propia de cambios pendientes; las mutaciones encoladas dependen del soporte de Firestore.
+- El service worker no cachea llamadas externas, APIs de Firebase, HTML ni assets.
+- Todavía no hay una cola visual propia de cambios pendientes; las mutaciones encoladas dependen del soporte interno de Firestore.
 - Las reglas de seguridad siguen aplicándose cuando Firestore sincroniza con el servidor.
-- En iPhone, solo estarán disponibles sin conexión los viajes y planes que ya se hayan abierto con conexión al menos una vez.
+- Si no hay conexión real, el dashboard solo podrá mostrar datos ya disponibles en la caché breve de la app.
 
 ## Siguientes fases recomendadas
 

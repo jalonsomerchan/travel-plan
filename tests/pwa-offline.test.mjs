@@ -108,18 +108,18 @@ describe('PWA offline support', () => {
     assert.match(sharedCache, /travel-plan:shared-cache:v2/);
   });
 
-  it('documents current offline limits and next phases', () => {
+  it('documents the online-first PWA limits and cleanup strategy', () => {
     const docs = readText('docs/pwa-offline.md');
 
-    assert.match(docs, /Persistencia offline de Firestore/);
-    assert.match(docs, /[Ff]allback de navegación/);
-    assert.match(docs, /network-first de scripts, estilos y manifest/);
+    assert.match(docs, /Sin persistencia offline avanzada de Firestore/);
+    assert.match(docs, /Sin caché de shell ni fallback de navegación offline/);
+    assert.match(docs, /Lectura directa autenticada por REST/);
     assert.match(docs, /localStorage/);
-    assert.match(docs, /parámetros/);
+    assert.match(docs, /se desregistra/);
+    assert.match(docs, /no intercepta peticiones/);
     assert.match(docs, /Estado de conexión/);
     assert.match(docs, /Siguientes fases recomendadas/);
     assert.match(docs, /cola visible de cambios pendientes/);
-    assert.match(docs, /Safari iOS/i);
     assert.match(docs, /getFirebaseDb\(\)/);
   });
 });

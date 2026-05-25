@@ -19,4 +19,17 @@ describe('dashboard mini trips rendering', () => {
     assert.match(dashboard, /ml-5 border-l-4 border-l-\[var\(--color-primary-soft\)\] pl-4 sm:ml-8/);
     assert.match(dashboard, /trip\.parentTripId/);
   });
+
+  it('falls back to authenticated Firestore REST reads when the SDK returns an empty offline snapshot', () => {
+    const dashboard = readText('src/scripts/pages/dashboard.ts');
+    const rest = readText('src/lib/firebase/trip-rest.ts');
+
+    assert.match(dashboard, /fetchUserTripsDirect/);
+    assert.match(dashboard, /renderDirectTripsFallback/);
+    assert.match(dashboard, /received-direct/);
+    assert.match(rest, /documents:runQuery/);
+    assert.match(rest, /Authorization: `Bearer \$\{token\}`/);
+    assert.match(rest, /ARRAY_CONTAINS/);
+    assert.match(rest, /ownerId/);
+  });
 });
