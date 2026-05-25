@@ -13,13 +13,14 @@ describe('mobile filters and list actions', () => {
   it('keeps trip filters collapsed behind a toggle on every viewport', () => {
     const component = readText('src/components/pages/TripPage.astro');
     const script = readText('src/scripts/pages/trip.ts');
+    const listView = readText('src/scripts/pages/list-view-mode.ts');
     const es = readText('src/i18n/translations/es.json');
     const en = readText('src/i18n/translations/en.json');
 
     assert.match(component, /data-plan-filters-toggle/);
     assert.match(component, /aria-expanded="false"/);
     assert.match(component, /id="trip-plan-filters"/);
-    assert.match(component, /class="inline-flex min-h-11 w-full/);
+    assert.match(component, /class="inline-flex min-h-11 w-auto/);
     assert.doesNotMatch(component, /data-plan-filters-toggle[^>]*sm:hidden/s);
     assert.match(component, /class="mt-3 hidden grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"/);
     assert.doesNotMatch(component, /class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3/);
@@ -31,6 +32,8 @@ describe('mobile filters and list actions', () => {
     assert.match(script, /filtersToggle\?\.addEventListener\('click'/);
     assert.match(script, /filtersForm\?\.classList\.toggle\('hidden', isExpanded\)/);
     assert.match(script, /filtersForm\?\.classList\.toggle\('grid', !isExpanded\)/);
+    assert.match(listView, /data-list-view-filter-slot/);
+    assert.match(listView, /moveTripFiltersToggle\(toolbar\)/);
     assert.match(script, /matchesBooleanFilter/);
     assert.match(script, /getLocalTodayIsoDate/);
     assert.match(script, /filters\.paid = paidSelect\.value/);

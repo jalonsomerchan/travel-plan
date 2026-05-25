@@ -56,8 +56,35 @@ export function initListViewMode(locale: Locale) {
   window.addEventListener(eventName, () => syncToggleLabels(locale));
 }
 
+function getToolbarInsertionTarget(list: HTMLElement) {
+  const tripFiltersForm = document.querySelector<HTMLFormElement>('[data-plan-filters]');
+
+  if (tripFiltersForm?.parentElement) {
+    return {
+      parent: tripFiltersForm.parentElement,
+      before: tripFiltersForm,
+    };
+  }
+
+  return {
+    parent: list.parentElement,
+    before: list,
+  };
+}
+
+function moveTripFiltersToggle(toolbar: HTMLElement) {
+  const filtersToggle = document.querySelector<HTMLButtonElement>('[data-plan-filters-toggle]');
+  const filtersSlot = toolbar.querySelector<HTMLElement>('[data-list-view-filter-slot]');
+
+  if (!filtersToggle || !filtersSlot) {
+    return;
+  }
+
+  filtersSlot.append(filtersToggle);
+}
+
 export function ensureListViewToggle(locale: Locale, list: HTMLElement | null) {
-  if (!list || list.previousElementSibling?.hasAttribute('data-list-view-toolbar')) {
+  if (!list || document.querySelector('[data-list-view-toolbar]')) {
     return;
   }
 
@@ -66,12 +93,18 @@ export function ensureListViewToggle(locale: Locale, list: HTMLElement | null) {
   toolbar.dataset.listViewToolbar = 'true';
   toolbar.className = 'list-view-toolbar';
   toolbar.innerHTML = `
-    <span class="list-view-toolbar__label">${t('listView.label')}</span>
-    <button class="list-view-toolbar__button" data-list-view-toggle type="button"></button>
+    <div class="list-view-toolbar__filters" data-list-view-filter-slot></div>
+    <div class="list-view-toolbar__view">
+      <span class="list-view-toolbar__label">${t('listView.label')}</span>
+      <button class="list-view-toolbar__button" data-list-view-toggle type="button"></button>
+    </div>
   `;
 
   const button = toolbar.querySelector<HTMLButtonElement>('[data-list-view-toggle]');
+  const insertionTarget = getToolbarInsertionTarget(list);
+
   button?.addEventListener('click', () => setListViewMode(getNextMode()));
-  list.before(toolbar);
+  moveTripFiltersToggle(toolbar);
+  insertionTarget.parent?.insertBefore(toolbar, insertionTarget.before);
   syncToggleLabels(locale);
 }
