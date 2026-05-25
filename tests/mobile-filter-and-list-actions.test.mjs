@@ -10,7 +10,7 @@ function readText(path) {
 }
 
 describe('mobile filters and list actions', () => {
-  it('keeps trip filters collapsed behind a mobile toggle', () => {
+  it('keeps trip filters collapsed behind a toggle on every viewport', () => {
     const component = readText('src/components/pages/TripPage.astro');
     const script = readText('src/scripts/pages/trip.ts');
     const es = readText('src/i18n/translations/es.json');
@@ -19,7 +19,10 @@ describe('mobile filters and list actions', () => {
     assert.match(component, /data-plan-filters-toggle/);
     assert.match(component, /aria-expanded="false"/);
     assert.match(component, /id="trip-plan-filters"/);
-    assert.match(component, /class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"/);
+    assert.match(component, /class="inline-flex min-h-11 w-full/);
+    assert.doesNotMatch(component, /data-plan-filters-toggle[^>]*sm:hidden/s);
+    assert.match(component, /class="mt-3 hidden grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"/);
+    assert.doesNotMatch(component, /class="mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3/);
     assert.match(component, /data-plan-filter-paid/);
     assert.match(component, /data-plan-filter-booked/);
     assert.match(component, /data-plan-filter-date/);
@@ -27,6 +30,7 @@ describe('mobile filters and list actions', () => {
     assert.match(component, /data-plan-filter-guide/);
     assert.match(script, /filtersToggle\?\.addEventListener\('click'/);
     assert.match(script, /filtersForm\?\.classList\.toggle\('hidden', isExpanded\)/);
+    assert.match(script, /filtersForm\?\.classList\.toggle\('grid', !isExpanded\)/);
     assert.match(script, /matchesBooleanFilter/);
     assert.match(script, /getLocalTodayIsoDate/);
     assert.match(script, /filters\.paid = paidSelect\.value/);
