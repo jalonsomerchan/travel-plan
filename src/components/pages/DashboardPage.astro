@@ -35,16 +35,18 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
         { href: dashboardUrl, id: 'sign-out-button', label: t('auth.signOut') },
       ]}
     />
-    <DashboardSectionNav slot="nav" locale={locale} />
     <p
-      class="mt-4 flex min-w-0 items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-3 text-sm font-semibold leading-snug text-[var(--color-warning)]"
+      slot="nav"
+      class="mt-6 flex min-w-0 items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-3 text-sm font-semibold leading-snug text-[var(--color-warning)]"
       data-dashboard-checklist-count
       data-checklists-url={checklistsUrl}
       hidden
       role="status"
       aria-live="polite"
     ></p>
+    <DashboardSectionNav slot="nav" locale={locale} />
     <p
+      slot="nav"
       class="mt-4 flex min-w-0 items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-4 py-3 text-sm font-semibold leading-snug text-[var(--color-primary)]"
       data-dashboard-invite-count
       hidden
