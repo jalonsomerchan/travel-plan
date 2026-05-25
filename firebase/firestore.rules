@@ -13,13 +13,18 @@ service cloud.firestore {
       return tripVisibleFromTripData(resource.data);
     }
 
-    function tripVisibleFromTripData(tripData) {
+    function tripDirectlyVisibleFromTripData(tripData) {
       return signedIn() && (
         tripData.ownerId == request.auth.uid ||
-        request.auth.uid in tripData.memberIds ||
-        (
-          tripData.parentTripId is string &&
-          request.auth.uid in get(/databases/$(database)/documents/trips/$(tripData.parentTripId)).data.memberIds
+        request.auth.uid in tripData.memberIds
+      );
+    }
+
+    function tripVisibleFromTripData(tripData) {
+      return tripDirectlyVisibleFromTripData(tripData) || (
+        tripData.parentTripId is string &&
+        tripDirectlyVisibleFromTripData(
+          get(/databases/$(database)/documents/trips/$(tripData.parentTripId)).data
         )
       );
     }
