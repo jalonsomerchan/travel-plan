@@ -439,7 +439,6 @@ dialog::backdrop {
 
 .app-actions-menu-trigger {
   display: inline-flex;
-  min-height: 2.75rem;
   cursor: pointer;
   align-items: center;
   justify-content: center;
