@@ -292,18 +292,12 @@ export function subscribeChildTrips(
   onError?: (error: Error) => void,
 ) {
   const db = getFirebaseDb();
-  const tripsQuery = query(
-    collection(db, 'trips'),
-    where('parentTripId', '==', parentTripId),
-    orderBy('startDate', 'asc'),
-  );
+  const tripsQuery = query(collection(db, 'trips'), where('parentTripId', '==', parentTripId));
 
   return onSnapshot(
     tripsQuery,
     (snapshot) => {
-      const trips = snapshot.docs
-        .filter((item) => !isTripDeletedData(item.data()))
-        .map(mapTripRecord);
+      const trips = sortTripRecords(mapTripDocs(snapshot.docs));
 
       trips.forEach(setCachedTrip);
       callback(trips);

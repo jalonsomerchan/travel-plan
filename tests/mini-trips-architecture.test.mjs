@@ -19,7 +19,12 @@ describe('Mini Trips architecture', () => {
     assert.match(models, /parentTripId\?: string/);
     assert.match(tripsService, /subscribeChildTrips/);
     assert.match(tripsService, /where\('parentTripId', '==', parentTripId\)/);
+    assert.match(tripsService, /sortTripRecords\(mapTripDocs\(snapshot\.docs\)\)/);
+    assert.doesNotMatch(tripsService, /where\('parentTripId', '==', parentTripId\)[\s\S]*orderBy\('startDate'/);
     assert.match(rules, /tripData\.parentTripId is string/);
+    assert.match(rules, /function tripDirectlyVisibleFromTripData/);
+    assert.match(rules, /tripData\.ownerId == request\.auth\.uid/);
+    assert.match(rules, /tripDirectlyVisibleFromTripData\(\s*get\(\/databases\/\$\(database\)\/documents\/trips\/\$\(tripData\.parentTripId\)\)\.data\s*\)/);
     assert.match(firebaseGuide, /Mini Viajes/);
     assert.match(firebaseGuide, /parentTripId/);
   });
