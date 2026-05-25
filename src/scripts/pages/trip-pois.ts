@@ -31,6 +31,7 @@ import {
   setTripContextName,
   syncTripNavigation,
 } from './shared';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 
 function getFormInput(form: HTMLFormElement, name: string) {
   return form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
@@ -127,6 +128,8 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
     return;
   }
 
+  ensureListViewToggle(locale, list);
+
   if (points.length === 0) {
     list.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('tripPois.empty'))}</article>`;
     return;
@@ -135,7 +138,7 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
   list.innerHTML = points
     .map(
       (point) => `
-        <article class="app-card-shell min-w-0 overflow-hidden">
+        <article class="app-card-shell min-w-0 overflow-hidden" data-list-card>
           <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
             <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-[var(--shadow-xs)]" style="background:${escapeHtml(point.color)};">
               ${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}
@@ -143,8 +146,8 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
             <div class="min-w-0">
               <div class="flex min-w-0 flex-wrap items-center gap-3">
                 <h3 class="min-w-0 break-words text-lg font-bold leading-tight text-[var(--color-text)] [overflow-wrap:anywhere]">${escapeHtml(point.name)}</h3>
-                <span class="rounded-full border border-[var(--color-border)] px-2 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-soft)]">${escapeHtml(t(`tripPois.type.${point.type}`))}</span>
-                <span class="status-pill" data-tone="${point.isVisible ? 'success' : 'warning'}">${escapeHtml(point.isVisible ? t('tripPois.visibility.visible') : t('tripPois.visibility.hidden'))}</span>
+                <span class="rounded-full border border-[var(--color-border)] px-2 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(t(`tripPois.type.${point.type}`))}</span>
+                <span class="status-pill" data-list-detail data-tone="${point.isVisible ? 'success' : 'warning'}">${escapeHtml(point.isVisible ? t('tripPois.visibility.visible') : t('tripPois.visibility.hidden'))}</span>
               </div>
             </div>
             <details class="app-actions-menu">
@@ -164,8 +167,8 @@ function renderPoiList(locale: Locale, points: TripPointOfInterestRecord[]) {
               </div>
             </details>
           </div>
-          ${point.description ? `<p class="mt-3 w-full break-words text-sm text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(point.description)}</p>` : ''}
-          <p class="mt-3 w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(point.locationName)}</p>
+          ${point.description ? `<p class="mt-3 w-full break-words text-sm text-[var(--color-text-soft)] [overflow-wrap:anywhere]" data-list-detail>${escapeHtml(point.description)}</p>` : ''}
+          <p class="mt-3 w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]" data-list-detail>${escapeHtml(point.locationName)}</p>
         </article>
       `,
     )
@@ -274,6 +277,7 @@ export function mountTripPoisPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
   if (aiLink) {
     aiLink.href = getAppUrl(locale, 'trip-pois-ai', { trip: tripId });

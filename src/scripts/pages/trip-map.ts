@@ -43,6 +43,7 @@ import {
   syncTripNavigation,
   syncTripShell,
 } from './shared';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 
 function fitTripMap(map: L.Map, bounds: L.LatLngBounds) {
   map.invalidateSize();
@@ -89,6 +90,8 @@ function renderPlanList(
     return;
   }
 
+  ensureListViewToggle(locale, target);
+
   if (locatedPlans.length === 0 && visiblePoints.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('map.empty'))}</article>`;
     return;
@@ -97,15 +100,15 @@ function renderPlanList(
   target.innerHTML = [
     ...visiblePoints.map(
       (point) => `
-        <article class="app-card-shell">
+        <article class="app-card-shell" data-list-card>
           <div class="flex items-center gap-2">
             <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black text-white" style="background:${escapeHtml(point.color)};">${escapeHtml(resolveTripPoiIcon(point.icon, point.type))}</span>
             <h3 class="text-lg font-bold">${escapeHtml(point.name)}</h3>
           </div>
-          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]">${escapeHtml(t(`tripPois.type.${point.type}`))}</p>
-          ${point.description ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(point.description)}</p>` : ''}
-          <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(point.locationName)}</p>
-          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]">${escapeHtml(t('tripPois.breadcrumb'))}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(t(`tripPois.type.${point.type}`))}</p>
+          ${point.description ? `<p class="mt-2 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(point.description)}</p>` : ''}
+          <p class="mt-3 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(point.locationName)}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(t('tripPois.breadcrumb'))}</p>
         </article>
       `,
     ),
@@ -114,14 +117,14 @@ function renderPlanList(
       const categoryLabel = getCategoryLabel(locale, plan.category);
 
       return `
-        <a class="app-card-shell" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+        <a class="app-card-shell" data-list-card href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
           <div class="flex items-center gap-2">
             <span class="plan-category-dot" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
             <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
           </div>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
-          <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(getPlanLocationLabel(plan))}</p>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
+          <p class="mt-3 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(getPlanLocationLabel(plan))}</p>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(formatPlanMoment(plan, locale) || t('calendar.unscheduled'))}</p>
         </a>
       `;
     }),
@@ -190,6 +193,7 @@ export function mountTripMapPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
 
   if (backTripLink) {

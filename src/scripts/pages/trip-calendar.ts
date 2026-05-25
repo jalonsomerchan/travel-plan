@@ -10,6 +10,7 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, getCategoryLabel, getPageTranslator, getPlanStatusLabel, syncTripNavigation, syncTripShell } from './shared';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 
 function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
   const t = getPageTranslator(locale);
@@ -19,6 +20,9 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
   if (!groupsTarget || !eventsTarget) {
     return;
   }
+
+  ensureListViewToggle(locale, groupsTarget);
+  ensureListViewToggle(locale, eventsTarget);
 
   const datedPlans = plans.filter((plan) => plan.date);
   const unscheduledPlans = plans.filter((plan) => !plan.date);
@@ -47,18 +51,18 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
                   const categoryLabel = getCategoryLabel(locale, plan.category);
 
                   return `
-                    <a class="app-card-shell p-4" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
+                    <a class="app-card-shell p-4" data-list-card href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <div class="flex items-center gap-2">
                             <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
                             <h4 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h4>
                           </div>
-                          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(plan.time ?? t('calendar.noTime'))}</p>
+                          <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(plan.time ?? t('calendar.noTime'))}</p>
                         </div>
-                        <span class="status-pill" data-tone="primary">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
+                        <span class="status-pill" data-list-detail data-tone="primary">${escapeHtml(getPlanStatusLabel(locale, plan.status))}</span>
                       </div>
-                      <p class="mt-3 text-sm text-[var(--color-text-muted)]">${escapeHtml(categoryLabel)}</p>
+                      <p class="mt-3 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(categoryLabel)}</p>
                     </a>
                   `;
                 })
@@ -75,13 +79,13 @@ function renderTimeline(locale: Locale, tripId: string, plans: PlanRecord[]) {
           const categoryLabel = getCategoryLabel(locale, plan.category);
 
           return `
-            <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
-              <p class="text-sm font-semibold text-[var(--color-text-soft)]">${escapeHtml(t('calendar.unscheduled'))}</p>
+            <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4" data-list-card>
+              <p class="text-sm font-semibold text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(t('calendar.unscheduled'))}</p>
               <div class="mt-2 flex items-center gap-2">
                 <span style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
                 <h3 class="min-w-0 text-lg font-bold text-[var(--color-text)]">${getPlanNameWithFlagsHtml(plan, t)}</h3>
               </div>
-              <p class="mt-2 text-sm text-[var(--color-text-muted)]">${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
+              <p class="mt-2 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(categoryLabel)} · ${escapeHtml(getPlanStatusLabel(locale, plan.status))}</p>
               <a class="mt-4 app-card-link" data-variant="secondary" href="${getAppUrl(locale, 'plan', { trip: tripId, plan: plan.id })}">
                 ${escapeHtml(t('trip.openPlan'))}
               </a>
@@ -111,6 +115,7 @@ export function mountTripCalendarPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
 
   if (backLink) {

@@ -14,6 +14,7 @@ import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, redirectHome } from './shared';
 import { renderGlobalTodayPage, renderGlobalTodayTripsError } from './global-today-render';
+import { initListViewMode } from './list-view-mode';
 
 function logTripsPermissionError(user: User | null) {
   const config = getFirebasePublicConfig();
@@ -39,6 +40,7 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   const sync = () => renderGlobalTodayPage(locale, trips, plansByTrip, locationState);
 
   filtersForm?.addEventListener('input', sync);

@@ -3,6 +3,7 @@ import { escapeHtml } from '../../lib/app/dom';
 import type { ChecklistItemRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { getChecklistStatusLabel, getChecklistStatusTone, getPageTranslator } from './shared';
+import { ensureListViewToggle } from './list-view-mode';
 
 export interface ChecklistGroup {
   actionLabel?: string;
@@ -58,6 +59,8 @@ export function renderChecklistGroups(
     return;
   }
 
+  ensureListViewToggle(locale, target);
+
   if (groups.every((group) => group.items.length === 0)) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(options.emptyLabel ?? t('tripChecklist.empty'))}</article>`;
     return;
@@ -86,7 +89,7 @@ export function renderChecklistGroups(
                 const isCompleted = item.status === 'completed';
 
                 return `
-                  <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4">
+                  <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4" data-list-card>
                     <div class="flex items-start justify-between gap-3">
                       <label class="flex min-w-0 flex-1 items-start gap-3">
                         <input
@@ -103,7 +106,7 @@ export function renderChecklistGroups(
                           <span class="block font-semibold text-[var(--color-text)] ${isCompleted ? 'line-through opacity-70' : ''}">
                             ${escapeHtml(item.title)}
                           </span>
-                          <span class="mt-1 inline-flex">
+                          <span class="mt-1 inline-flex" data-list-detail>
                             <span class="status-pill" data-tone="${getChecklistStatusTone(item.status)}">${escapeHtml(
                               getChecklistStatusLabel(locale, item.status),
                             )}</span>

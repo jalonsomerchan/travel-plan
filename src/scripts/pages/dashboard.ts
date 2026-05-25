@@ -14,6 +14,7 @@ import {
   getPendingChecklistItemsCount,
   subscribeTripsChecklistItems,
 } from './checklist-summary';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 import {
   bindSignOut,
   ensureFirebaseReady,
@@ -185,6 +186,7 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-trip-list]');
   if (!target) return;
+  ensureListViewToggle(locale, target);
   if (trips.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('dashboard.empty'))}</article>`;
     return;
@@ -205,15 +207,15 @@ function renderTrips(locale: Locale, trips: TripRecord[]) {
   const rootTrips = trips.filter((trip) => !trip.parentTripId || !trips.some((candidate) => candidate.id === trip.parentTripId));
 
   const renderTripCard = (trip: TripRecord, nested = false) => `
-    <a class="app-card-shell ${nested ? 'ml-5 border-l-4 border-l-[var(--color-primary-soft)] pl-4 sm:ml-8' : ''}" href="${getAppUrl(locale, 'trip', { trip: trip.id })}">
+    <a class="app-card-shell ${nested ? 'ml-5 border-l-4 border-l-[var(--color-primary-soft)] pl-4 sm:ml-8' : ''}" data-list-card href="${getAppUrl(locale, 'trip', { trip: trip.id })}">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-xl font-bold text-[var(--color-text)]">${escapeHtml(trip.name)}</h3>
-          <p class="mt-2 text-sm text-[var(--color-text-soft)]">${escapeHtml(trip.location)}</p>
+          <p class="mt-2 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(trip.location)}</p>
         </div>
-        <span class="status-pill" data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
+        <span class="status-pill" data-list-detail data-tone="${getTripStatusTone(trip.status)}">${escapeHtml(getTripStatusLabel(locale, trip.status))}</span>
       </div>
-      <p class="mt-4 text-sm text-[var(--color-text-muted)]">${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
+      <p class="mt-4 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(formatDateRange(trip.startDate, trip.endDate, locale))}</p>
     </a>
   `;
 
@@ -322,6 +324,7 @@ export function mountDashboardPage({ locale }: { locale: Locale }) {
   const subscriptions = createSubscriptionScope();
   const checklistSubscriptions = createSubscriptionScope();
   if (!ensureFirebaseReady(locale)) return;
+  initListViewMode(locale);
   bindSignOut(signOutButton, locale);
   if (createTripLink) createTripLink.href = getAppUrl(locale, 'trip-create');
   if (invitesLink) invitesLink.href = getAppUrl(locale, 'trip-invites');

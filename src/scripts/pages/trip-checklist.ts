@@ -30,6 +30,7 @@ import {
   getPendingChecklistCount,
   renderChecklistGroups,
 } from './trip-checklist-groups';
+import { initListViewMode } from './list-view-mode';
 
 export function mountTripChecklistPage({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
@@ -58,6 +59,7 @@ export function mountTripChecklistPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
 
   if (backLink) {

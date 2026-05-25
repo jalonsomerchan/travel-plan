@@ -16,6 +16,8 @@ import globalTodayEn from './feature-translations/global-today/en.json';
 import globalTodayEs from './feature-translations/global-today/es.json';
 import invitesEn from './feature-translations/invites/en.json';
 import invitesEs from './feature-translations/invites/es.json';
+import listViewEn from './feature-translations/list-view/en.json';
+import listViewEs from './feature-translations/list-view/es.json';
 import mapEn from './feature-translations/map/en.json';
 import mapEs from './feature-translations/map/es.json';
 import mapVisibilityEn from './feature-translations/map-visibility/en.json';
@@ -46,6 +48,7 @@ export type TranslationKey =
   | keyof typeof globalChecklistsEs
   | keyof typeof globalTodayEs
   | keyof typeof invitesEs
+  | keyof typeof listViewEs
   | keyof typeof mapEs
   | keyof typeof mapVisibilityEs
   | keyof typeof planFormLayoutEs
@@ -69,6 +72,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...globalChecklistsEs,
     ...globalTodayEs,
     ...invitesEs,
+    ...listViewEs,
     ...mapEs,
     ...mapVisibilityEs,
     ...planFormLayoutEs,
@@ -89,6 +93,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...globalChecklistsEn,
     ...globalTodayEn,
     ...invitesEn,
+    ...listViewEn,
     ...mapEn,
     ...mapVisibilityEn,
     ...planFormLayoutEn,

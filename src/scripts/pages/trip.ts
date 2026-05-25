@@ -40,6 +40,7 @@ import {
   renderPlanAiGuideMenuAction,
   stopPlanAiGuidePlayer,
 } from './plan-ai-guide-player';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 import {
   ensureFirebaseReady,
   getCategoryLabel,
@@ -229,6 +230,7 @@ function renderPlans(
   const t = getPageTranslator(locale);
   syncCurrentLocationAction(plans, geolocation);
   if (!target) return;
+  ensureListViewToggle(locale, target);
   if (plans.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('trip.plansEmpty'))}</article>`;
     return;
@@ -247,7 +249,7 @@ function renderPlans(
       const aiGuideIndicator = renderPlanAiGuideIndicator(locale, plan);
 
       return `
-        <article class="app-card-shell min-w-0 overflow-hidden">
+        <article class="app-card-shell min-w-0 overflow-hidden" data-list-card>
           <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
             <span class="plan-category-dot mt-2" style="${getPlanCategoryDotStyle(plan.category)}" aria-hidden="true"></span>
             <a class="min-w-0" href="${planUrl}">
@@ -277,15 +279,15 @@ function renderPlans(
               </div>
             </details>
           </div>
-          <div class="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <div class="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2" data-list-detail>
             <p class="min-w-0 break-words text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-soft)] [overflow-wrap:anywhere]">${escapeHtml(t('trip.planCard.type'))} · ${escapeHtml(categoryLabel)}</p>
             ${renderPlanStatusIndicator(locale, plan.status)}
           </div>
           ${(flags || aiGuideIndicator)
-            ? `<div class="mt-2 flex min-w-0 flex-wrap items-center gap-2">${flags}${aiGuideIndicator}</div>`
+            ? `<div class="mt-2 flex min-w-0 flex-wrap items-center gap-2" data-list-detail>${flags}${aiGuideIndicator}</div>`
             : ''}
-          ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]">${escapeHtml(description)}</p>` : ''}
-          <div class="mt-3 grid min-w-0 gap-x-4 gap-y-1 text-sm text-[var(--color-text-soft)] sm:grid-cols-2">
+          ${description ? `<p class="mt-3 max-w-full break-words text-sm text-[var(--color-text-muted)] [overflow-wrap:anywhere]" data-list-detail>${escapeHtml(description)}</p>` : ''}
+          <div class="mt-3 grid min-w-0 gap-x-4 gap-y-1 text-sm text-[var(--color-text-soft)] sm:grid-cols-2" data-list-detail>
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.date'))}</span> | ${escapeHtml(dateLabel)}</p>
             <p class="min-w-0 break-words [overflow-wrap:anywhere]"><span class="font-semibold text-[var(--color-text-muted)]">${escapeHtml(t('trip.planCard.distance'))}:</span> ${escapeHtml(distanceLabel || '-')}</p>
           </div>
@@ -526,6 +528,7 @@ export function mountTripPage({ locale }: { locale: Locale }) {
     return;
   }
   if (!ensureFirebaseReady(locale)) return;
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
   if (calendarLink) calendarLink.href = getAppUrl(locale, 'calendar', { trip: tripId });
   if (mapLink) mapLink.href = getAppUrl(locale, 'map', { trip: tripId });

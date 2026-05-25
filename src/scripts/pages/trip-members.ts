@@ -26,6 +26,7 @@ import {
   syncTripParentNavigation,
   syncTripShell,
 } from './shared';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 
 const inviteErrorMessages: Record<Locale, Record<string, string>> = {
   es: {
@@ -41,7 +42,7 @@ const inviteErrorMessages: Record<Locale, Record<string, string>> = {
 };
 
 function renderMemberCard(locale: Locale, member: TripMemberRecord, tone: 'primary' | 'warning') {
-  return `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4"><div class="flex items-center justify-between gap-3"><div><p class="font-semibold text-[var(--color-text)]">${escapeHtml(member.email)}</p><p class="mt-1 text-sm text-[var(--color-text-soft)]">${escapeHtml(getRoleLabel(locale, member.role))}</p></div><span class="status-pill" data-tone="${tone}">${escapeHtml(getRoleLabel(locale, member.role))}</span></div></article>`;
+  return `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4" data-list-card><div class="flex items-center justify-between gap-3"><div><p class="font-semibold text-[var(--color-text)]">${escapeHtml(member.email)}</p><p class="mt-1 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(getRoleLabel(locale, member.role))}</p></div><span class="status-pill" data-list-detail data-tone="${tone}">${escapeHtml(getRoleLabel(locale, member.role))}</span></div></article>`;
 }
 
 function renderPeople(
@@ -57,6 +58,8 @@ function renderPeople(
     return;
   }
 
+  ensureListViewToggle(locale, target);
+
   const directMemberKeys = new Set(members.map((member) => member.userId || member.email.toLowerCase()));
   const visibleInheritedMembers = inheritedMembers.filter(
     (member) => !directMemberKeys.has(member.userId || member.email.toLowerCase()),
@@ -64,7 +67,7 @@ function renderPeople(
   const memberCards = members.map((member) => renderMemberCard(locale, member, 'primary'));
   const inheritedCards = visibleInheritedMembers.map((member) => renderMemberCard(locale, member, 'warning'));
   const pendingCards = invites.map(
-    (invite) => `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4"><div class="flex items-center justify-between gap-3"><div><p class="font-semibold text-[var(--color-text)]">${escapeHtml(invite.email)}</p><p class="mt-1 text-sm text-[var(--color-text-soft)]">${escapeHtml(getRoleLabel(locale, invite.role))}</p></div><span class="status-pill" data-tone="warning">${escapeHtml(t('trip.invite.pendingStatus'))}</span></div></article>`,
+    (invite) => `<article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4" data-list-card><div class="flex items-center justify-between gap-3"><div><p class="font-semibold text-[var(--color-text)]">${escapeHtml(invite.email)}</p><p class="mt-1 text-sm text-[var(--color-text-soft)]" data-list-detail>${escapeHtml(getRoleLabel(locale, invite.role))}</p></div><span class="status-pill" data-list-detail data-tone="warning">${escapeHtml(t('trip.invite.pendingStatus'))}</span></div></article>`,
   );
 
   if (memberCards.length === 0 && inheritedCards.length === 0 && pendingCards.length === 0) {
@@ -142,6 +145,7 @@ export function mountTripMembersPage({ locale }: { locale: Locale }) {
   if (!tripId || !form) return;
   if (!ensureFirebaseReady(locale)) return;
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
 
   if (backLink) {

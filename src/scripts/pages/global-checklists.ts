@@ -23,6 +23,7 @@ import {
   getPendingChecklistCount,
   renderChecklistGroups,
 } from './trip-checklist-groups';
+import { initListViewMode } from './list-view-mode';
 
 function logTripsPermissionError(user: User | null) {
   const config = getFirebasePublicConfig();
@@ -80,6 +81,7 @@ export function mountGlobalChecklistsPage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   const sync = () => renderGlobalChecklists(locale, trips, currentItemsByTrip);
 
   window.addEventListener(

@@ -22,6 +22,7 @@ import {
   getPlanStatusOptions,
   getPlanStatusTone,
 } from './shared';
+import { ensureListViewToggle } from './list-view-mode';
 
 export function getTodayFilters(): TodayFilters {
   const search = document.querySelector<HTMLInputElement>('[data-today-filter-search]');
@@ -149,7 +150,7 @@ function renderPlanCard(locale: Locale, item: TodayPlanItem) {
   const tripUrl = getAppUrl(locale, 'trip', { trip: item.trip.id });
 
   return `
-    <article class="app-card-shell min-w-0 overflow-hidden">
+    <article class="app-card-shell min-w-0 overflow-hidden" data-list-card>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
           <p class="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-primary)]">${escapeHtml(item.trip.name)}</p>
@@ -157,9 +158,9 @@ function renderPlanCard(locale: Locale, item: TodayPlanItem) {
             <h3 class="min-w-0 text-lg font-black leading-tight text-[var(--color-text)]">${getPlanNameWithFlagsHtml(item.plan, t)}</h3>
           </a>
         </div>
-        ${renderStatusPill(locale, item.plan.status)}
+        <span data-list-detail>${renderStatusPill(locale, item.plan.status)}</span>
       </div>
-      <dl class="mt-4 grid gap-3 text-sm text-[var(--color-text-muted)] sm:grid-cols-2">
+      <dl class="mt-4 grid gap-3 text-sm text-[var(--color-text-muted)] sm:grid-cols-2" data-list-detail>
         <div>
           <dt class="font-bold text-[var(--color-text)]">${escapeHtml(t('trip.planCard.type'))}</dt>
           <dd class="mt-1 flex items-center gap-2">
@@ -224,6 +225,8 @@ function renderList(
   if (!target) {
     return;
   }
+
+  ensureListViewToggle(locale, target);
 
   if (activeTrips.length === 0) {
     target.innerHTML = renderEmpty(locale, 'today.empty.trips');

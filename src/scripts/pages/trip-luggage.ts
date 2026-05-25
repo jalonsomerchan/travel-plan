@@ -24,6 +24,7 @@ import {
   syncLuggageShell,
   syncTripNavigation,
 } from './shared';
+import { ensureListViewToggle, initListViewMode } from './list-view-mode';
 
 function getPendingLuggageCount(items: ChecklistItemRecord[]) {
   return items.filter((item) => item.status === 'pending').length;
@@ -61,6 +62,8 @@ function renderLuggageItems(locale: Locale, items: ChecklistItemRecord[]) {
     return;
   }
 
+  ensureListViewToggle(locale, target);
+
   if (items.length === 0) {
     target.innerHTML = `<article class="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-soft)] px-5 py-8 text-center text-sm text-[var(--color-text-soft)]">${escapeHtml(t('tripLuggage.empty'))}</article>`;
     return;
@@ -71,7 +74,7 @@ function renderLuggageItems(locale: Locale, items: ChecklistItemRecord[]) {
       const isCompleted = item.status === 'completed';
 
       return `
-        <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4">
+        <article class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-4" data-list-card>
           <div class="flex items-start justify-between gap-3">
             <label class="flex min-w-0 flex-1 items-start gap-3">
               <input
@@ -87,7 +90,7 @@ function renderLuggageItems(locale: Locale, items: ChecklistItemRecord[]) {
                 <span class="block font-semibold text-[var(--color-text)] ${isCompleted ? 'line-through opacity-70' : ''}">
                   ${escapeHtml(item.title)}
                 </span>
-                <span class="mt-1 inline-flex">
+                <span class="mt-1 inline-flex" data-list-detail>
                   <span class="status-pill" data-tone="${getChecklistStatusTone(item.status)}">${escapeHtml(
                     getChecklistStatusLabel(locale, item.status),
                   )}</span>
@@ -137,6 +140,7 @@ export function mountTripLuggagePage({ locale }: { locale: Locale }) {
     return;
   }
 
+  initListViewMode(locale);
   syncTripNavigation(locale, tripId);
   setNavigationLinkHidden('trip-luggage-link', true);
 
