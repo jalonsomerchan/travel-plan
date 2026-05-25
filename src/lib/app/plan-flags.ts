@@ -5,13 +5,18 @@ interface TranslateFn {
   (key: string): string;
 }
 
-function getPlanFlags(plan: Pick<PlanRecord | PlanInput, 'isPaid' | 'isBooked' | 'isOptional' | 'isImportant'>) {
+type PlanFlagFields = Pick<PlanRecord | PlanInput, 'isPaid' | 'isBooked' | 'needsReservation' | 'isOptional' | 'isImportant'>;
+
+function getPlanFlags(plan: PlanFlagFields) {
   return [
     plan.isPaid
       ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-success-soft)] text-sm font-black text-[var(--color-success)]" aria-label="paid" title="paid">$</span>`
       : '',
     plan.isBooked
       ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]" aria-label="booked" title="booked">✓</span>`
+      : '',
+    plan.needsReservation
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-warning-soft)] text-sm font-black text-[var(--color-warning)]" aria-label="reservation required" title="reservation required">R</span>`
       : '',
     plan.isOptional
       ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-sm font-black text-[var(--color-text-soft)]" aria-label="optional" title="optional">?</span>`
@@ -22,13 +27,11 @@ function getPlanFlags(plan: Pick<PlanRecord | PlanInput, 'isPaid' | 'isBooked' |
   ].filter(Boolean);
 }
 
-export function getPlanFlagsHtml(
-  plan: Pick<PlanRecord | PlanInput, 'isPaid' | 'isBooked' | 'isOptional' | 'isImportant'>,
-  t: TranslateFn,
-) {
+export function getPlanFlagsHtml(plan: PlanFlagFields, t: TranslateFn) {
   const labels = {
     paid: escapeHtml(t('plan.flag.paid')),
     booked: escapeHtml(t('plan.flag.booked')),
+    needsReservation: escapeHtml(t('plan.flag.needsReservation')),
     optional: escapeHtml(t('plan.flag.optional')),
     important: escapeHtml(t('plan.flag.important')),
   };
@@ -39,6 +42,9 @@ export function getPlanFlagsHtml(
       : '',
     plan.isBooked
       ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-soft)] text-sm font-black text-[var(--color-primary)]" aria-label="${labels.booked}" title="${labels.booked}">✓</span>`
+      : '',
+    plan.needsReservation
+      ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-warning-soft)] text-sm font-black text-[var(--color-warning)]" aria-label="${labels.needsReservation}" title="${labels.needsReservation}">R</span>`
       : '',
     plan.isOptional
       ? `<span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-sm font-black text-[var(--color-text-soft)]" aria-label="${labels.optional}" title="${labels.optional}">?</span>`
@@ -52,7 +58,7 @@ export function getPlanFlagsHtml(
 }
 
 export function getPlanNameWithFlagsHtml(
-  plan: Pick<PlanRecord | PlanInput, 'name' | 'isPaid' | 'isBooked' | 'isOptional' | 'isImportant'>,
+  plan: Pick<PlanRecord | PlanInput, 'name' | 'isPaid' | 'isBooked' | 'needsReservation' | 'isOptional' | 'isImportant'>,
   t: TranslateFn,
 ) {
   const flags = getPlanFlagsHtml(plan, t);

@@ -14,6 +14,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
     category: (data.category as PlanRecord['category']) ?? 'visit',
     isPaid: data.isPaid === true,
     isBooked: data.isBooked === true,
+    needsReservation: data.needsReservation === true,
     isOptional: data.isOptional === true,
     isImportant: data.isImportant === true,
     locationName: data.locationName ? String(data.locationName) : undefined,

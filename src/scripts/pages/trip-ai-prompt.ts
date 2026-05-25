@@ -39,6 +39,7 @@ function toPlanInput(candidate: CandidateEntry): PlanInput {
     category: candidate.category,
     isPaid: candidate.isPaid,
     isBooked: candidate.isBooked,
+    needsReservation: candidate.needsReservation,
     isOptional: candidate.isOptional,
     isImportant: candidate.isImportant,
     locationName: candidate.locationName,
@@ -48,7 +49,6 @@ function toPlanInput(candidate: CandidateEntry): PlanInput {
     time: candidate.time,
     status: 'proposed',
     links: candidate.links,
-    aiGuide: candidate.aiGuide,
   };
 }
 
@@ -81,6 +81,7 @@ function renderCandidate(locale: Locale, candidate: CandidateEntry) {
             <span class="flex flex-wrap gap-2">
               <span class="status-pill" data-tone="primary">${escapeHtml(categoryLabel)}</span>
               <span class="status-pill" data-tone="${candidate.isPaid ? 'warning' : 'success'}">${escapeHtml(paymentLabel)}</span>
+              ${candidate.needsReservation ? `<span class="status-pill" data-tone="warning">${escapeHtml(t('plan.flag.needsReservation'))}</span>` : ''}
             </span>
           </span>
           <span class="mt-3 block text-sm text-[var(--color-text-muted)]">${escapeHtml(candidate.description || t('plan.descriptionEmpty'))}</span>

@@ -106,7 +106,8 @@ Plan context:
 - Place: ${formatPlanLocation(plan, locale)}
 - Planned moment: ${formatPlanDate(plan, locale)}
 - Paid: ${plan.isPaid ? 'yes' : 'no'}
-- Reservation required: ${plan.isBooked ? 'yes' : 'no'}
+- Reservation required: ${plan.needsReservation ? 'yes' : 'no'}
+- Already booked: ${plan.isBooked ? 'yes' : 'no'}
 
 Style instructions:
 - ${getToneInstruction(options.tone, locale)}
@@ -142,7 +143,8 @@ Contexto del plan:
 - Lugar: ${formatPlanLocation(plan, locale)}
 - Momento previsto: ${formatPlanDate(plan, locale)}
 - De pago: ${plan.isPaid ? 'sí' : 'no'}
-- Requiere reserva: ${plan.isBooked ? 'sí' : 'no'}
+- Requiere reserva: ${plan.needsReservation ? 'sí' : 'no'}
+- Ya reservado: ${plan.isBooked ? 'sí' : 'no'}
 
 Instrucciones de estilo:
 - ${getToneInstruction(options.tone, locale)}

@@ -102,14 +102,14 @@ function getBudgetInstruction(mode: TripAiPromptBudgetMode, locale: Locale) {
 
 function getBookingInstruction(mode: TripAiPromptBookingMode, locale: Locale) {
   const es = {
-    both: '- Puedes incluir sitios con reserva o sin reserva. Recuerda que isBooked significa que requiere reserva.',
-    'no-booking': '- Evita sitios que requieran reserva. Usa isBooked como false.',
-    'booking-required': '- Prioriza sitios o planes que requieran reserva. Usa isBooked como true cuando haga falta reservar.',
+    both: '- Puedes incluir sitios con reserva o sin reserva. Usa needsReservation para marcar si requieren reserva previa.',
+    'no-booking': '- Evita sitios que requieran reserva. Usa needsReservation como false.',
+    'booking-required': '- Prioriza sitios o planes que requieran reserva. Usa needsReservation como true cuando haga falta reservar.',
   };
   const en = {
-    both: '- You can include places with or without reservations. Remember that isBooked means a reservation is required.',
-    'no-booking': '- Avoid places that require reservations. Use isBooked as false.',
-    'booking-required': '- Prioritize places or plans that require reservations. Use isBooked as true when booking is needed.',
+    both: '- You can include places with or without reservations. Use needsReservation to mark whether advance booking is required.',
+    'no-booking': '- Avoid places that require reservations. Use needsReservation as false.',
+    'booking-required': '- Prioritize places or plans that require reservations. Use needsReservation as true when booking is needed.',
   };
 
   return locale === 'es' ? es[mode] : en[mode];

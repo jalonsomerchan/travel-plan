@@ -91,6 +91,7 @@ export interface PlanRecord {
   category: PlanCategory;
   isPaid: boolean;
   isBooked: boolean;
+  needsReservation: boolean;
   isOptional: boolean;
   isImportant: boolean;
   locationName?: string;
@@ -109,6 +110,7 @@ export interface PlanInput {
   category: PlanCategory;
   isPaid: boolean;
   isBooked: boolean;
+  needsReservation: boolean;
   isOptional: boolean;
   isImportant: boolean;
   locationName?: string;

@@ -21,7 +21,7 @@ describe('plan flags', () => {
     const form = readText('src/components/app/PlanFormFields.astro');
     const edit = readText('src/scripts/pages/plan-edit.ts');
 
-    ['isPaid', 'isBooked', 'isOptional', 'isImportant'].forEach((field) => {
+    ['isPaid', 'isBooked', 'needsReservation', 'isOptional', 'isImportant'].forEach((field) => {
       assert.match(models, new RegExp(`${field}: boolean;`));
       assert.match(location, new RegExp(`${field}: data\\.get\\('${field}'\\) === 'on'`));
       assert.match(firestore, new RegExp(`${field}: data\\.${field} === true`));
@@ -72,6 +72,7 @@ describe('plan flags', () => {
     assert.match(helper, /plan\.flag\.paid/);
     assert.match(helper, />\$</);
     assert.match(helper, />✓</);
+    assert.match(helper, />R</);
     assert.match(helper, />\?</);
     assert.match(helper, />!</);
     assert.match(trip, /getPlanFlagsHtml\(plan, t\)/);
@@ -80,6 +81,8 @@ describe('plan flags', () => {
     assert.match(globalCalendar, /getPlanNameWithFlagsHtml\(plan, t\)/);
     assert.match(map, /getPlanNameWithFlagsHtml\(plan, t\)/);
     assert.match(es, /"plan\.form\.isPaid": "Plan de pago"/);
+    assert.match(es, /"plan\.form\.needsReservation": "Necesita reserva"/);
     assert.match(en, /"plan\.form\.isPaid": "Paid plan"/);
+    assert.match(en, /"plan\.form\.needsReservation": "Reservation required"/);
   });
 });

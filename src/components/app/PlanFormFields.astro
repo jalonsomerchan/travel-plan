@@ -80,6 +80,13 @@ const t = useTranslations(locale);
           </span>
         </label>
         <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
+          <input class="mt-1" id={`${prefix}-needsReservation`} name="needsReservation" type="checkbox" />
+          <span>
+            <span class="block font-bold">{t('plan.form.needsReservation')}</span>
+            <span class="mt-0.5 block text-xs leading-snug text-[var(--color-text-soft)]">{t('plan.form.needsReservationHint')}</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--shadow-xs)] transition hover:border-[var(--color-border-strong)]">
           <input class="mt-1" id={`${prefix}-isOptional`} name="isOptional" type="checkbox" />
           <span>
             <span class="block font-bold">{t('plan.form.isOptional')}</span>

@@ -78,6 +78,7 @@ export function getPlanInputFromForm(form: HTMLFormElement): PlanInput {
     category: String(data.get('category') ?? 'visit') as PlanRecord['category'],
     isPaid: data.get('isPaid') === 'on',
     isBooked: data.get('isBooked') === 'on',
+    needsReservation: data.get('needsReservation') === 'on',
     isOptional: data.get('isOptional') === 'on',
     isImportant: data.get('isImportant') === 'on',
     locationName: location.name || undefined,

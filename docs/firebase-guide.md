@@ -86,6 +86,11 @@ Los documentos de `trips/{tripId}/plans/{planId}` pueden incluir enlaces asociad
   "description": "Visita principal de la mañana",
   "category": "museum",
   "status": "pending",
+  "isPaid": true,
+  "isBooked": false,
+  "needsReservation": true,
+  "isOptional": false,
+  "isImportant": true,
   "links": [
     {
       "label": "Entradas",
@@ -100,9 +105,18 @@ Campos de `links`:
 - `label`: texto corto visible para identificar el enlace. Si se guarda vacío desde cliente, se usa la propia URL como etiqueta.
 - `url`: URL externa completa. La UI solo acepta y muestra enlaces `http://` o `https://`.
 
+Campos de flags de planes:
+
+- `isPaid`: indica que el plan es de pago.
+- `isBooked`: indica que ya hay reserva, entrada o confirmación.
+- `needsReservation`: indica que el plan requiere reserva previa, aunque todavía no esté reservado.
+- `isOptional`: indica que el plan es opcional.
+- `isImportant`: indica que el plan debe destacarse como importante.
+
 Compatibilidad:
 
 - Los planes antiguos sin `links` se interpretan como `links: []`.
+- Los planes antiguos sin `needsReservation` se interpretan como `needsReservation: false`.
 - Los enlaces se guardan como una lista pequeña de objetos `{ label, url }`, sin crear subcolecciones para evitar complejidad innecesaria.
 - En las vistas de lectura los enlaces externos se abren en una pestaña nueva con `rel="noopener noreferrer"`.
 

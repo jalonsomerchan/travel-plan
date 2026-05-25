@@ -79,7 +79,6 @@ Return a JSON object with this exact structure:
     {
       "name": "Short plain-text place or plan title",
       "description": "Short summary and practical notes. Put sources or reference links here, never in name.",
-      "aiGuide": "Longer audio-guide text about the place: what it is, why it matters, history, context, curiosities and what to notice there.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -88,6 +87,8 @@ Return a JSON object with this exact structure:
       "locationLng": 0,
       "isPaid": false,
       "isBooked": false,
+      "needsReservation": false,
+      "isOptional": false,
       "isImportant": false,
       "links": [{ "label": "Official website", "url": "https://example.com" }]
     }
@@ -99,12 +100,13 @@ Rules:
 - Use only these categories: ${categories}.
 - status is optional. If you include it, use "proposed". If you omit it, TravelPlan will save it as proposed.
 - Use dates within the trip range only.
-- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in description or aiGuide.
-- Focus aiGuide on what the place is like and what makes it interesting, not on guiding me step by step through the area.
+- Do not include aiGuide, guide, audioGuide or any audio-guide field in the JSON.
+- Do not include duration, visit length, estimated minutes, schedule blocks or rigid route-guide data in description.
 - Coordinates are optional, but include them when you are reasonably confident.
 - links is optional and must only contain http or https URLs.
-- isBooked means the place or plan requires a reservation or booking in advance.
-- Do not invent bookings. If something is only a recommendation, keep isBooked as false.
+- needsReservation means the place or plan requires a reservation or booking in advance.
+- isBooked means you already have a booking, ticket or confirmation. For AI suggestions, keep isBooked as false unless the user explicitly says it is already booked.
+- Do not invent reservations. If something is only a recommendation, keep isBooked as false.
 - isOptional is optional in the JSON. If omitted, TravelPlan will save it as false.
 - Keep name as a clean plain-text title: no links, no URLs, no markdown, no citations, no source names and no JSON fragments.
 - If you need to include a source, link, citation or official website, put it in description or links, never in name.
@@ -126,7 +128,6 @@ Devuelve un objeto JSON con esta estructura exacta:
     {
       "name": "Título corto y limpio del sitio o plan",
       "description": "Resumen corto y notas prácticas. Si hay fuentes o enlaces de referencia, ponlos aquí, nunca en name.",
-      "aiGuide": "Texto más largo de audioguía sobre el sitio: qué es, por qué merece la pena, historia, contexto, curiosidades y en qué fijarme allí.",
       "category": "visit",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
@@ -135,6 +136,8 @@ Devuelve un objeto JSON con esta estructura exacta:
       "locationLng": 0,
       "isPaid": false,
       "isBooked": false,
+      "needsReservation": false,
+      "isOptional": false,
       "isImportant": false,
       "links": [{ "label": "Web oficial", "url": "https://example.com" }]
     }
@@ -146,11 +149,12 @@ Reglas:
 - Usa solo estas categorías: ${categories}.
 - status es opcional. Si lo incluyes, usa "proposed". Si lo omites, TravelPlan lo guardará como propuesto.
 - Usa únicamente fechas dentro del rango del viaje.
-- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en description ni en aiGuide.
-- Centra aiGuide en cómo es el sitio y por qué es interesante, no en guiarme paso a paso por la zona.
+- No incluyas aiGuide, guide, audioGuide ni ningún campo de audioguía en el JSON.
+- No incluyas duración, tiempo estimado, minutos de visita, bloques horarios ni datos rígidos de guía/ruta en description.
 - Las coordenadas son opcionales, pero inclúyelas si estás razonablemente seguro.
 - links es opcional y solo debe contener URLs http o https.
-- isBooked significa que el sitio o plan requiere reserva previa.
+- needsReservation significa que el sitio o plan requiere reserva previa.
+- isBooked significa que ya tienes reserva, entrada o confirmación. Para sugerencias IA, deja isBooked como false salvo que el usuario diga expresamente que ya está reservado.
 - No inventes reservas. Si algo es una recomendación, deja isBooked como false.
 - isOptional es opcional en el JSON. Si se omite, TravelPlan lo guardará como false.
 - Mantén name como un título limpio en texto plano: sin enlaces, sin URLs, sin markdown, sin citas, sin nombres de fuente y sin fragmentos JSON.
@@ -242,7 +246,6 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
     sourceIndex: index,
     name,
     description: getDescriptionWithTitleSources(getString(record, ['description', 'notes', 'reason']), rawName),
-    aiGuide: getString(record, ['aiGuide', 'guide', 'audioGuide']) || undefined,
     category: normalizeCategory(getString(record, ['category', 'type'])),
     date: getString(record, ['date']) || undefined,
     time: getString(record, ['time']) || undefined,
@@ -252,6 +255,7 @@ function normalizeCandidate(item: unknown, index: number): TripAiPromptCandidate
     locationLng: getNumber(record, 'locationLng'),
     isPaid: getBoolean(record, 'isPaid'),
     isBooked: getBoolean(record, 'isBooked'),
+    needsReservation: getBoolean(record, 'needsReservation'),
     isOptional: getBoolean(record, 'isOptional'),
     isImportant: getBoolean(record, 'isImportant'),
     links: safeLinks,

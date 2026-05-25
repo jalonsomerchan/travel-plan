@@ -68,7 +68,7 @@ describe('trip AI prompt wizard', () => {
     assert.match(script, /status: 'proposed'/);
   });
 
-  it('keeps AI guides persisted and playable in plan detail', () => {
+  it('keeps AI guides generated from plan detail instead of trip prompt imports', () => {
     const models = readText('src/lib/app/models.ts');
     const prompt = readText('src/lib/app/trip-ai-prompt.ts');
     const plans = readText('src/lib/firebase/plans.ts');
@@ -78,9 +78,10 @@ describe('trip AI prompt wizard', () => {
     const editScript = readText('src/scripts/pages/plan-edit.ts');
 
     assert.match(models, /aiGuide\?: string/);
-    assert.match(prompt, /aiGuide/);
+    assert.match(prompt, /Do not include aiGuide/);
+    assert.doesNotMatch(prompt, /aiGuide: getString\(record/);
     assert.match(plans, /aiGuide/);
-    assert.match(promptScript, /aiGuide: candidate\.aiGuide/);
+    assert.doesNotMatch(promptScript, /aiGuide: candidate\.aiGuide/);
     assert.match(planPage, /data-plan-ai-guide-section/);
     assert.match(planScript, /speechSynthesis/);
     assert.match(planScript, /SpeechSynthesisUtterance/);

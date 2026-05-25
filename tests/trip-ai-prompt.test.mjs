@@ -52,6 +52,20 @@ describe('trip AI prompt tool', () => {
     assert.match(pageScript, /data-trip-ai-candidate-checkbox/);
   });
 
+  it('asks AI to fill reservation needs without importing audio guide fields', () => {
+    const helper = readText('src/lib/app/trip-ai-prompt.ts');
+    const pageScript = readText('src/scripts/pages/trip-ai-prompt.ts');
+
+    assert.match(helper, /"needsReservation": false/);
+    assert.match(helper, /needsReservation means/);
+    assert.match(helper, /No incluyas aiGuide, guide, audioGuide/);
+    assert.match(helper, /Do not include aiGuide, guide, audioGuide/);
+    assert.match(helper, /needsReservation: getBoolean\(record, 'needsReservation'\)/);
+    assert.doesNotMatch(helper, /aiGuide: getString\(record/);
+    assert.match(pageScript, /needsReservation: candidate\.needsReservation/);
+    assert.doesNotMatch(pageScript, /aiGuide: candidate\.aiGuide/);
+  });
+
   it('keeps AI prompt candidate badges and title cleanup in place', () => {
     const helper = readText('src/lib/app/trip-ai-prompt.ts');
     const links = readText('src/lib/app/plan-links.ts');
@@ -68,6 +82,7 @@ describe('trip AI prompt tool', () => {
     assert.match(pageScript, /getPaymentLabel/);
     assert.match(pageScript, /tripAi\.budget\.free/);
     assert.match(pageScript, /candidate\.isPaid \? 'warning' : 'success'/);
+    assert.match(pageScript, /candidate\.needsReservation/);
   });
 
   it('keeps feature translations aligned and registered', () => {
