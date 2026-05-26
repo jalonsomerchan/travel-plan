@@ -1,12 +1,12 @@
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDateRange } from '../../lib/app/format';
-import type { TripRecord } from '../../lib/app/models';
+import type { TripChildSummaryRecord } from '../../lib/app/models';
 import { getAppUrl } from '../../lib/app/routes';
 import { getPageTranslator, getTripStatusLabel, getTripStatusTone } from './shared';
 import { ensureListViewToggle } from './list-view-mode';
 
-export function renderMiniTrips(locale: Locale, miniTrips: TripRecord[]) {
+export function renderMiniTrips(locale: Locale, miniTrips: TripChildSummaryRecord[]) {
   const target = document.querySelector<HTMLElement>('[data-mini-trip-list]');
   const count = document.querySelector<HTMLElement>('[data-mini-trip-count]');
   const t = getPageTranslator(locale);

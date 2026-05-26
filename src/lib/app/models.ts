@@ -29,6 +29,15 @@ export interface TripAccommodationRecord {
   locationLng?: number;
 }
 
+export interface TripChildSummaryRecord {
+  id: string;
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  status: TripStatus;
+}
+
 export interface TripRecord {
   id: string;
   name: string;
@@ -40,6 +49,7 @@ export interface TripRecord {
   status: TripStatus;
   accommodation?: TripAccommodationRecord;
   parentTripId?: string;
+  childTrips: TripChildSummaryRecord[];
   ownerId: string;
   ownerEmail: string;
   memberIds: string[];
@@ -119,7 +129,7 @@ export interface PlanInput {
   date?: string;
   time?: string;
   status: PlanStatus;
-  links?: PlanLinkRecord[];
+  links: PlanLinkRecord[];
   aiGuide?: string;
 }
 
@@ -127,6 +137,7 @@ export interface ChecklistItemRecord {
   id: string;
   title: string;
   status: ChecklistItemStatus;
+  createdAt?: unknown;
 }
 
 export interface ChecklistItemInput {
@@ -134,27 +145,43 @@ export interface ChecklistItemInput {
   status: ChecklistItemStatus;
 }
 
-export interface TripPointOfInterestRecord {
+export interface TripPoiRecord {
   id: string;
   name: string;
   description: string;
-  icon: string;
   type: TripPoiType;
+  icon: string;
   color: string;
-  isVisible: boolean;
   locationName: string;
   locationLat: number;
   locationLng: number;
+  isVisible: boolean;
+  isSystem?: boolean;
 }
 
-export interface TripPointOfInterestInput {
+export interface TripPoiInput {
   name: string;
   description: string;
-  icon: string;
   type: TripPoiType;
+  icon: string;
   color: string;
-  isVisible: boolean;
   locationName: string;
   locationLat: number;
   locationLng: number;
+  isVisible: boolean;
+  isSystem?: boolean;
+}
+
+export interface LuggageItemRecord {
+  id: string;
+  name: string;
+  quantity: number;
+  isPacked: boolean;
+  ownerId: string;
+}
+
+export interface LuggageItemInput {
+  name: string;
+  quantity: number;
+  isPacked: boolean;
 }
