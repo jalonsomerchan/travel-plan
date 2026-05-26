@@ -440,8 +440,10 @@ const dashboardUrl = getLocalizedPath('/app/', locale);
 
   <script>
     import { mountTripPage } from '../../scripts/pages/trip';
+    import { mountTripMiniTripsFallback } from '../../scripts/pages/trip-mini-trips-fallback';
 
     mountTripPage({ locale: document.documentElement.lang });
+    mountTripMiniTripsFallback({ locale: document.documentElement.lang });
 
     const planList = document.querySelector<HTMLElement>('[data-plan-list]');
 
