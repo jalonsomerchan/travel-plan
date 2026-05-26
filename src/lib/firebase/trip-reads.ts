@@ -1,5 +1,5 @@
 import { doc, getDoc } from 'firebase/firestore';
-import type { TripAccommodationRecord, TripRecord } from '../app/models';
+import type { TripAccommodationRecord, TripChildSummaryRecord, TripRecord } from '../app/models';
 import { getFirebaseDb } from './config';
 import { clearCachedTrip, getCachedTrip, setCachedTrip } from './shared-data-cache';
 
@@ -23,6 +23,41 @@ function mapTripAccommodationRecord(value: unknown): TripAccommodationRecord | u
   };
 }
 
+function mapTripChildSummaryRecord(value: unknown): TripChildSummaryRecord | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const data = value as Record<string, unknown>;
+  const id = String(data.id ?? '').trim();
+  const name = String(data.name ?? '').trim();
+
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    location: String(data.location ?? ''),
+    startDate: String(data.startDate ?? ''),
+    endDate: String(data.endDate ?? ''),
+    status: (data.status as TripRecord['status']) ?? 'idea',
+  };
+}
+
+function mapTripChildSummaries(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    const childTrip = mapTripChildSummaryRecord(item);
+
+    return childTrip ? [childTrip] : [];
+  });
+}
+
 function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripRecord {
   const data = snapshot.data();
 
@@ -37,6 +72,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     status: (data.status as TripRecord['status']) ?? 'idea',
     accommodation: mapTripAccommodationRecord(data.accommodation),
     parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
+    childTrips: mapTripChildSummaries(data.childTrips),
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
