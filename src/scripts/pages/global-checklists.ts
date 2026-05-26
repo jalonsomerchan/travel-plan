@@ -18,6 +18,7 @@ import {
   type ChecklistItemsByTrip,
   subscribeTripsChecklistItems,
 } from './checklist-summary';
+import { expandTripsWithChildSummaries } from './trip-child-summaries';
 import {
   getCompletedChecklistCount,
   getPendingChecklistCount,
@@ -109,7 +110,7 @@ export function mountGlobalChecklistsPage({ locale }: { locale: Locale }) {
       subscribeUserTrips(
         user.uid,
         (items) => {
-          trips = items;
+          trips = expandTripsWithChildSummaries(items);
           subscribeTripsChecklistItems(trips, checklistSubscriptions, (itemsByTrip) => {
             currentItemsByTrip = itemsByTrip;
             sync();
