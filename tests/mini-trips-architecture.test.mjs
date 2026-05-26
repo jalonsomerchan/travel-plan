@@ -17,6 +17,8 @@ describe('Mini Trips architecture', () => {
     const firebaseGuide = readText('docs/firebase-guide.md');
 
     assert.match(models, /parentTripId\?: string/);
+    assert.match(models, /TripChildSummaryRecord/);
+    assert.match(models, /childTrips: TripChildSummaryRecord\[\]/);
     assert.match(tripsService, /subscribeChildTrips/);
     assert.match(tripsService, /where\('parentTripId', '==', parentTripId\)/);
     assert.match(tripsService, /sortTripRecords\(mapTripDocs\(snapshot\.docs\)\)/);
@@ -32,6 +34,7 @@ describe('Mini Trips architecture', () => {
   it('surfaces mini trips from the parent trip page and merges child checklists in the parent checklist view', () => {
     const tripPage = readText('src/components/pages/TripPage.astro');
     const tripScript = readText('src/scripts/pages/trip.ts');
+    const miniTripsFallback = readText('src/scripts/pages/trip-mini-trips-fallback.ts');
     const sharedScript = readText('src/scripts/pages/shared.ts');
     const checklistPage = readText('src/components/pages/TripChecklistPage.astro');
     const checklistScript = readText('src/scripts/pages/trip-checklist.ts');
@@ -40,10 +43,14 @@ describe('Mini Trips architecture', () => {
     assert.match(tripPage, /data-mini-trip-list/);
     assert.match(tripPage, /data-trip-tabs/);
     assert.match(tripPage, /trip-mini-trips-panel/);
+    assert.match(tripPage, /mountTripMiniTripsFallback/);
     assert.match(tripScript, /renderMiniTrips/);
     assert.match(tripScript, /subscribeChildTrips/);
     assert.match(tripScript, /syncTripPanels/);
     assert.match(tripScript, /trip-create-mini-trip-menu-link/);
+    assert.match(miniTripsFallback, /trip\.childTrips/);
+    assert.match(miniTripsFallback, /renderMiniTrips\(locale, trip\.childTrips\)/);
+    assert.match(miniTripsFallback, /syncPanels\(true\)/);
     assert.match(sharedScript, /trip-create-mini-trip-menu-link/);
     assert.match(checklistPage, /data-parent-trip-banner/);
     assert.match(checklistScript, /renderChecklistGroups/);
