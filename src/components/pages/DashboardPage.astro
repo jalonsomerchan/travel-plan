@@ -66,7 +66,9 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
 
   <script>
     import { mountDashboardPage } from '../../scripts/pages/dashboard';
+    import { mountDashboardMiniTripsFallback } from '../../scripts/pages/dashboard-mini-trips-fallback';
 
     mountDashboardPage({ locale: document.documentElement.lang });
+    mountDashboardMiniTripsFallback({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>
