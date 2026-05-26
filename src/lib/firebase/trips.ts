@@ -5,6 +5,7 @@ import {
   collection,
   deleteField,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
@@ -22,6 +23,7 @@ import {
 } from '../app/invite-share';
 import type {
   TripAccommodationRecord,
+  TripChildSummaryRecord,
   TripInput,
   TripInviteRecord,
   TripMemberRecord,
@@ -113,6 +115,60 @@ function isTripDeletedData(data: Record<string, unknown>) {
   return Boolean(data.deletedAt);
 }
 
+function mapTripChildSummaryRecord(value: unknown): TripChildSummaryRecord | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const data = value as Record<string, unknown>;
+  const id = String(data.id ?? '').trim();
+  const name = String(data.name ?? '').trim();
+
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    location: String(data.location ?? ''),
+    startDate: String(data.startDate ?? ''),
+    endDate: String(data.endDate ?? ''),
+    status: (data.status as TripRecord['status']) ?? 'idea',
+  };
+}
+
+function mapTripChildSummaries(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    const childTrip = mapTripChildSummaryRecord(item);
+
+    return childTrip ? [childTrip] : [];
+  });
+}
+
+function sortTripChildSummaries(trips: TripChildSummaryRecord[]) {
+  return [...trips].sort((left, right) =>
+    `${left.startDate || '9999-99-99'}${left.name}`.localeCompare(
+      `${right.startDate || '9999-99-99'}${right.name}`,
+    ),
+  );
+}
+
+function getTripChildSummaryRecord(tripId: string, input: TripInput): TripChildSummaryRecord {
+  return {
+    id: tripId,
+    name: input.name,
+    location: input.location,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    status: input.status,
+  };
+}
+
 function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripRecord {
   const data = snapshot.data();
 
@@ -127,6 +183,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     status: (data.status as TripRecord['status']) ?? 'idea',
     accommodation: mapTripAccommodationRecord(data.accommodation),
     parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
+    childTrips: mapTripChildSummaries(data.childTrips),
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
@@ -153,6 +210,44 @@ function mergeTripRecords(tripGroups: TripRecord[][]) {
 
 function mapTripDocs(docs: Array<{ id: string; data: () => Record<string, unknown> }>) {
   return docs.filter((item) => !isTripDeletedData(item.data())).map(mapTripRecord);
+}
+
+async function upsertParentChildTripSummary(parentTripId: string, childTrip: TripChildSummaryRecord) {
+  const db = getFirebaseDb();
+  const parentRef = doc(db, 'trips', parentTripId);
+  const parentSnapshot = await getDoc(parentRef);
+
+  if (!parentSnapshot.exists() || isTripDeletedData(parentSnapshot.data())) {
+    return;
+  }
+
+  const childTrips = mapTripChildSummaries(parentSnapshot.data().childTrips).filter(
+    (item) => item.id !== childTrip.id,
+  );
+
+  await updateDoc(parentRef, {
+    childTrips: sortTripChildSummaries([...childTrips, childTrip]),
+    updatedAt: serverTimestamp(),
+  });
+  clearCachedTrip(parentTripId);
+}
+
+async function removeParentChildTripSummary(parentTripId: string, childTripId: string) {
+  const db = getFirebaseDb();
+  const parentRef = doc(db, 'trips', parentTripId);
+  const parentSnapshot = await getDoc(parentRef);
+
+  if (!parentSnapshot.exists() || isTripDeletedData(parentSnapshot.data())) {
+    return;
+  }
+
+  await updateDoc(parentRef, {
+    childTrips: mapTripChildSummaries(parentSnapshot.data().childTrips).filter(
+      (item) => item.id !== childTripId,
+    ),
+    updatedAt: serverTimestamp(),
+  });
+  clearCachedTrip(parentTripId);
 }
 
 function mapMemberRecord(snapshot: { id: string; data: () => Record<string, unknown> }): TripMemberRecord {
@@ -350,6 +445,7 @@ export async function createTrip(user: User, input: TripInput) {
   const db = getFirebaseDb();
   const tripData = {
     ...getTripWriteData(input),
+    childTrips: [],
     ownerId: user.uid,
     ownerEmail: user.email ?? '',
     memberIds: [user.uid],
@@ -374,21 +470,42 @@ export async function createTrip(user: User, input: TripInput) {
     console.error('createTrip.memberWrite', error);
   });
 
+  if (input.parentTripId) {
+    await upsertParentChildTripSummary(input.parentTripId, getTripChildSummaryRecord(tripRef.id, input));
+  }
+
   return tripRef.id;
 }
 
 export async function updateTrip(tripId: string, input: TripInput) {
   const db = getFirebaseDb();
+  const tripRef = doc(db, 'trips', tripId);
+  const previousSnapshot = await getDoc(tripRef);
+  const previousTrip =
+    previousSnapshot.exists() && !isTripDeletedData(previousSnapshot.data())
+      ? mapTripRecord(previousSnapshot)
+      : null;
 
-  await updateDoc(doc(db, 'trips', tripId), {
+  await updateDoc(tripRef, {
     ...getTripUpdateData(input),
     updatedAt: serverTimestamp(),
   });
+
+  if (previousTrip?.parentTripId && previousTrip.parentTripId !== input.parentTripId) {
+    await removeParentChildTripSummary(previousTrip.parentTripId, tripId);
+  }
+
+  if (input.parentTripId) {
+    await upsertParentChildTripSummary(input.parentTripId, getTripChildSummaryRecord(tripId, input));
+  }
+
   clearCachedTrip(tripId);
 }
 
 export async function deleteTrip(tripId: string) {
   const db = getFirebaseDb();
+  const tripSnapshot = await getDoc(doc(db, 'trips', tripId));
+  const trip = tripSnapshot.exists() && !isTripDeletedData(tripSnapshot.data()) ? mapTripRecord(tripSnapshot) : null;
   const childTripsSnapshot = await getDocs(query(collection(db, 'trips'), where('parentTripId', '==', tripId)));
   const invitesSnapshot = await getDocs(query(collection(db, 'tripInvites'), where('tripId', '==', tripId)));
 
@@ -445,6 +562,11 @@ export async function deleteTrip(tripId: string) {
     deletedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  if (trip?.parentTripId) {
+    await removeParentChildTripSummary(trip.parentTripId, tripId);
+  }
+
   clearTripSharedCache(tripId);
 }
 
