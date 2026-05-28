@@ -1,11 +1,14 @@
 import type { TripAccommodationRecord } from './models';
+import {
+  formatCoordinatesLabel,
+  getDistanceBetweenCoordinates as getCoordinatesDistanceKm,
+  hasLocationCoordinates,
+} from './coordinates';
 
 export function hasAccommodationLocation(
   accommodation: Pick<TripAccommodationRecord, 'locationLat' | 'locationLng'> | undefined,
 ) {
-  return (
-    typeof accommodation?.locationLat === 'number' && typeof accommodation.locationLng === 'number'
-  );
+  return hasLocationCoordinates(accommodation);
 }
 
 export function getAccommodationLocationLabel(
@@ -18,7 +21,7 @@ export function getAccommodationLocationLabel(
   }
 
   if (hasAccommodationLocation(accommodation)) {
-    return `${accommodation.locationLat?.toFixed(5)}, ${accommodation.locationLng?.toFixed(5)}`;
+    return formatCoordinatesLabel(accommodation.locationLat, accommodation.locationLng);
   }
 
   return '';
@@ -48,16 +51,8 @@ export function getDistanceBetweenCoordinates(
   latitudeB: number,
   longitudeB: number,
 ) {
-  const earthRadiusKm = 6371;
-  const toRadians = (value: number) => (value * Math.PI) / 180;
-  const latitudeDelta = toRadians(latitudeB - latitudeA);
-  const longitudeDelta = toRadians(longitudeB - longitudeA);
-  const startLatitude = toRadians(latitudeA);
-  const endLatitude = toRadians(latitudeB);
-
-  const haversine =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(longitudeDelta / 2) ** 2;
-
-  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  return getCoordinatesDistanceKm(
+    { latitude: latitudeA, longitude: longitudeA },
+    { latitude: latitudeB, longitude: longitudeB },
+  );
 }

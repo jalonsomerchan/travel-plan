@@ -1,4 +1,9 @@
 import type { PlanInput, PlanRecord } from './models';
+import {
+  formatCoordinatesLabel,
+  hasLocationCoordinates,
+  toCoordinateNumber,
+} from './coordinates';
 
 interface PlanLocationFormState {
   query: string;
@@ -9,22 +14,10 @@ interface PlanLocationFormState {
   hasLngValue: boolean;
 }
 
-function toFiniteCoordinate(value: FormDataEntryValue | null) {
-  const rawValue = String(value ?? '').trim();
-
-  if (!rawValue) {
-    return undefined;
-  }
-
-  const coordinate = Number(rawValue);
-
-  return Number.isFinite(coordinate) ? coordinate : undefined;
-}
-
 function getPlanLocationFormState(form: HTMLFormElement): PlanLocationFormState {
   const data = new FormData(form);
-  const lat = toFiniteCoordinate(data.get('locationLat'));
-  const lng = toFiniteCoordinate(data.get('locationLng'));
+  const lat = toCoordinateNumber(data.get('locationLat'), 'latitude');
+  const lng = toCoordinateNumber(data.get('locationLng'), 'longitude');
 
   return {
     query: String(data.get('locationQuery') ?? '').trim(),
@@ -37,7 +30,7 @@ function getPlanLocationFormState(form: HTMLFormElement): PlanLocationFormState 
 }
 
 export function hasPlanLocation(plan: Pick<PlanRecord, 'locationLat' | 'locationLng'>) {
-  return typeof plan.locationLat === 'number' && typeof plan.locationLng === 'number';
+  return hasLocationCoordinates(plan);
 }
 
 export function getPlanLocationLabel(plan: Pick<PlanRecord, 'locationName' | 'locationLat' | 'locationLng'>) {
@@ -46,7 +39,7 @@ export function getPlanLocationLabel(plan: Pick<PlanRecord, 'locationName' | 'lo
   }
 
   if (hasPlanLocation(plan)) {
-    return `${plan.locationLat?.toFixed(5)}, ${plan.locationLng?.toFixed(5)}`;
+    return formatCoordinatesLabel(plan.locationLat, plan.locationLng);
   }
 
   return '';

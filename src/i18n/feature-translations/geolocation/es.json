@@ -1,4 +1,6 @@
 {
   "geolocation.error.unsupported": "Tu navegador no permite obtener la ubicación actual.",
+  "geolocation.error.denied": "Has denegado el permiso de ubicación. Puedes seguir usando el listado sin compartirla.",
+  "geolocation.error.timeout": "La petición de ubicación ha tardado demasiado. Inténtalo de nuevo.",
   "geolocation.error.unavailable": "No se ha podido obtener tu ubicación actual. Revisa los permisos o inténtalo de nuevo."
 }

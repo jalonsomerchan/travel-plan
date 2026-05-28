@@ -1,8 +1,6 @@
 import type { Locale } from '../../config/site';
-import {
-  getDistanceBetweenCoordinates,
-  hasAccommodationLocation,
-} from '../../lib/app/accommodation';
+import { hasAccommodationLocation } from '../../lib/app/accommodation';
+import { getDistanceBetweenCoordinates } from '../../lib/app/coordinates';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDistance, formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
 import {
@@ -146,10 +144,11 @@ function getAccommodationDistanceLabel(locale: Locale, trip: TripRecord | null, 
   }
 
   const distanceKm = getDistanceBetweenCoordinates(
-    trip.accommodation.locationLat,
-    trip.accommodation.locationLng,
-    plan.locationLat,
-    plan.locationLng,
+    {
+      latitude: trip.accommodation.locationLat,
+      longitude: trip.accommodation.locationLng,
+    },
+    { latitude: plan.locationLat, longitude: plan.locationLng },
   );
 
   return formatDistance(distanceKm, locale);
@@ -165,10 +164,8 @@ function getCurrentLocationDistanceLabel(
   }
 
   const distanceKm = getDistanceBetweenCoordinates(
-    userLocation.latitude,
-    userLocation.longitude,
-    plan.locationLat,
-    plan.locationLng,
+    userLocation,
+    { latitude: plan.locationLat, longitude: plan.locationLng },
   );
 
   return formatDistance(distanceKm, locale);

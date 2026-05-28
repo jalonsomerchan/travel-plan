@@ -10,6 +10,7 @@ Incluye:
 - Vista de detalle para cada plan.
 - Calendario mensual por viaje.
 - Calendario global de todos los viajes.
+- Vista global “Ahora” con planes pendientes cercanos y mapa minimizable.
 - Vista de mapa por viaje con Leaflet.
 - Localización de planes con búsqueda sobre OpenStreetMap.
 - Wizard de sugerencias de planes con IA autenticada dentro de cada viaje.
@@ -103,6 +104,7 @@ src/
 - `/app/plan/?trip=ID&plan=ID`: detalle de plan.
 - `/app/calendar/?trip=ID`: calendario del viaje.
 - `/app/map/?trip=ID`: mapa del viaje.
+- `/app/today/`: vista global “Ahora”.
 - `/app/trip-plan-suggestions/?trip=ID`: wizard IA para proponer planes del viaje.
 - `/app/calendar/all/`: calendario global.
 

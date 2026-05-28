@@ -3,14 +3,15 @@ import {
   defaultTodayFilters,
   getTodayItems,
   matchesTodayFilters,
+  type TodayDataState,
   type TodayFilters,
   type TodayLocationState,
   type TodayPlanItem,
 } from '../../lib/app/global-today';
 import { escapeHtml } from '../../lib/app/dom';
-import { formatDistance, formatPlanMoment } from '../../lib/app/format';
+import { formatDistance, formatFriendlyDate, formatPlanMoment } from '../../lib/app/format';
 import { getPlanNameWithFlagsHtml } from '../../lib/app/plan-flags';
-import type { PlanRecord, PlanStatus, TripRecord } from '../../lib/app/models';
+import type { PlanStatus, TripRecord } from '../../lib/app/models';
 import { getPlanCategoryDotStyle } from '../../lib/app/plan-category-colors';
 import { getPlanLocationLabel } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
@@ -19,7 +20,6 @@ import {
   getCategoryOptions,
   getPageTranslator,
   getPlanStatusLabel,
-  getPlanStatusOptions,
   getPlanStatusTone,
 } from './shared';
 import { ensureListViewToggle } from './list-view-mode';
@@ -29,17 +29,20 @@ export function getTodayFilters(): TodayFilters {
   const trip = document.querySelector<HTMLSelectElement>('[data-today-filter-trip]');
   const category = document.querySelector<HTMLSelectElement>('[data-today-filter-category]');
   const status = document.querySelector<HTMLSelectElement>('[data-today-filter-status]');
-  const dateMode = document.querySelector<HTMLSelectElement>('[data-today-filter-date]');
-  const locationMode = document.querySelector<HTMLSelectElement>('[data-today-filter-location]');
+  const distance = document.querySelector<HTMLSelectElement>('[data-today-filter-distance]');
+  const date = document.querySelector<HTMLInputElement>('[data-today-filter-date]');
+  const includeWithoutDate = document.querySelector<HTMLInputElement>(
+    '[data-today-filter-without-date]',
+  );
 
   return {
     search: search?.value ?? defaultTodayFilters.search,
     tripId: trip?.value ?? defaultTodayFilters.tripId,
     category: category?.value ?? defaultTodayFilters.category,
-    status: status?.value ?? defaultTodayFilters.status,
-    dateMode: (dateMode?.value as TodayFilters['dateMode']) ?? defaultTodayFilters.dateMode,
-    locationMode:
-      (locationMode?.value as TodayFilters['locationMode']) ?? defaultTodayFilters.locationMode,
+    status: (status?.value as TodayFilters['status']) ?? defaultTodayFilters.status,
+    maxDistanceKm: distance?.value ?? defaultTodayFilters.maxDistanceKm,
+    date: date?.value ?? defaultTodayFilters.date,
+    includeWithoutDate: includeWithoutDate?.checked ?? defaultTodayFilters.includeWithoutDate,
   };
 }
 
@@ -47,7 +50,6 @@ function renderSelectOptions(locale: Locale, trips: TripRecord[]) {
   const t = getPageTranslator(locale);
   const tripSelect = document.querySelector<HTMLSelectElement>('[data-today-filter-trip]');
   const categorySelect = document.querySelector<HTMLSelectElement>('[data-today-filter-category]');
-  const statusSelect = document.querySelector<HTMLSelectElement>('[data-today-filter-status]');
 
   if (tripSelect) {
     const currentValue = tripSelect.value || 'all';
@@ -70,40 +72,55 @@ function renderSelectOptions(locale: Locale, trips: TripRecord[]) {
     ].join('');
     categorySelect.value = currentValue;
   }
+}
 
-  if (statusSelect) {
-    const currentValue = statusSelect.value || 'all';
-    const statusOptions = getPlanStatusOptions(locale).filter(
-      (item) => item.value !== 'visited' && item.value !== 'discarded',
-    );
+function getLocationStatusMessage(locale: Locale, state: TodayLocationState) {
+  const t = getPageTranslator(locale);
 
-    statusSelect.innerHTML = [
-      `<option value="all">${escapeHtml(t('trip.filters.allStatuses'))}</option>`,
-      ...statusOptions.map(
-        (item) => `<option value="${item.value}">${escapeHtml(item.label)}</option>`,
-      ),
-    ].join('');
-    statusSelect.value = statusOptions.some((item) => item.value === currentValue)
-      ? currentValue
-      : 'all';
+  switch (state.status) {
+    case 'locating':
+      return t('today.location.loading');
+    case 'ready':
+      return t('today.location.ready');
+    case 'imprecise':
+      return t('today.location.imprecise');
+    case 'unsupported':
+      return t('geolocation.error.unsupported');
+    case 'denied':
+      return t('geolocation.error.denied');
+    case 'timeout':
+      return t('geolocation.error.timeout');
+    case 'unavailable':
+      return t('geolocation.error.unavailable');
+    default:
+      return '';
   }
 }
 
 function renderLocationState(locale: Locale, state: TodayLocationState) {
-  const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-today-location-status]');
   const button = document.querySelector<HTMLButtonElement>('[data-today-location-action]');
-  const label = state.isLoading
-    ? t('today.location.loading')
-    : state.errorKey
-      ? t(state.errorKey)
-      : state.location
-        ? t('today.location.ready')
-        : '';
+  const distanceSelect = document.querySelector<HTMLSelectElement>('[data-today-filter-distance]');
+  const distanceHint = document.querySelector<HTMLElement>('[data-today-distance-hint]');
+  const label = getLocationStatusMessage(locale, state);
+  const hasLocation = Boolean(state.location);
 
   if (button) {
-    button.disabled = state.isLoading;
-    button.setAttribute('aria-busy', state.isLoading ? 'true' : 'false');
+    button.disabled = state.status === 'locating';
+    button.setAttribute('aria-busy', state.status === 'locating' ? 'true' : 'false');
+  }
+
+  if (distanceSelect) {
+    distanceSelect.disabled = !hasLocation;
+    if (!hasLocation) {
+      distanceSelect.value = 'all';
+    }
+  }
+
+  if (distanceHint) {
+    distanceHint.textContent = hasLocation
+      ? getPageTranslator(locale)('today.filters.distanceReady')
+      : getPageTranslator(locale)('today.filters.distanceHint');
   }
 
   if (!target) {
@@ -112,10 +129,23 @@ function renderLocationState(locale: Locale, state: TodayLocationState) {
 
   target.hidden = !label;
   target.textContent = label;
-  target.dataset.tone = state.errorKey ? 'danger' : state.location ? 'success' : 'info';
+  target.dataset.tone =
+    state.status === 'ready'
+      ? 'success'
+      : state.status === 'imprecise'
+        ? 'warning'
+        : state.status === 'idle'
+          ? 'info'
+          : 'danger';
 }
 
-function renderSummary(locale: Locale, visibleItems: TodayPlanItem[], activeTrips: TripRecord[]) {
+function renderSummary(
+  locale: Locale,
+  visibleItems: TodayPlanItem[],
+  allItems: TodayPlanItem[],
+  trips: TripRecord[],
+  dataState: TodayDataState,
+) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-today-summary]');
 
@@ -123,13 +153,20 @@ function renderSummary(locale: Locale, visibleItems: TodayPlanItem[], activeTrip
     return;
   }
 
+  const loadingLabel = dataState.tripsLoaded
+    ? dataState.loadingTripIds.length > 0
+      ? t('today.summary.loadingPlans').replace('{count}', String(dataState.loadingTripIds.length))
+      : ''
+    : t('common.loading');
   const label = t('today.summary')
     .replace('{plans}', String(visibleItems.length))
-    .replace('{trips}', String(activeTrips.length));
+    .replace('{total}', String(allItems.length))
+    .replace('{trips}', String(trips.length));
 
   target.innerHTML = `
-    <div class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-3 text-sm font-semibold text-[var(--color-text-muted)]">
-      ${escapeHtml(label)}
+    <div class="grid gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-3 text-sm font-semibold text-[var(--color-text-muted)]">
+      <p>${escapeHtml(label)}</p>
+      ${loadingLabel ? `<p class="text-xs text-[var(--color-text-soft)]">${escapeHtml(loadingLabel)}</p>` : ''}
     </div>
   `;
 }
@@ -148,18 +185,21 @@ function renderPlanCard(locale: Locale, item: TodayPlanItem) {
     typeof item.distanceKm === 'number' ? formatDistance(item.distanceKm, locale) : '';
   const planUrl = getAppUrl(locale, 'plan', { trip: item.trip.id, plan: item.plan.id });
   const tripUrl = getAppUrl(locale, 'trip', { trip: item.trip.id });
+  const tripDateRange = `${formatFriendlyDate(item.trip.startDate, locale)} - ${formatFriendlyDate(item.trip.endDate, locale)}`;
 
   return `
     <article class="app-card-shell min-w-0 overflow-hidden" data-list-card>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
           <p class="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-primary)]">${escapeHtml(item.trip.name)}</p>
+          <p class="mt-1 text-xs font-semibold text-[var(--color-text-soft)]">${escapeHtml(tripDateRange)}</p>
           <a class="mt-2 block min-w-0" href="${planUrl}">
             <h3 class="min-w-0 text-lg font-black leading-tight text-[var(--color-text)]">${getPlanNameWithFlagsHtml(item.plan, t)}</h3>
           </a>
         </div>
         <span data-list-detail>${renderStatusPill(locale, item.plan.status)}</span>
       </div>
+      ${item.plan.description ? `<p class="mt-3 text-sm text-[var(--color-text-muted)]" data-list-detail>${escapeHtml(item.plan.description)}</p>` : ''}
       <dl class="mt-4 grid gap-3 text-sm text-[var(--color-text-muted)] sm:grid-cols-2" data-list-detail>
         <div>
           <dt class="font-bold text-[var(--color-text)]">${escapeHtml(t('trip.planCard.type'))}</dt>
@@ -216,8 +256,8 @@ function renderList(
   locale: Locale,
   allItems: TodayPlanItem[],
   visibleItems: TodayPlanItem[],
-  activeTrips: TripRecord[],
-  locationState: TodayLocationState,
+  trips: TripRecord[],
+  dataState: TodayDataState,
 ) {
   const t = getPageTranslator(locale);
   const target = document.querySelector<HTMLElement>('[data-today-list]');
@@ -226,10 +266,20 @@ function renderList(
     return;
   }
 
+  if (!dataState.tripsLoaded) {
+    target.innerHTML = renderEmpty(locale, 'common.loading');
+    return;
+  }
+
   ensureListViewToggle(locale, target);
 
-  if (activeTrips.length === 0) {
+  if (trips.length === 0) {
     target.innerHTML = renderEmpty(locale, 'today.empty.trips');
+    return;
+  }
+
+  if (allItems.length === 0 && dataState.loadingTripIds.length > 0) {
+    target.innerHTML = renderEmpty(locale, 'common.loading');
     return;
   }
 
@@ -246,28 +296,48 @@ function renderList(
   const located = visibleItems.filter((item) => typeof item.distanceKm === 'number');
   const unlocated = visibleItems.filter((item) => typeof item.distanceKm !== 'number');
 
-  target.innerHTML = locationState.location
-    ? [
-        renderPlanSection(locale, t('today.group.nearby'), located),
-        renderPlanSection(locale, t('today.group.withoutLocation'), unlocated),
-      ].join('')
-    : renderPlanSection(locale, t('today.group.all'), visibleItems);
+  target.innerHTML = [
+    renderPlanSection(locale, t('today.group.nearby'), located),
+    renderPlanSection(locale, t('today.group.withoutLocation'), unlocated),
+  ]
+    .filter(Boolean)
+    .join('');
+}
+
+export function renderMapPanelState(locale: Locale) {
+  const details = document.querySelector<HTMLDetailsElement>('[data-today-map-panel]');
+  const toggleState = document.querySelector<HTMLElement>('[data-today-map-toggle-state]');
+  const toggleButton = document.querySelector<HTMLButtonElement>('[data-today-map-toggle]');
+
+  if (!details || !toggleState || !toggleButton) {
+    return;
+  }
+
+  const t = getPageTranslator(locale);
+  const isOpen = details.open;
+
+  toggleState.textContent = isOpen ? t('today.map.expanded') : t('today.map.collapsed');
+  toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
 export function renderGlobalTodayPage(
   locale: Locale,
   trips: TripRecord[],
-  plansByTrip: Record<string, PlanRecord[]>,
+  plansByTrip: Record<string, import('../../lib/app/models').PlanRecord[]>,
   locationState: TodayLocationState,
+  dataState: TodayDataState,
 ) {
-  const { activeTrips, items } = getTodayItems(trips, plansByTrip, locationState.location);
+  const { items } = getTodayItems(trips, plansByTrip, locationState.location);
   const filters = getTodayFilters();
   const visibleItems = items.filter((item) => matchesTodayFilters(item, filters));
 
-  renderSelectOptions(locale, activeTrips);
+  renderSelectOptions(locale, trips);
   renderLocationState(locale, locationState);
-  renderSummary(locale, visibleItems, activeTrips);
-  renderList(locale, items, visibleItems, activeTrips, locationState);
+  renderSummary(locale, visibleItems, items, trips, dataState);
+  renderList(locale, items, visibleItems, trips, dataState);
+  renderMapPanelState(locale);
+
+  return { items, visibleItems };
 }
 
 export function renderGlobalTodayTripsError(locale: Locale) {

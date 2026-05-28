@@ -22,7 +22,16 @@ No se deben añadir capas que requieran tokens privados en el cliente. Si una ca
 
 ## Ubicación actual
 
-El botón de ubicación usa `navigator.geolocation.getCurrentPosition()` solo después de una interacción explícita del usuario. Debe manejar navegador no compatible, permiso denegado, timeout y coordenadas inválidas. El marcador de usuario usa un icono propio para diferenciarse de planes, alojamiento y POIs.
+El botón de ubicación usa `navigator.geolocation.getCurrentPosition()` solo después de una interacción explícita del usuario. Debe manejar navegador no compatible, permiso denegado, timeout, coordenadas inválidas y ubicaciones con precisión baja.
+
+Reglas obligatorias:
+
+- la ubicación actual del usuario no se guarda en Firestore ni en ninguna base de datos;
+- se usa solo en memoria local para ordenar planes, acotar filtros por distancia y dibujar el marcador temporal en el mapa;
+- la UI debe seguir funcionando en modo lista aunque no haya permiso, soporte o coordenadas válidas;
+- si la precisión es baja, debe mostrarse un aviso textual accesible y no solo un cambio de color.
+
+El marcador de usuario usa un icono o estilo propio para diferenciarse de planes, alojamiento y POIs.
 
 ## Puntos de interés
 

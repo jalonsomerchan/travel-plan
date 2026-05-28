@@ -1,4 +1,5 @@
 import type { TripInput } from './models';
+import { hasLocationCoordinates, toCoordinateNumber } from './coordinates';
 
 interface TripLocationFormState {
   query: string;
@@ -9,22 +10,10 @@ interface TripLocationFormState {
   hasLngValue: boolean;
 }
 
-function toFiniteCoordinate(value: FormDataEntryValue | null) {
-  const rawValue = String(value ?? '').trim();
-
-  if (!rawValue) {
-    return undefined;
-  }
-
-  const coordinate = Number(rawValue);
-
-  return Number.isFinite(coordinate) ? coordinate : undefined;
-}
-
 function getTripLocationFormState(form: HTMLFormElement): TripLocationFormState {
   const data = new FormData(form);
-  const lat = toFiniteCoordinate(data.get('locationLat'));
-  const lng = toFiniteCoordinate(data.get('locationLng'));
+  const lat = toCoordinateNumber(data.get('locationLat'), 'latitude');
+  const lng = toCoordinateNumber(data.get('locationLng'), 'longitude');
 
   return {
     query: String(data.get('locationQuery') ?? '').trim(),
@@ -37,7 +26,7 @@ function getTripLocationFormState(form: HTMLFormElement): TripLocationFormState 
 }
 
 export function hasTripLocationCoordinates(trip: Pick<TripInput, 'locationLat' | 'locationLng'>) {
-  return typeof trip.locationLat === 'number' && typeof trip.locationLng === 'number';
+  return hasLocationCoordinates(trip);
 }
 
 export function getTripLocationValidationKey(form: HTMLFormElement) {

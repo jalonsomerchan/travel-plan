@@ -16,11 +16,14 @@ function readText(path) {
 describe('trip location coordinate saving', () => {
   it('keeps a shared validation helper for trip location coordinates', () => {
     const helper = readText('src/lib/app/trip-location.ts');
+    const coordinates = readText('src/lib/app/coordinates.ts');
 
     assert.match(helper, /getTripLocationValidationKey/);
     assert.match(helper, /getTripLocationInputFromForm/);
     assert.match(helper, /hasTripLocationCoordinates/);
-    assert.match(helper, /locationQuery/);
+    assert.match(helper, /toCoordinateNumber/);
+    assert.match(helper, /hasLocationCoordinates/);
+    assert.match(coordinates, /toCoordinateNumber/);
     assert.match(helper, /trip\.form\.locationSelectionRequired/);
     assert.match(helper, /trip\.form\.locationInvalidCoordinates/);
   });

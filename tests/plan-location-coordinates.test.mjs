@@ -16,10 +16,14 @@ function readText(path) {
 describe('plan location coordinate saving', () => {
   it('keeps a shared validation helper for plan location coordinates', () => {
     const helper = readText('src/lib/app/plan-location.ts');
+    const coordinates = readText('src/lib/app/coordinates.ts');
 
     assert.match(helper, /getPlanLocationValidationKey/);
-    assert.match(helper, /toFiniteCoordinate/);
-    assert.match(helper, /locationQuery/);
+    assert.match(helper, /toCoordinateNumber/);
+    assert.match(helper, /hasLocationCoordinates/);
+    assert.match(coordinates, /toCoordinateNumber/);
+    assert.match(coordinates, /isValidLatitude/);
+    assert.match(coordinates, /isValidLongitude/);
     assert.match(helper, /plan\.location\.selectionRequired/);
     assert.match(helper, /plan\.location\.invalidCoordinates/);
   });

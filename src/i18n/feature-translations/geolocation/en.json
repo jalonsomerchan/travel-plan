@@ -1,4 +1,6 @@
 {
   "geolocation.error.unsupported": "Your browser cannot get your current location.",
+  "geolocation.error.denied": "You denied location access. You can keep using the list without sharing it.",
+  "geolocation.error.timeout": "The location request took too long. Try again.",
   "geolocation.error.unavailable": "We could not get your current location. Check permissions or try again."
 }

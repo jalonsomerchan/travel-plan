@@ -1,9 +1,10 @@
 import type { User } from 'firebase/auth';
 import type { Locale } from '../../config/site';
 import {
+  defaultTodayDataState,
   defaultTodayLocationState,
-  getLocalTodayIsoDate,
-  isTripActiveOnDate,
+  isLocationImprecise,
+  type TodayDataState,
   type TodayLocationState,
 } from '../../lib/app/global-today';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
@@ -13,7 +14,11 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeUserTrips } from '../../lib/firebase/trips';
 import { ensureFirebaseReady, redirectHome } from './shared';
-import { renderGlobalTodayPage, renderGlobalTodayTripsError } from './global-today-render';
+import {
+  renderGlobalTodayPage,
+  renderGlobalTodayTripsError,
+} from './global-today-render';
+import { createGlobalTodayMapController } from './global-today-map';
 import { initListViewMode } from './list-view-mode';
 
 function logTripsPermissionError(user: User | null) {
@@ -30,28 +35,51 @@ function logTripsPermissionError(user: User | null) {
 export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
   const filtersForm = document.querySelector<HTMLFormElement>('[data-today-filters]');
   const locationButton = document.querySelector<HTMLButtonElement>('[data-today-location-action]');
+  const mapToggleButton = document.querySelector<HTMLButtonElement>('[data-today-map-toggle]');
+  const mapPanel = document.querySelector<HTMLDetailsElement>('[data-today-map-panel]');
   const subscriptions = createSubscriptionScope();
   const planSubscriptions = createSubscriptionScope();
+  const mapController = createGlobalTodayMapController(locale);
   let trips: TripRecord[] = [];
   let plansByTrip: Record<string, PlanRecord[]> = {};
   let locationState: TodayLocationState = { ...defaultTodayLocationState };
+  let dataState: TodayDataState = { ...defaultTodayDataState };
 
   if (!ensureFirebaseReady(locale)) {
     return;
   }
 
   initListViewMode(locale);
-  const sync = () => renderGlobalTodayPage(locale, trips, plansByTrip, locationState);
+
+  const sync = () => {
+    const result = renderGlobalTodayPage(locale, trips, plansByTrip, locationState, dataState);
+
+    mapController.sync({
+      isOpen: Boolean(mapPanel?.open),
+      items: result.visibleItems,
+      locationState,
+    });
+  };
 
   filtersForm?.addEventListener('input', sync);
   filtersForm?.addEventListener('change', sync);
   filtersForm?.addEventListener('submit', (event) => event.preventDefault());
 
+  mapToggleButton?.addEventListener('click', () => {
+    if (!mapPanel) {
+      return;
+    }
+
+    mapPanel.open = !mapPanel.open;
+    sync();
+  });
+
+  mapPanel?.addEventListener('toggle', sync);
+
   locationButton?.addEventListener('click', () => {
     if (!('geolocation' in navigator)) {
       locationState = {
-        isLoading: false,
-        errorKey: 'geolocation.error.unsupported',
+        status: 'unsupported',
         location: null,
       };
       sync();
@@ -59,28 +87,33 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
     }
 
     locationState = {
-      isLoading: true,
-      errorKey: null,
+      status: 'locating',
       location: locationState.location,
     };
     sync();
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const nextLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracyMeters: position.coords.accuracy,
+        };
+
         locationState = {
-          isLoading: false,
-          errorKey: null,
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          },
+          status: isLocationImprecise(position.coords.accuracy) ? 'imprecise' : 'ready',
+          location: nextLocation,
         };
         sync();
       },
-      () => {
+      (error) => {
         locationState = {
-          isLoading: false,
-          errorKey: 'geolocation.error.unavailable',
+          status:
+            error.code === error.PERMISSION_DENIED
+              ? 'denied'
+              : error.code === error.TIMEOUT
+                ? 'timeout'
+                : 'unavailable',
           location: null,
         };
         sync();
@@ -92,6 +125,7 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
   const resetState = () => {
     trips = [];
     plansByTrip = {};
+    dataState = { ...defaultTodayDataState, tripsLoaded: true };
     planSubscriptions.clear();
   };
 
@@ -111,22 +145,34 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
       return;
     }
 
+    dataState = { ...defaultTodayDataState };
+    sync();
+
     subscriptions.add(
       subscribeUserTrips(
         user.uid,
         (items) => {
           trips = items;
-          planSubscriptions.clear();
           plansByTrip = {};
+          planSubscriptions.clear();
+          dataState = {
+            tripsLoaded: true,
+            loadingTripIds: items.map((trip) => trip.id),
+          };
           sync();
 
-          const today = getLocalTodayIsoDate();
-          const activeTrips = trips.filter((trip) => isTripActiveOnDate(trip, today));
+          if (items.length === 0) {
+            return;
+          }
 
-          activeTrips.forEach((trip) => {
+          items.forEach((trip) => {
             planSubscriptions.add(
               subscribeTripPlans(trip.id, (plans) => {
                 plansByTrip[trip.id] = plans;
+                dataState = {
+                  tripsLoaded: true,
+                  loadingTripIds: dataState.loadingTripIds.filter((itemId) => itemId !== trip.id),
+                };
                 sync();
               }),
             );

@@ -21,6 +21,7 @@ describe('global today view', () => {
       'src/components/pages/GlobalTodayPage.astro',
       'src/scripts/pages/global-today.ts',
       'src/scripts/pages/global-today-render.ts',
+      'src/scripts/pages/global-today-map.ts',
       'src/lib/app/global-today.ts',
     ].forEach((path) => {
       assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
@@ -43,19 +44,25 @@ describe('global today view', () => {
     const ui = readText('src/i18n/ui.ts');
 
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
-    assert.equal(es['appNav.today'], 'Hoy');
-    assert.equal(en['appNav.today'], 'Today');
+    assert.equal(es['appNav.today'], 'Ahora');
+    assert.equal(en['appNav.today'], 'Now');
     assert.match(ui, /feature-translations\/global-today\/es\.json/);
     assert.match(ui, /feature-translations\/global-today\/en\.json/);
   });
 
-  it('filters global today plans to active trips and non-completed plans', () => {
+  it('filters global today plans to pending items across all visible trips', () => {
     const helper = readText('src/lib/app/global-today.ts');
+    const page = readText('src/components/pages/GlobalTodayPage.astro');
+    const map = readText('src/scripts/pages/global-today-map.ts');
 
-    assert.match(helper, /isTripActiveOnDate/);
-    assert.match(helper, /trip\.startDate <= today/);
-    assert.match(helper, /trip\.endDate >= today/);
-    assert.match(helper, /plan\.status !== 'visited'/);
-    assert.match(helper, /!plan\.date \|\| plan\.date === today/);
+    assert.match(helper, /filter\(isPendingPlan\)/);
+    assert.match(helper, /trips\.flatMap/);
+    assert.match(helper, /status: 'pending'/);
+    assert.match(helper, /maxDistanceKm/);
+    assert.match(helper, /includeWithoutDate/);
+    assert.match(page, /data-today-map-panel/);
+    assert.match(page, /data-today-map-toggle/);
+    assert.match(map, /today\.map\.onlyUserLocation/);
+    assert.match(map, /today\.map\.withoutUserLocation/);
   });
 });

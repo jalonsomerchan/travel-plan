@@ -7,7 +7,7 @@ import {
   type NearbyPoiCategoryConfig,
   type NearbyPoiTagFilter,
 } from '../../config/poi';
-import { getDistanceBetweenCoordinates } from './accommodation';
+import { formatCoordinatesLabel, getDistanceBetweenCoordinates } from './coordinates';
 
 export type NearbyPoiCategoryId = (typeof nearbyPoiCategories)[number]['id'];
 
@@ -105,10 +105,6 @@ function getCoordinates(element: OverpassElement) {
   }
 
   return null;
-}
-
-function formatCoordinatesLabel(latitude: number, longitude: number) {
-  return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 }
 
 function matchesFilter(tags: Record<string, string>, filter: NearbyPoiTagFilter) {
@@ -238,10 +234,8 @@ export async function searchNearbyPois(
       }
 
       const distanceKm = getDistanceBetweenCoordinates(
-        normalizedParams.latitude,
-        normalizedParams.longitude,
-        coordinates.latitude,
-        coordinates.longitude,
+        { latitude: normalizedParams.latitude, longitude: normalizedParams.longitude },
+        coordinates,
       );
 
       normalizedResults.set(`${element.type}-${element.id}`, {
