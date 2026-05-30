@@ -42,7 +42,7 @@ const visibleBreadcrumbs = shouldStartAtDashboard ? breadcrumbs.slice(1) : bread
   </div>
   <section class:list={shellClasses}>
     {visibleBreadcrumbs.length > 0 && <Breadcrumbs items={visibleBreadcrumbs} />}
-    {loading && <LoadingState class="mt-6" label={loadingLabel} data-app-loading />}
+    {loading && <LoadingState class="app-loading-screen" label={loadingLabel} data-app-loading />}
     <div data-app-content={loading ? 'loading' : undefined} hidden={loading}>
       <div class="app-shell-layout">
         <div class="app-shell-copy">

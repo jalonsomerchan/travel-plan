@@ -258,6 +258,19 @@ dialog::backdrop {
   gap: 1rem;
 }
 
+.app-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 80);
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100svh;
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--color-bg) 88%, var(--color-surface-raised) 12%);
+  box-shadow: none;
+}
+
 .app-shell-topbar {
   display: flex;
   justify-content: space-between;
