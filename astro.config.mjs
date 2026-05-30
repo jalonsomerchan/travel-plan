@@ -31,6 +31,15 @@ export default defineConfig({
           assetFileNames: 'assets/[name].[hash][extname]',
           chunkFileNames: 'assets/[name].[hash].js',
           entryFileNames: 'assets/[name].[hash].js',
+          manualChunks(id) {
+            if (id.includes('/node_modules/firebase/') || id.includes('/node_modules/@firebase/')) {
+              return 'vendor-firebase';
+            }
+
+            if (id.includes('/node_modules/leaflet/')) {
+              return 'vendor-leaflet';
+            }
+          },
         },
       },
     },

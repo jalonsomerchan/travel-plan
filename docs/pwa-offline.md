@@ -7,6 +7,7 @@ La app incluye una capa PWA para que pueda instalarse y reutilizar datos ya carg
 - Manifest web mejorado con `id`, `scope`, `start_url`, categorías y modo `standalone`.
 - Metadatos móviles en `BaseLayout.astro`.
 - Service worker de limpieza para desregistrar versiones antiguas y borrar cachés heredadas.
+- La limpieza legacy de cachés, service workers antiguos e IndexedDB se programa tras `load` y en idle para no competir con el primer render.
 - Indicador accesible de conexión para avisar cuando la app está offline o vuelve a estar online.
 - Sin caché de shell ni fallback de navegación offline: se prioriza servir la versión online real para evitar estados obsoletos.
 - Sin persistencia offline avanzada de Firestore: `getFirebaseDb()` usa solo la inicialización central con fallback de transporte.
@@ -64,6 +65,7 @@ Regla obligatoria para el proyecto:
 - En `activate`, borra caches, se desregistra y reclama clientes para dejar de interceptar tráfico.
 - En `fetch`, no intercepta peticiones.
 - La respuesta de `sw.js` usa `Cache-Control: no-store, max-age=0`.
+- El registro y la limpieza desde cliente se ejecutan despues de `load` y en idle para reducir trabajo durante el arranque.
 
 ## Límites actuales
 

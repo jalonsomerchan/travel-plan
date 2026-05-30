@@ -17,4 +17,12 @@ describe('asset cache busting', () => {
     assert.match(astroConfig, /chunkFileNames:\s*['"]assets\/\[name\]\.\[hash\]\.js['"]/);
     assert.match(astroConfig, /entryFileNames:\s*['"]assets\/\[name\]\.\[hash\]\.js['"]/);
   });
+
+  it('keeps heavy vendor dependencies in reusable cacheable chunks', () => {
+    const astroConfig = readText('astro.config.mjs');
+
+    assert.match(astroConfig, /manualChunks/);
+    assert.match(astroConfig, /vendor-firebase/);
+    assert.match(astroConfig, /vendor-leaflet/);
+  });
 });
