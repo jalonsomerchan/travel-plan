@@ -7,14 +7,23 @@ export interface PlanLinksValidation {
   errorKey?: string;
 }
 
-function sanitizePlanLinkUrl(value: string) {
+export function sanitizeExternalLinkUrl(value: string) {
   return value
     .trim()
     .replace(/^[[("'`\s]+/, '')
-    .replace(/[)"'`\]\s]+$/g, '')
+    .replace(/[")"'`\]\s]+$/g, '')
     .replace(/\]+\(https?:\/\/.*$/i, '')
     .replace(/%22.*$/i, '')
     .replace(/[.,;:]+$/g, '');
+}
+
+export function isSafeExternalUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return allowedProtocols.has(url.protocol);
+  } catch {
+    return false;
+  }
 }
 
 export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
@@ -29,7 +38,7 @@ export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
       }
 
       const record = item as Record<string, unknown>;
-      const url = sanitizePlanLinkUrl(String(record.url ?? ''));
+      const url = sanitizeExternalLinkUrl(String(record.url ?? ''));
       const label = String(record.label ?? '').trim() || url;
 
       if (!url) {
@@ -42,12 +51,7 @@ export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
 }
 
 export function isSafeExternalPlanUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return allowedProtocols.has(url.protocol);
-  } catch {
-    return false;
-  }
+  return isSafeExternalUrl(value);
 }
 
 export function validatePlanLinks(links: PlanLinkRecord[]): PlanLinksValidation {
