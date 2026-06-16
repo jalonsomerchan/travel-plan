@@ -24,6 +24,12 @@ jobs:
     name: Test and build
     runs-on: ubuntu-latest
     steps:
+      - name: Diagnose tests early
+        run: |
+          git clone --quiet --depth=1 --branch "$GITHUB_HEAD_REF" "https://github.com/$GITHUB_REPOSITORY.git" .
+          npm ci --silent
+          npm test
+
       - name: Checkout
         uses: actions/checkout@v4
 
