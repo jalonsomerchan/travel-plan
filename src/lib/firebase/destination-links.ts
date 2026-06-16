@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import type { DestinationLinkInput, DestinationLinkRecord } from '../app/models';
 import {
   normalizeDestinationLinkInput,
@@ -6,6 +6,14 @@ import {
   validateDestinationLink,
 } from '../app/destination-links';
 import { getFirebaseDb } from './config';
+
+function createDestinationLinkId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `destination-link-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 function getDestinationLinkWriteData(input: DestinationLinkInput) {
   const normalized = normalizeDestinationLinkInput(input);
@@ -23,8 +31,13 @@ function getDestinationLinkWriteData(input: DestinationLinkInput) {
   };
 }
 
-function mapDestinationLinkRecord(snapshot: { id: string; data: () => Record<string, unknown> }): DestinationLinkRecord | null {
-  const data = snapshot.data();
+function mapDestinationLinkValue(value: unknown): DestinationLinkRecord | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const data = value as Record<string, unknown>;
+  const id = String(data.id ?? '').trim();
   const normalized = normalizeDestinationLinkInput({
     title: String(data.title ?? ''),
     url: String(data.url ?? ''),
@@ -32,14 +45,45 @@ function mapDestinationLinkRecord(snapshot: { id: string; data: () => Record<str
     notes: data.notes ? String(data.notes) : undefined,
   });
 
-  if (!normalized.title || !normalized.url) {
+  if (!id || !normalized.title || !normalized.url) {
     return null;
   }
 
   return {
-    id: snapshot.id,
+    id,
     ...normalized,
   };
+}
+
+function mapDestinationLinks(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return sortDestinationLinks(
+    value
+      .map(mapDestinationLinkValue)
+      .filter((link): link is DestinationLinkRecord => Boolean(link)),
+  );
+}
+
+async function getTripDestinationLinks(tripId: string) {
+  const db = getFirebaseDb();
+  const snapshot = await getDoc(doc(db, 'trips', tripId));
+
+  return mapDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined);
+}
+
+async function saveTripDestinationLinks(tripId: string, links: DestinationLinkRecord[]) {
+  const db = getFirebaseDb();
+
+  await updateDoc(doc(db, 'trips', tripId), {
+    destinationLinks: links.map((link) => ({
+      id: link.id,
+      ...getDestinationLinkWriteData(link),
+    })),
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export function subscribeTripDestinationLinks(
@@ -47,18 +91,10 @@ export function subscribeTripDestinationLinks(
   callback: (links: DestinationLinkRecord[]) => void,
 ) {
   const db = getFirebaseDb();
-  const linksRef = collection(db, 'trips', tripId, 'destinationLinks');
 
   return onSnapshot(
-    linksRef,
-    (snapshot) =>
-      callback(
-        sortDestinationLinks(
-          snapshot.docs
-            .map(mapDestinationLinkRecord)
-            .filter((link): link is DestinationLinkRecord => Boolean(link)),
-        ),
-      ),
+    doc(db, 'trips', tripId),
+    (snapshot) => callback(mapDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined)),
     (error) => {
       console.error('subscribeTripDestinationLinks', error);
     },
@@ -66,14 +102,15 @@ export function subscribeTripDestinationLinks(
 }
 
 export async function createTripDestinationLink(tripId: string, input: DestinationLinkInput) {
-  const db = getFirebaseDb();
-  const linkRef = await addDoc(collection(db, 'trips', tripId, 'destinationLinks'), {
+  const links = await getTripDestinationLinks(tripId);
+  const link: DestinationLinkRecord = {
+    id: createDestinationLinkId(),
     ...getDestinationLinkWriteData(input),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  };
 
-  return linkRef.id;
+  await saveTripDestinationLinks(tripId, sortDestinationLinks([...links, link]));
+
+  return link.id;
 }
 
 export async function updateTripDestinationLink(
@@ -81,16 +118,19 @@ export async function updateTripDestinationLink(
   linkId: string,
   input: DestinationLinkInput,
 ) {
-  const db = getFirebaseDb();
+  const links = await getTripDestinationLinks(tripId);
 
-  await updateDoc(doc(db, 'trips', tripId, 'destinationLinks', linkId), {
-    ...getDestinationLinkWriteData(input),
-    updatedAt: serverTimestamp(),
-  });
+  await saveTripDestinationLinks(
+    tripId,
+    links.map((link) => (link.id === linkId ? { id: linkId, ...getDestinationLinkWriteData(input) } : link)),
+  );
 }
 
 export async function deleteTripDestinationLink(tripId: string, linkId: string) {
-  const db = getFirebaseDb();
+  const links = await getTripDestinationLinks(tripId);
 
-  await deleteDoc(doc(db, 'trips', tripId, 'destinationLinks', linkId));
+  await saveTripDestinationLinks(
+    tripId,
+    links.filter((link) => link.id !== linkId),
+  );
 }
