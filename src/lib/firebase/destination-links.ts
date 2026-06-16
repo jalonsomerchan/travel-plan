@@ -1,4 +1,4 @@
-import { doc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import {
   normalizeDestinationLinkInput,
   normalizeDestinationLinks,
@@ -49,21 +49,6 @@ async function saveTripDestinationLinks(tripId: string, links: DestinationLinkRe
     })),
     updatedAt: serverTimestamp(),
   });
-}
-
-export function subscribeTripDestinationLinks(
-  tripId: string,
-  callback: (links: DestinationLinkRecord[]) => void,
-) {
-  const db = getFirebaseDb();
-
-  return onSnapshot(
-    doc(db, 'trips', tripId),
-    (snapshot) => callback(normalizeDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined)),
-    (error) => {
-      console.error('subscribeTripDestinationLinks', error);
-    },
-  );
 }
 
 export async function createTripDestinationLink(tripId: string, input: DestinationLinkInput) {
