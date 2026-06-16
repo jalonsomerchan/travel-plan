@@ -244,6 +244,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 ## Scripts de cliente por pagina
 
 - `src/scripts/pages/*.ts`: comportamiento de cliente dividido por vista para dashboard, viajes, planes, mapas, checklists, calendario, IA, POIs, equipaje, alojamiento, enlaces utiles del destino e invitaciones.
+- `src/scripts/pages/trip-destination-links.ts`: UI y acciones de enlaces utiles generales dentro de la pagina de un viaje.
 - `src/scripts/maps/*.ts`: integracion de Leaflet, Google Maps, capas, marcadores, visibilidad, geolocalizacion, POIs y controles moviles.
 - `src/scripts/pwa/register-service-worker.ts`: registro del service worker.
 - `src/scripts/pwa/connection-status.ts`: deteccion y publicacion del estado de conexion.
