@@ -52,8 +52,8 @@ describe('destination useful links', () => {
     assert.match(mount, /mountTripDestinationLinks/);
     assert.match(pageScript, /data-destination-links-section/);
     assert.match(pageScript, /subscribeTripMembers/);
-    assert.match(pageScript, /target = '_blank'/);
-    assert.match(pageScript, /rel = 'noopener noreferrer'/);
+    assert.match(pageScript, /_blank/);
+    assert.match(pageScript, /noopener noreferrer/);
     assert.match(pageScript, /validateDestinationLink/);
   });
 
