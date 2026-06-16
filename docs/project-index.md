@@ -83,8 +83,8 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/i18n/translations/en.json`: traducciones globales en ingles.
 - `src/i18n/feature-translations/*/es.json`: traducciones en castellano separadas por funcionalidad.
 - `src/i18n/feature-translations/*/en.json`: traducciones en ingles separadas por funcionalidad.
-- `src/i18n/feature-translations/destination-links.es.json`: traducciones en castellano para enlaces utiles del destino.
-- `src/i18n/feature-translations/destination-links.en.json`: traducciones en ingles para enlaces utiles del destino.
+- `src/i18n/feature-translations/destination-links/es.json`: traducciones en castellano para enlaces utiles del destino.
+- `src/i18n/feature-translations/destination-links/en.json`: traducciones en ingles para enlaces utiles del destino.
 
 ## Layouts, estilos y utilidades base
 
