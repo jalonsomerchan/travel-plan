@@ -1,10 +1,11 @@
 import { doc, getDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
-import type { DestinationLinkInput, DestinationLinkRecord } from '../app/models';
 import {
   normalizeDestinationLinkInput,
+  normalizeDestinationLinks,
   sortDestinationLinks,
   validateDestinationLink,
 } from '../app/destination-links';
+import type { DestinationLinkInput, DestinationLinkRecord } from '../app/models';
 import { getFirebaseDb } from './config';
 
 function createDestinationLinkId() {
@@ -31,47 +32,11 @@ function getDestinationLinkWriteData(input: DestinationLinkInput) {
   };
 }
 
-function mapDestinationLinkValue(value: unknown): DestinationLinkRecord | null {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const data = value as Record<string, unknown>;
-  const id = String(data.id ?? '').trim();
-  const normalized = normalizeDestinationLinkInput({
-    title: String(data.title ?? ''),
-    url: String(data.url ?? ''),
-    category: data.category ? String(data.category) : undefined,
-    notes: data.notes ? String(data.notes) : undefined,
-  });
-
-  if (!id || !normalized.title || !normalized.url) {
-    return null;
-  }
-
-  return {
-    id,
-    ...normalized,
-  };
-}
-
-function mapDestinationLinks(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return sortDestinationLinks(
-    value
-      .map(mapDestinationLinkValue)
-      .filter((link): link is DestinationLinkRecord => Boolean(link)),
-  );
-}
-
 async function getTripDestinationLinks(tripId: string) {
   const db = getFirebaseDb();
   const snapshot = await getDoc(doc(db, 'trips', tripId));
 
-  return mapDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined);
+  return normalizeDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined);
 }
 
 async function saveTripDestinationLinks(tripId: string, links: DestinationLinkRecord[]) {
@@ -94,7 +59,7 @@ export function subscribeTripDestinationLinks(
 
   return onSnapshot(
     doc(db, 'trips', tripId),
-    (snapshot) => callback(mapDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined)),
+    (snapshot) => callback(normalizeDestinationLinks(snapshot.exists() ? snapshot.data().destinationLinks : undefined)),
     (error) => {
       console.error('subscribeTripDestinationLinks', error);
     },
