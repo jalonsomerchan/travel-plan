@@ -16,6 +16,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
+import { normalizeDestinationLinks } from '../app/destination-links';
 import {
   getInviteId,
   isValidInviteEmail,
@@ -184,6 +185,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     accommodation: mapTripAccommodationRecord(data.accommodation),
     parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
     childTrips: mapTripChildSummaries(data.childTrips),
+    destinationLinks: normalizeDestinationLinks(data.destinationLinks),
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
@@ -446,6 +448,7 @@ export async function createTrip(user: User, input: TripInput) {
   const tripData = {
     ...getTripWriteData(input),
     childTrips: [],
+    destinationLinks: [],
     ownerId: user.uid,
     ownerEmail: user.email ?? '',
     memberIds: [user.uid],

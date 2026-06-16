@@ -40,6 +40,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `docs/ai-checklist.md`: checklist para cambios relacionados con IA.
 - `docs/map-providers.md`: proveedores y criterios para mapas.
 - `docs/pwa-offline.md`: comportamiento offline y PWA.
+- `docs/destination-links.md`: convencion de datos y UI para enlaces utiles generales del destino.
 
 ## Archivos publicos
 
@@ -82,6 +83,8 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/i18n/translations/en.json`: traducciones globales en ingles.
 - `src/i18n/feature-translations/*/es.json`: traducciones en castellano separadas por funcionalidad.
 - `src/i18n/feature-translations/*/en.json`: traducciones en ingles separadas por funcionalidad.
+- `src/i18n/feature-translations/destination-links/es.json`: traducciones en castellano para enlaces utiles del destino.
+- `src/i18n/feature-translations/destination-links/en.json`: traducciones en ingles para enlaces utiles del destino.
 
 ## Layouts, estilos y utilidades base
 
@@ -182,6 +185,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/app/global-today.ts`: logica para la vista global de hoy.
 - `src/lib/app/accommodation.ts`: modelo y helpers de alojamiento.
 - `src/lib/app/invite-share.ts`: helpers para compartir invitaciones.
+- `src/lib/app/destination-links.ts`: validacion, normalizacion y ordenacion de enlaces utiles del destino.
 - `src/lib/app/plan-category-colors.ts`: colores por categoria de plan.
 - `src/lib/app/plan-dates.ts`: reglas de fechas de planes.
 - `src/lib/app/plan-flags.ts`: estados y banderas de planes.
@@ -212,6 +216,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/firebase/trip-rest.ts`: operaciones REST auxiliares de viajes.
 - `src/lib/firebase/trip-reads.ts`: lecturas de viajes.
 - `src/lib/firebase/trips.ts`: escrituras y operaciones principales de viajes.
+- `src/lib/firebase/destination-links.ts`: persistencia de enlaces utiles del destino dentro del documento de viaje.
 - `src/lib/firebase/plan-reads.ts`: lecturas de planes.
 - `src/lib/firebase/plans.ts`: escrituras y operaciones principales de planes.
 - `src/lib/firebase/checklists.ts`: persistencia de checklists.
@@ -238,7 +243,8 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 
 ## Scripts de cliente por pagina
 
-- `src/scripts/pages/*.ts`: comportamiento de cliente dividido por vista para dashboard, viajes, planes, mapas, checklists, calendario, IA, POIs, equipaje, alojamiento e invitaciones.
+- `src/scripts/pages/*.ts`: comportamiento de cliente dividido por vista para dashboard, viajes, planes, mapas, checklists, calendario, IA, POIs, equipaje, alojamiento, enlaces utiles del destino e invitaciones.
+- `src/scripts/pages/trip-destination-links.ts`: UI y acciones de enlaces utiles generales dentro de la pagina de un viaje.
 - `src/scripts/maps/*.ts`: integracion de Leaflet, Google Maps, capas, marcadores, visibilidad, geolocalizacion, POIs y controles moviles.
 - `src/scripts/pwa/register-service-worker.ts`: registro del service worker.
 - `src/scripts/pwa/connection-status.ts`: deteccion y publicacion del estado de conexion.
@@ -263,6 +269,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `tests/ios-input-zoom.test.mjs`: prevencion de zoom automatico en iOS.
 - `tests/offline-plan-writes.test.mjs`: escrituras offline de planes.
 - `tests/poi-smoke.test.mjs`: comprobaciones basicas de POIs.
+- `tests/destination-links.test.mjs`: comprobaciones de modelo, persistencia, i18n y UI de enlaces utiles del destino.
 
 ## Archivos generados o locales
 

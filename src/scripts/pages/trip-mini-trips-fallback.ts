@@ -2,6 +2,7 @@ import type { Locale } from '../../config/site';
 import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
+import { mountTripDestinationLinks } from './trip-destination-links';
 import { renderMiniTrips } from './trip-mini-trips';
 import { mountTripPlanOrder } from './trip-plan-order';
 
@@ -47,6 +48,7 @@ export function mountTripMiniTripsFallback({ locale }: { locale: Locale }) {
   const subscriptions = createSubscriptionScope();
 
   mountTripPlanOrder({ locale });
+  mountTripDestinationLinks({ locale });
 
   if (!tripId) {
     return;

@@ -7,14 +7,27 @@ export interface PlanLinksValidation {
   errorKey?: string;
 }
 
-function sanitizePlanLinkUrl(value: string) {
+export function sanitizeExternalLinkUrl(value: string) {
   return value
     .trim()
     .replace(/^[[("'`\s]+/, '')
-    .replace(/[)"'`\]\s]+$/g, '')
+    .replace(/[")"'`\]\s]+$/g, '')
     .replace(/\]+\(https?:\/\/.*$/i, '')
     .replace(/%22.*$/i, '')
     .replace(/[.,;:]+$/g, '');
+}
+
+export function sanitizePlanLinkUrl(value: string) {
+  return sanitizeExternalLinkUrl(value);
+}
+
+export function isSafeExternalUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return allowedProtocols.has(url.protocol);
+  } catch {
+    return false;
+  }
 }
 
 export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
@@ -42,12 +55,7 @@ export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
 }
 
 export function isSafeExternalPlanUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return allowedProtocols.has(url.protocol);
-  } catch {
-    return false;
-  }
+  return isSafeExternalUrl(value);
 }
 
 export function validatePlanLinks(links: PlanLinkRecord[]): PlanLinksValidation {
