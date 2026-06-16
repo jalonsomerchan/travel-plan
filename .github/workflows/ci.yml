@@ -24,15 +24,6 @@ jobs:
     name: Test and build
     runs-on: ubuntu-latest
     steps:
-      - name: Diagnose tests early
-        run: |
-          git clone --quiet --depth=1 --branch "$GITHUB_HEAD_REF" "https://github.com/$GITHUB_REPOSITORY.git" .
-          npm ci --silent
-          npm test > /tmp/test-output.log 2>&1 || {
-            grep -n -E "not ok|ERR_ASSERTION|AssertionError|failureType|expected|actual|error:" /tmp/test-output.log | head -n 120
-            exit 1
-          }
-
       - name: Checkout
         uses: actions/checkout@v4
 
