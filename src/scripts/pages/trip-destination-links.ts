@@ -13,7 +13,6 @@ import type {
 import {
   createTripDestinationLink,
   deleteTripDestinationLink,
-  subscribeTripDestinationLinks,
   updateTripDestinationLink,
 } from '../../lib/firebase/destination-links';
 import { observeSession } from '../../lib/firebase/session';
@@ -321,8 +320,11 @@ export function mountTripDestinationLinks({ locale }: { locale: Locale }) {
     resetForm(locale, section, state);
     sync();
     if (!user) return;
-    subscriptions.add(subscribeTrip(tripId, (trip) => { state.trip = trip; sync(); }));
+    subscriptions.add(subscribeTrip(tripId, (trip) => {
+      state.trip = trip;
+      state.links = trip?.destinationLinks ?? [];
+      sync();
+    }));
     subscriptions.add(subscribeTripMembers(tripId, (members) => { state.members = members; sync(); }));
-    subscriptions.add(subscribeTripDestinationLinks(tripId, (links) => { state.links = links; sync(); }));
   });
 }
