@@ -45,11 +45,11 @@ describe('destination useful links', () => {
     assert.match(persistence, /destinationLinks/);
     assert.match(persistence, /doc\(db, 'trips', tripId\)/);
     assert.match(persistence, /updateDoc/);
-    assert.match(persistence, /subscribeTripDestinationLinks/);
     assert.match(persistence, /normalizeDestinationLinks/);
     assert.match(trips, /destinationLinks: normalizeDestinationLinks\(data\.destinationLinks\)/);
     assert.match(tripReads, /destinationLinks: normalizeDestinationLinks\(data\.destinationLinks\)/);
     assert.doesNotMatch(persistence, /collection\(db, 'trips', tripId, 'destinationLinks'\)/);
+    assert.doesNotMatch(persistence, /onSnapshot/);
   });
 
   it('mounts an accessible editable section on the trip page', () => {
@@ -59,6 +59,7 @@ describe('destination useful links', () => {
     assert.match(mount, /mountTripDestinationLinks/);
     assert.match(pageScript, /data-destination-links-section/);
     assert.match(pageScript, /subscribeTripMembers/);
+    assert.match(pageScript, /trip\?\.destinationLinks/);
     assert.match(pageScript, /_blank/);
     assert.match(pageScript, /noopener noreferrer/);
     assert.match(pageScript, /validateDestinationLink/);
