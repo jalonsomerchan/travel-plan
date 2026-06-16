@@ -94,6 +94,21 @@ export interface PlanLinkRecord {
   url: string;
 }
 
+export interface DestinationLinkRecord {
+  id: string;
+  title: string;
+  url: string;
+  category?: string;
+  notes?: string;
+}
+
+export interface DestinationLinkInput {
+  title: string;
+  url: string;
+  category?: string;
+  notes?: string;
+}
+
 export interface PlanRecord {
   id: string;
   name: string;
