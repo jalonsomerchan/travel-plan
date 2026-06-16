@@ -31,6 +31,42 @@ export function normalizeDestinationLinkInput(input: DestinationLinkInput): Dest
   };
 }
 
+export function normalizeDestinationLinkRecord(value: unknown): DestinationLinkRecord | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const data = value as Record<string, unknown>;
+  const id = String(data.id ?? '').trim();
+  const normalized = normalizeDestinationLinkInput({
+    title: String(data.title ?? ''),
+    url: String(data.url ?? ''),
+    category: data.category ? String(data.category) : undefined,
+    notes: data.notes ? String(data.notes) : undefined,
+  });
+
+  if (!id || !normalized.title || !isSafeExternalUrl(normalized.url)) {
+    return null;
+  }
+
+  return {
+    id,
+    ...normalized,
+  };
+}
+
+export function normalizeDestinationLinks(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return sortDestinationLinks(
+    value
+      .map(normalizeDestinationLinkRecord)
+      .filter((link): link is DestinationLinkRecord => Boolean(link)),
+  );
+}
+
 export function getDestinationLinkCategoryKey(link: Pick<DestinationLinkRecord, 'category'>) {
   return link.category?.trim() ?? '';
 }
