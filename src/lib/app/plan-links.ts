@@ -17,6 +17,10 @@ export function sanitizeExternalLinkUrl(value: string) {
     .replace(/[.,;:]+$/g, '');
 }
 
+export function sanitizePlanLinkUrl(value: string) {
+  return sanitizeExternalLinkUrl(value);
+}
+
 export function isSafeExternalUrl(value: string) {
   try {
     const url = new URL(value);
@@ -38,7 +42,7 @@ export function normalizePlanLinks(value: unknown): PlanLinkRecord[] {
       }
 
       const record = item as Record<string, unknown>;
-      const url = sanitizeExternalLinkUrl(String(record.url ?? ''));
+      const url = sanitizePlanLinkUrl(String(record.url ?? ''));
       const label = String(record.label ?? '').trim() || url;
 
       if (!url) {
