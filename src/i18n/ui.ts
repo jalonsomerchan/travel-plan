@@ -6,6 +6,8 @@ import authLoadingEn from './feature-translations/auth-loading/en.json';
 import authLoadingEs from './feature-translations/auth-loading/es.json';
 import checklistFormsEn from './feature-translations/checklist-forms/en.json';
 import checklistFormsEs from './feature-translations/checklist-forms/es.json';
+import destinationLinksEn from './feature-translations/destination-links.en.json';
+import destinationLinksEs from './feature-translations/destination-links.es.json';
 import footerVersionEn from './feature-translations/footer-version/en.json';
 import footerVersionEs from './feature-translations/footer-version/es.json';
 import geolocationEn from './feature-translations/geolocation/en.json';
@@ -43,6 +45,7 @@ export type TranslationKey =
   | keyof typeof es
   | keyof typeof authLoadingEs
   | keyof typeof checklistFormsEs
+  | keyof typeof destinationLinksEs
   | keyof typeof footerVersionEs
   | keyof typeof geolocationEs
   | keyof typeof globalChecklistsEs
@@ -67,6 +70,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...es,
     ...authLoadingEs,
     ...checklistFormsEs,
+    ...destinationLinksEs,
     ...footerVersionEs,
     ...geolocationEs,
     ...globalChecklistsEs,
@@ -88,6 +92,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...en,
     ...authLoadingEn,
     ...checklistFormsEn,
+    ...destinationLinksEn,
     ...footerVersionEn,
     ...geolocationEn,
     ...globalChecklistsEn,
