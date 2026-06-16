@@ -58,8 +58,8 @@ describe('destination useful links', () => {
   });
 
   it('keeps destination link translations aligned and registered', () => {
-    const esPath = 'src/i18n/feature-translations/destination-links.es.json';
-    const enPath = 'src/i18n/feature-translations/destination-links.en.json';
+    const esPath = 'src/i18n/feature-translations/destination-links/es.json';
+    const enPath = 'src/i18n/feature-translations/destination-links/en.json';
     const es = readJson(esPath);
     const en = readJson(enPath);
     const ui = readText('src/i18n/ui.ts');
@@ -67,8 +67,8 @@ describe('destination useful links', () => {
     assert.equal(existsSync(join(root, esPath)), true);
     assert.equal(existsSync(join(root, enPath)), true);
     assert.deepEqual(Object.keys(en).sort(), Object.keys(es).sort());
-    assert.match(ui, /destination-links\.es\.json/);
-    assert.match(ui, /destination-links\.en\.json/);
+    assert.match(ui, /feature-translations\/destination-links\/es\.json/);
+    assert.match(ui, /feature-translations\/destination-links\/en\.json/);
   });
 
   it('documents the destinationLinks field decision', () => {
