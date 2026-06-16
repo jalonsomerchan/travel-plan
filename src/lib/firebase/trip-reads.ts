@@ -1,4 +1,5 @@
 import { doc, getDoc } from 'firebase/firestore';
+import { normalizeDestinationLinks } from '../app/destination-links';
 import type { TripAccommodationRecord, TripChildSummaryRecord, TripRecord } from '../app/models';
 import { getFirebaseDb } from './config';
 import { clearCachedTrip, getCachedTrip, setCachedTrip } from './shared-data-cache';
@@ -73,6 +74,7 @@ function mapTripRecord(snapshot: { id: string; data: () => Record<string, unknow
     accommodation: mapTripAccommodationRecord(data.accommodation),
     parentTripId: data.parentTripId ? String(data.parentTripId) : undefined,
     childTrips: mapTripChildSummaries(data.childTrips),
+    destinationLinks: normalizeDestinationLinks(data.destinationLinks),
     ownerId: String(data.ownerId ?? ''),
     ownerEmail: String(data.ownerEmail ?? ''),
     memberIds: Array.isArray(data.memberIds) ? data.memberIds.map(String) : [],
