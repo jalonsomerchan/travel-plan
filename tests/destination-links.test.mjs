@@ -20,7 +20,9 @@ describe('destination useful links', () => {
 
     assert.match(models, /interface DestinationLinkRecord/);
     assert.match(models, /interface DestinationLinkInput/);
+    assert.match(models, /destinationLinks: DestinationLinkRecord\[\]/);
     assert.match(helpers, /normalizeDestinationLinkInput/);
+    assert.match(helpers, /normalizeDestinationLinks/);
     assert.match(helpers, /validateDestinationLink/);
     assert.match(helpers, /sortDestinationLinks/);
   });
@@ -37,11 +39,16 @@ describe('destination useful links', () => {
 
   it('stores useful links on the trip document for existing rule compatibility', () => {
     const persistence = readText('src/lib/firebase/destination-links.ts');
+    const trips = readText('src/lib/firebase/trips.ts');
+    const tripReads = readText('src/lib/firebase/trip-reads.ts');
 
     assert.match(persistence, /destinationLinks/);
     assert.match(persistence, /doc\(db, 'trips', tripId\)/);
     assert.match(persistence, /updateDoc/);
     assert.match(persistence, /subscribeTripDestinationLinks/);
+    assert.match(persistence, /normalizeDestinationLinks/);
+    assert.match(trips, /destinationLinks: normalizeDestinationLinks\(data\.destinationLinks\)/);
+    assert.match(tripReads, /destinationLinks: normalizeDestinationLinks\(data\.destinationLinks\)/);
     assert.doesNotMatch(persistence, /collection\(db, 'trips', tripId, 'destinationLinks'\)/);
   });
 
