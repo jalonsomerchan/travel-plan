@@ -38,6 +38,26 @@ export interface TripChildSummaryRecord {
   status: TripStatus;
 }
 
+export interface PlanLinkRecord {
+  label: string;
+  url: string;
+}
+
+export interface DestinationLinkRecord {
+  id: string;
+  title: string;
+  url: string;
+  category?: string;
+  notes?: string;
+}
+
+export interface DestinationLinkInput {
+  title: string;
+  url: string;
+  category?: string;
+  notes?: string;
+}
+
 export interface TripRecord {
   id: string;
   name: string;
@@ -50,6 +70,7 @@ export interface TripRecord {
   accommodation?: TripAccommodationRecord;
   parentTripId?: string;
   childTrips: TripChildSummaryRecord[];
+  destinationLinks: DestinationLinkRecord[];
   ownerId: string;
   ownerEmail: string;
   memberIds: string[];
@@ -87,26 +108,6 @@ export interface TripInviteRecord {
   emailLower: string;
   role: TripMemberRole;
   status: 'pending' | 'accepted' | 'deleted';
-}
-
-export interface PlanLinkRecord {
-  label: string;
-  url: string;
-}
-
-export interface DestinationLinkRecord {
-  id: string;
-  title: string;
-  url: string;
-  category?: string;
-  notes?: string;
-}
-
-export interface DestinationLinkInput {
-  title: string;
-  url: string;
-  category?: string;
-  notes?: string;
 }
 
 export interface PlanRecord {
