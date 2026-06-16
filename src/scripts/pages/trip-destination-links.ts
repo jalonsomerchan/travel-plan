@@ -108,7 +108,7 @@ function ensureSection(locale: Locale) {
   const list = document.createElement('div');
 
   section.className = 'mb-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4 shadow-[var(--shadow-xs)] sm:p-5';
-  section.dataset.destinationLinksSection = '';
+  section.setAttribute('data-destination-links-section', '');
   section.hidden = true;
   header.className = 'min-w-0';
   appendText(header, 'p', 'text-xs font-black uppercase tracking-[0.14em] text-[var(--color-text-soft)]', t('destinationLinks.eyebrow'));
