@@ -8,9 +8,11 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import type { PlanInput, PlanRecord } from '../app/models';
 import { normalizePlanLinks } from '../app/plan-links';
+import { sortPlansByScheduleAndDayOrder } from '../app/plan-order';
 import { getFirebaseDb } from './config';
 import {
   clearCachedTripPlans,
@@ -19,7 +21,15 @@ import {
 } from './shared-data-cache';
 import { shouldUseSnapshot } from './snapshot-freshness';
 
-const optionalPlanFields = ['locationName', 'locationLat', 'locationLng', 'date', 'time', 'aiGuide'] as const;
+const optionalPlanFields = [
+  'locationName',
+  'locationLat',
+  'locationLng',
+  'date',
+  'time',
+  'dayOrder',
+  'aiGuide',
+] as const;
 
 function getPlanCreateData(input: PlanInput) {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
@@ -55,6 +65,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
     locationLng: typeof data.locationLng === 'number' ? data.locationLng : undefined,
     date: data.date ? String(data.date) : undefined,
     time: data.time ? String(data.time) : undefined,
+    dayOrder: typeof data.dayOrder === 'number' && Number.isFinite(data.dayOrder) ? data.dayOrder : undefined,
     status: (data.status as PlanRecord['status']) ?? 'pending',
     links: normalizePlanLinks(data.links),
     aiGuide: data.aiGuide ? String(data.aiGuide) : undefined,
@@ -62,11 +73,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
 }
 
 function sortPlans(plans: PlanRecord[]) {
-  return [...plans].sort((left, right) =>
-    `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
-      `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
-    ),
-  );
+  return sortPlansByScheduleAndDayOrder(plans);
 }
 
 function inputToPlanRecord(id: string, input: PlanInput): PlanRecord {
@@ -85,6 +92,7 @@ function inputToPlanRecord(id: string, input: PlanInput): PlanRecord {
     locationLng: input.locationLng,
     date: input.date,
     time: input.time,
+    dayOrder: input.dayOrder,
     status: input.status,
     links: normalizePlanLinks(input.links),
     aiGuide: input.aiGuide,
@@ -209,6 +217,28 @@ export function queueUpdatePlan(tripId: string, planId: string, input: PlanInput
     ...getPlanUpdateData(input),
     updatedAt: serverTimestamp(),
   }).catch(reportQueuedPlanWrite);
+}
+
+export async function updatePlanDayOrders(
+  tripId: string,
+  updates: Array<{ planId: string; dayOrder: number }>,
+) {
+  if (updates.length === 0) {
+    return;
+  }
+
+  const db = getFirebaseDb();
+  const batch = writeBatch(db);
+
+  updates.forEach((update) => {
+    batch.update(doc(db, 'trips', tripId, 'plans', update.planId), {
+      dayOrder: update.dayOrder,
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  await batch.commit();
+  clearCachedTripPlans(tripId);
 }
 
 export async function deletePlan(tripId: string, planId: string) {

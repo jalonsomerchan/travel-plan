@@ -3,6 +3,7 @@ import { observeSession } from '../../lib/firebase/session';
 import { createSubscriptionScope } from '../../lib/firebase/subscription-scope';
 import { subscribeTrip } from '../../lib/firebase/trips';
 import { renderMiniTrips } from './trip-mini-trips';
+import { mountTripPlanOrder } from './trip-plan-order';
 
 function getSelectedTab() {
   const selected = document.querySelector<HTMLButtonElement>('[data-trip-tab][aria-selected="true"]');
@@ -44,6 +45,8 @@ function syncPanels(hasMiniTrips: boolean) {
 export function mountTripMiniTripsFallback({ locale }: { locale: Locale }) {
   const tripId = new URL(window.location.href).searchParams.get('trip') ?? '';
   const subscriptions = createSubscriptionScope();
+
+  mountTripPlanOrder({ locale });
 
   if (!tripId) {
     return;

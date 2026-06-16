@@ -109,6 +109,7 @@ export interface PlanRecord {
   locationLng?: number;
   date?: string;
   time?: string;
+  dayOrder?: number;
   status: PlanStatus;
   links: PlanLinkRecord[];
   aiGuide?: string;
@@ -128,6 +129,7 @@ export interface PlanInput {
   locationLng?: number;
   date?: string;
   time?: string;
+  dayOrder?: number;
   status: PlanStatus;
   links: PlanLinkRecord[];
   aiGuide?: string;

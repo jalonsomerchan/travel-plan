@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import type { PlanRecord } from '../app/models';
 import { normalizePlanLinks } from '../app/plan-links';
+import { sortPlansByScheduleAndDayOrder } from '../app/plan-order';
 import { getFirebaseDb } from './config';
 import { getCachedTripPlans, setCachedTripPlans } from './shared-data-cache';
 
@@ -22,6 +23,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
     locationLng: typeof data.locationLng === 'number' ? data.locationLng : undefined,
     date: data.date ? String(data.date) : undefined,
     time: data.time ? String(data.time) : undefined,
+    dayOrder: typeof data.dayOrder === 'number' && Number.isFinite(data.dayOrder) ? data.dayOrder : undefined,
     status: (data.status as PlanRecord['status']) ?? 'pending',
     links: normalizePlanLinks(data.links),
     aiGuide: data.aiGuide ? String(data.aiGuide) : undefined,
@@ -29,11 +31,7 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
 }
 
 function sortPlans(plans: PlanRecord[]) {
-  return [...plans].sort((left, right) =>
-    `${left.date ?? '9999-99-99'}${left.time ?? '99:99'}`.localeCompare(
-      `${right.date ?? '9999-99-99'}${right.time ?? '99:99'}`,
-    ),
-  );
+  return sortPlansByScheduleAndDayOrder(plans);
 }
 
 export async function getTripPlansOnce(tripId: string) {
