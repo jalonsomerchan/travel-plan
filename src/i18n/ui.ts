@@ -12,6 +12,8 @@ import geolocationEn from './feature-translations/geolocation/en.json';
 import geolocationEs from './feature-translations/geolocation/es.json';
 import globalChecklistsEn from './feature-translations/global-checklists/en.json';
 import globalChecklistsEs from './feature-translations/global-checklists/es.json';
+import globalSearchEn from './feature-translations/global-search/en.json';
+import globalSearchEs from './feature-translations/global-search/es.json';
 import globalTodayEn from './feature-translations/global-today/en.json';
 import globalTodayEs from './feature-translations/global-today/es.json';
 import invitesEn from './feature-translations/invites/en.json';
@@ -46,6 +48,7 @@ export type TranslationKey =
   | keyof typeof footerVersionEs
   | keyof typeof geolocationEs
   | keyof typeof globalChecklistsEs
+  | keyof typeof globalSearchEs
   | keyof typeof globalTodayEs
   | keyof typeof invitesEs
   | keyof typeof listViewEs
@@ -70,6 +73,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...footerVersionEs,
     ...geolocationEs,
     ...globalChecklistsEs,
+    ...globalSearchEs,
     ...globalTodayEs,
     ...invitesEs,
     ...listViewEs,
@@ -91,6 +95,7 @@ const translations: Record<Locale, TranslationDictionary> = {
     ...footerVersionEn,
     ...geolocationEn,
     ...globalChecklistsEn,
+    ...globalSearchEn,
     ...globalTodayEn,
     ...invitesEn,
     ...listViewEn,
