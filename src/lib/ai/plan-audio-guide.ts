@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth';
 import { z } from 'zod';
 import { normalizeAiGuideText } from '../app/ai-guide-text';
 import type { PlanRecord, TripRecord } from '../app/models';
-import { generateAuthenticatedAiApiJson } from './authenticated-api-client';
+import { authenticatedAiApiEndpoint, generateAuthenticatedAiApiJson } from './authenticated-api-client';
 import { aiGenerationConfig } from './config';
 import { AiClientError, logAiError } from './errors';
 import { getAiFeatureFlags, isAiAvailable } from './flags';
@@ -11,6 +11,8 @@ import { assertAiClientLimit, registerAiClientUse } from './limits';
 
 const minGuideLength = 180;
 const maxGuideLength = 5000;
+const audioGuideMaxOutputTokens = '8000';
+const audioGuideTemperature = '0.8';
 
 type GeneratePlanAudioGuideInput = {
   firebaseUser: User;
@@ -43,6 +45,7 @@ export async function generatePlanAudioGuide(input: GeneratePlanAudioGuideInput)
       userPrompt: buildPlanAudioGuideUserPrompt(input),
       validator: createPlanAudioGuideValidator(),
       timeoutMs: aiGenerationConfig.timeoutMs,
+      fetcher: createPlanAudioGuideFetcher(),
     });
     const audioGuide = normalizeAiGuideText(response.audioGuide);
 
@@ -64,6 +67,19 @@ function createPlanAudioGuideValidator(): JsonValidator<PlanAudioGuideResponse> 
   });
 
   return (value: unknown): value is PlanAudioGuideResponse => schema.safeParse(value).success;
+}
+
+function createPlanAudioGuideFetcher(fetcher: typeof fetch = globalThis.fetch.bind(globalThis)) {
+  return ((input: RequestInfo | URL, init?: RequestInit) => {
+    if (typeof input !== 'string' || !input.startsWith(authenticatedAiApiEndpoint)) {
+      return fetcher(input, init);
+    }
+
+    const url = new URL(input);
+    url.searchParams.set('options[maxOutputTokens]', audioGuideMaxOutputTokens);
+    url.searchParams.set('options[temperature]', audioGuideTemperature);
+    return fetcher(url.toString(), init);
+  }) as typeof fetch;
 }
 
 function buildPlanAudioGuideSystemPrompt(locale: string) {
