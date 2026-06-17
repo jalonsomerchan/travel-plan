@@ -46,6 +46,9 @@ const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / 
         <button class="app-card-link" data-plan-ai-tour-open data-variant="secondary" type="button">
           {generateGuideLabel}
         </button>
+        <button class="app-card-link" data-plan-ai-audio-guide-action data-variant="primary" type="button">
+          {t('plan.aiAudioGuide.action')}
+        </button>
         <button class="app-card-link" data-plan-ai-guide-open-player data-variant="primary" type="button" hidden>
           {viewListenGuideLabel}
         </button>
@@ -53,6 +56,7 @@ const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / 
           {t('plan.delete')}
         </button>
       </div>
+      <p class="mb-3 text-sm text-[var(--color-text-soft)]" data-plan-ai-audio-guide-message></p>
       <p class="mb-6 text-sm text-[var(--color-text-soft)]" data-plan-delete-message>{t('plan.deleteHelper')}</p>
 
       <dialog class="plan-ai-tour-modal w-[min(100%-1.5rem,56rem)] max-w-none overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-0 text-[var(--color-text)] shadow-[var(--shadow-lg)]" data-plan-ai-tour-modal>
@@ -248,8 +252,10 @@ const viewListenGuideLabel = locale === 'es' ? 'Ver / escuchar guía' : 'View / 
   <script>
     import { mountPlanPage } from '../../scripts/pages/plan';
     import { openPlanAiGuidePlayer } from '../../scripts/pages/plan-ai-guide-player';
+    import { mountPlanAiAudioGuidePageAction } from '../../scripts/pages/plan-ai-audio-guide-action';
 
     mountPlanPage({ locale: document.documentElement.lang });
+    mountPlanAiAudioGuidePageAction({ locale: document.documentElement.lang });
 
     const guideButton = document.querySelector('[data-plan-ai-guide-open-player]');
     const guideSection = document.querySelector('[data-plan-ai-guide-section]');
