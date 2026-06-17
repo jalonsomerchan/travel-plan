@@ -3,10 +3,21 @@ import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
 import { formatDistance } from '../../lib/app/format';
-import type { TodayLocationState, TodayPlanItem } from '../../lib/app/global-today';
+import type {
+  TodayLocationState,
+  TodayPlanItem,
+  TodayUserLocation,
+} from '../../lib/app/global-today';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
 import { getAppUrl } from '../../lib/app/routes';
+import { addMapTools } from '../maps/leaflet-map-tools';
 import { createPlanMarkerIcon } from '../maps/trip-markers';
+import {
+  addMapVisibilityControl,
+  getMapVisibilityState,
+  type MapVisibilityPreferences,
+  syncCurrentLocationVisibility,
+} from '../maps/visibility';
 import { getCategoryLabel, getPageTranslator, getPlanStatusLabel } from './shared';
 
 interface GlobalTodayMapPayload {
@@ -15,27 +26,71 @@ interface GlobalTodayMapPayload {
   locationState: TodayLocationState;
 }
 
-function getBoundsSignature(items: TodayPlanItem[], locationState: TodayLocationState) {
+interface GlobalTodayMapControllerOptions {
+  onLocation?: (location: TodayUserLocation) => void;
+}
+
+function isVisiblePlanItem(item: TodayPlanItem, visibility: MapVisibilityPreferences) {
+  if (!visibility.categories[item.plan.category]) {
+    return false;
+  }
+
+  if (item.plan.status === 'proposed') {
+    return visibility.proposedPlans;
+  }
+
+  return visibility.plans;
+}
+
+function getBoundsSignature(
+  items: TodayPlanItem[],
+  locationState: TodayLocationState,
+  visibility: MapVisibilityPreferences,
+) {
   return [
+    `currentLocation:${visibility.currentLocation}`,
+    `plans:${visibility.plans}`,
+    `proposedPlans:${visibility.proposedPlans}`,
+    ...Object.entries(visibility.categories).map(([category, visible]) => `${category}:${visible}`),
     ...items
-      .filter((item) => hasPlanLocation(item.plan))
+      .filter((item) => hasPlanLocation(item.plan) && isVisiblePlanItem(item, visibility))
       .map((item) => `${item.plan.id}:${item.plan.locationLat}:${item.plan.locationLng}:${item.distanceKm ?? '-'}`),
-    locationState.location
+    visibility.currentLocation && locationState.location
       ? `user:${locationState.location.latitude}:${locationState.location.longitude}:${locationState.location.accuracyMeters ?? '-'}`
       : 'user:none',
   ].join('|');
 }
 
-export function createGlobalTodayMapController(locale: Locale) {
+function syncLayerVisibility(map: L.Map, layer: L.LayerGroup | null, visible: boolean) {
+  if (!layer) {
+    return;
+  }
+
+  if (visible && !map.hasLayer(layer)) {
+    layer.addTo(map);
+  }
+
+  if (!visible && map.hasLayer(layer)) {
+    layer.removeFrom(map);
+  }
+}
+
+export function createGlobalTodayMapController(
+  locale: Locale,
+  options: GlobalTodayMapControllerOptions = {},
+) {
   const t = getPageTranslator(locale);
   const canvas = document.querySelector<HTMLElement>('[data-today-map-canvas]');
   const status = document.querySelector<HTMLElement>('[data-today-map-status]');
   const summary = document.querySelector<HTMLElement>('[data-today-map-summary]');
   let map: L.Map | null = null;
-  let tileLayer: L.TileLayer | null = null;
-  let markerLayer: L.LayerGroup | null = null;
+  let proposedPlanMarkers: L.LayerGroup | null = null;
+  let planMarkers: L.LayerGroup | null = null;
+  let currentLocationMarkers: L.LayerGroup | null = null;
+  let visibility = getMapVisibilityState();
   let hasUserInteracted = false;
   let lastBoundsSignature = '';
+  let lastPayload: GlobalTodayMapPayload | null = null;
 
   function setStatus(message: string) {
     if (status) {
@@ -59,6 +114,17 @@ export function createGlobalTodayMapController(locale: Locale) {
     canvas.classList.toggle('hidden', !isVisible);
   }
 
+  function applyVisibility() {
+    if (!map) {
+      return;
+    }
+
+    syncLayerVisibility(map, proposedPlanMarkers, visibility.proposedPlans);
+    syncLayerVisibility(map, planMarkers, visibility.plans);
+    syncLayerVisibility(map, currentLocationMarkers, visibility.currentLocation);
+    syncCurrentLocationVisibility(visibility.currentLocation);
+  }
+
   function ensureMap() {
     if (!canvas) {
       return null;
@@ -78,11 +144,27 @@ export function createGlobalTodayMapController(locale: Locale) {
       hasUserInteracted = true;
     });
 
-    tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
-    markerLayer = L.layerGroup().addTo(map);
+    proposedPlanMarkers = L.layerGroup().addTo(map);
+    planMarkers = L.layerGroup().addTo(map);
+    currentLocationMarkers = L.layerGroup().addTo(map);
+
+    addMapTools(map, t, {
+      currentLocation: {
+        centerOnLocation: false,
+        locateOnLoad: true,
+        renderMarker: false,
+        onLocation: options.onLocation,
+      },
+    });
+    addMapVisibilityControl(map, t, (nextVisibility) => {
+      visibility = nextVisibility;
+      applyVisibility();
+
+      if (lastPayload) {
+        sync(lastPayload);
+      }
+    });
+    applyVisibility();
 
     return map;
   }
@@ -117,22 +199,25 @@ export function createGlobalTodayMapController(locale: Locale) {
   }
 
   function renderUserLocation(locationState: TodayLocationState, bounds: L.LatLngBounds) {
-    if (!markerLayer || !locationState.location) {
-      return;
+    if (!currentLocationMarkers || !visibility.currentLocation || !locationState.location) {
+      return false;
     }
 
     const userLatLng = L.latLng(locationState.location.latitude, locationState.location.longitude);
     bounds.extend(userLatLng);
 
-    L.circleMarker(userLatLng, {
-      radius: 8,
-      color: '#ffffff',
-      weight: 3,
-      fillColor: '#2563eb',
-      fillOpacity: 1,
+    L.marker(userLatLng, {
+      icon: L.divIcon({
+        className: 'map-user-location-marker',
+        html: '<span aria-hidden="true"></span>',
+        iconAnchor: [10, 10],
+        iconSize: [20, 20],
+      }),
+      keyboard: true,
+      title: t('today.map.userLocation'),
     })
       .bindPopup(escapeHtml(t('today.map.userLocation')))
-      .addTo(markerLayer);
+      .addTo(currentLocationMarkers);
 
     if (typeof locationState.location.accuracyMeters === 'number') {
       L.circle(userLatLng, {
@@ -141,8 +226,10 @@ export function createGlobalTodayMapController(locale: Locale) {
         weight: 1,
         fillColor: '#60a5fa',
         fillOpacity: 0.12,
-      }).addTo(markerLayer);
+      }).addTo(currentLocationMarkers);
     }
+
+    return true;
   }
 
   function getPlanPopupHtml(item: TodayPlanItem) {
@@ -166,17 +253,23 @@ export function createGlobalTodayMapController(locale: Locale) {
   }
 
   function renderPlanMarkers(items: TodayPlanItem[], bounds: L.LatLngBounds) {
-    if (!markerLayer) {
+    if (!proposedPlanMarkers || !planMarkers) {
       return 0;
     }
 
-    const locatedItems = items.filter((item) => hasPlanLocation(item.plan));
+    let locatedCount = 0;
 
-    locatedItems.forEach((item) => {
+    items.forEach((item) => {
+      if (!hasPlanLocation(item.plan) || !isVisiblePlanItem(item, visibility)) {
+        return;
+      }
+
+      const layer = item.plan.status === 'proposed' ? proposedPlanMarkers : planMarkers;
       const latLng = L.latLng(item.plan.locationLat, item.plan.locationLng);
       const statusLabel = getPlanStatusLabel(locale, item.plan.status);
       const title = `${item.plan.name} · ${item.trip.name} · ${statusLabel}`;
       bounds.extend(latLng);
+      locatedCount += 1;
 
       L.marker(latLng, {
         icon: createPlanMarkerIcon(item.plan, locale, {
@@ -187,15 +280,16 @@ export function createGlobalTodayMapController(locale: Locale) {
         title,
       })
         .bindPopup(getPlanPopupHtml(item))
-        .addTo(markerLayer);
+        .addTo(layer);
     });
 
-    return locatedItems.length;
+    return locatedCount;
   }
 
   function renderMapSummary(payload: GlobalTodayMapPayload, locatedCount: number) {
-    const withoutLocationCount = Math.max(payload.items.length - locatedCount, 0);
-    const locationLabel = payload.locationState.location
+    const visibleItems = payload.items.filter((item) => isVisiblePlanItem(item, visibility));
+    const withoutLocationCount = visibleItems.filter((item) => !hasPlanLocation(item.plan)).length;
+    const locationLabel = payload.locationState.location && visibility.currentLocation
       ? t('today.map.summary.withUserLocation')
       : t('today.map.summary.withoutUserLocation');
 
@@ -208,6 +302,8 @@ export function createGlobalTodayMapController(locale: Locale) {
   }
 
   function sync(payload: GlobalTodayMapPayload) {
+    lastPayload = payload;
+
     if (!canvas || !status) {
       return;
     }
@@ -221,20 +317,24 @@ export function createGlobalTodayMapController(locale: Locale) {
 
     const activeMap = ensureMap();
 
-    if (!activeMap || !markerLayer || !tileLayer) {
+    if (!activeMap || !proposedPlanMarkers || !planMarkers || !currentLocationMarkers) {
       setCanvasVisible(false);
       setStatus(t('today.map.unavailable'));
       setSummary('');
       return;
     }
 
-    markerLayer.clearLayers();
+    proposedPlanMarkers.clearLayers();
+    planMarkers.clearLayers();
+    currentLocationMarkers.clearLayers();
+
     const bounds = L.latLngBounds([]);
     const locatedCount = renderPlanMarkers(payload.items, bounds);
-    renderUserLocation(payload.locationState, bounds);
+    const hasVisibleUserLocation = renderUserLocation(payload.locationState, bounds);
     renderMapSummary(payload, locatedCount);
+    applyVisibility();
 
-    if (locatedCount === 0 && !payload.locationState.location) {
+    if (locatedCount === 0 && !hasVisibleUserLocation) {
       setCanvasVisible(false);
       setStatus(t('today.map.empty'));
       return;
@@ -244,13 +344,13 @@ export function createGlobalTodayMapController(locale: Locale) {
 
     if (locatedCount === 0) {
       setStatus(t('today.map.onlyUserLocation'));
-    } else if (!payload.locationState.location) {
+    } else if (!hasVisibleUserLocation) {
       setStatus(t('today.map.withoutUserLocation').replace('{count}', String(locatedCount)));
     } else {
       setStatus(t('today.map.ready').replace('{count}', String(locatedCount)));
     }
 
-    const signature = getBoundsSignature(payload.items, payload.locationState);
+    const signature = getBoundsSignature(payload.items, payload.locationState, visibility);
     requestAnimationFrame(() => fitMapBounds(activeMap, bounds, signature));
   }
 

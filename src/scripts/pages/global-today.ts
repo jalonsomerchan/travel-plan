@@ -6,6 +6,7 @@ import {
   isLocationImprecise,
   type TodayDataState,
   type TodayLocationState,
+  type TodayUserLocation,
 } from '../../lib/app/global-today';
 import type { PlanRecord, TripRecord } from '../../lib/app/models';
 import { getFirebasePublicConfig } from '../../lib/firebase/config';
@@ -32,6 +33,10 @@ function logTripsPermissionError(user: User | null) {
   });
 }
 
+function getLocationStatus(location: TodayUserLocation): TodayLocationState['status'] {
+  return isLocationImprecise(location.accuracyMeters) ? 'imprecise' : 'ready';
+}
+
 export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
   const filtersForm = document.querySelector<HTMLFormElement>('[data-today-filters]');
   const locationButton = document.querySelector<HTMLButtonElement>('[data-today-location-action]');
@@ -39,7 +44,6 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
   const mapPanel = document.querySelector<HTMLDetailsElement>('[data-today-map-panel]');
   const subscriptions = createSubscriptionScope();
   const planSubscriptions = createSubscriptionScope();
-  const mapController = createGlobalTodayMapController(locale);
   let trips: TripRecord[] = [];
   let plansByTrip: Record<string, PlanRecord[]> = {};
   let locationState: TodayLocationState = { ...defaultTodayLocationState };
@@ -51,7 +55,7 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
 
   initListViewMode(locale);
 
-  const sync = () => {
+  function sync() {
     const result = renderGlobalTodayPage(locale, trips, plansByTrip, locationState, dataState);
 
     mapController.sync({
@@ -59,7 +63,17 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
       items: result.visibleItems,
       locationState,
     });
-  };
+  }
+
+  const mapController = createGlobalTodayMapController(locale, {
+    onLocation: (location) => {
+      locationState = {
+        status: getLocationStatus(location),
+        location,
+      };
+      sync();
+    },
+  });
 
   filtersForm?.addEventListener('input', sync);
   filtersForm?.addEventListener('change', sync);
@@ -101,7 +115,7 @@ export function mountGlobalTodayPage({ locale }: { locale: Locale }) {
         };
 
         locationState = {
-          status: isLocationImprecise(position.coords.accuracy) ? 'imprecise' : 'ready',
+          status: getLocationStatus(nextLocation),
           location: nextLocation,
         };
         sync();
