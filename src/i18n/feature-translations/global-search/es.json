@@ -1,0 +1,20 @@
+{
+  "globalSearch.eyebrow": "Buscador global",
+  "globalSearch.title": "Encuentra cualquier elemento",
+  "globalSearch.description": "Busca viajes, planes, puntos de interés y tareas de checklist visibles para tu usuario sin entrar en cada viaje.",
+  "globalSearch.label": "Buscar en TravelPlan",
+  "globalSearch.placeholder": "Ej. museo, pasaporte, mirador...",
+  "globalSearch.hint": "Escribe al menos 2 caracteres para buscar en tus viajes, planes, puntos y checklist.",
+  "globalSearch.loading": "Buscando en tus viajes visibles...",
+  "globalSearch.empty": "No hay resultados para {query}.",
+  "globalSearch.error": "No se ha podido cargar el buscador global ahora mismo.",
+  "globalSearch.resultsSummary": "{count} resultados para {query}.",
+  "globalSearch.group.trip": "Viajes",
+  "globalSearch.group.plan": "Planes",
+  "globalSearch.group.poi": "Puntos de interés",
+  "globalSearch.group.checklist": "Checklist",
+  "globalSearch.type.trip": "Viaje",
+  "globalSearch.type.plan": "Plan",
+  "globalSearch.type.poi": "Punto de interés",
+  "globalSearch.type.checklist": "Checklist"
+}
