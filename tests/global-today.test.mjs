@@ -65,4 +65,23 @@ describe('global today view', () => {
     assert.match(map, /today\.map\.onlyUserLocation/);
     assert.match(map, /today\.map\.withoutUserLocation/);
   });
+
+  it('uses the shared map controls and visibility filters on the global Today map', () => {
+    const map = readText('src/scripts/pages/global-today-map.ts');
+    const page = readText('src/scripts/pages/global-today.ts');
+    const location = readText('src/scripts/maps/location.ts');
+
+    assert.match(map, /addMapTools/);
+    assert.match(map, /addMapVisibilityControl/);
+    assert.match(map, /getMapVisibilityState/);
+    assert.match(map, /visibility\.categories\[item\.plan\.category\]/);
+    assert.match(map, /visibility\.proposedPlans/);
+    assert.match(map, /visibility\.plans/);
+    assert.match(map, /visibility\.currentLocation/);
+    assert.match(map, /locateOnLoad:\s*true/);
+    assert.match(map, /renderMarker:\s*false/);
+    assert.match(page, /onLocation:\s*\(location\)/);
+    assert.match(location, /onLocation\?:/);
+    assert.match(location, /options\.onLocation\?\.\(nextLocation\)/);
+  });
 });
