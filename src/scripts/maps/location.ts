@@ -3,9 +3,17 @@ import { escapeHtml } from '../../lib/app/dom';
 import type { MapTranslate } from './layers';
 import { getMapVisibilityState, syncCurrentLocationVisibility } from './visibility';
 
-interface CurrentLocationOptions {
+export interface CurrentLocationCoordinates {
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+}
+
+export interface CurrentLocationOptions {
   centerOnLocation?: boolean;
   locateOnLoad?: boolean;
+  renderMarker?: boolean;
+  onLocation?: (location: CurrentLocationCoordinates) => void;
 }
 
 function syncMarkerVisibility(marker: L.Marker) {
@@ -23,6 +31,7 @@ export function addUserLocationMarker(
 ) {
   let marker: L.Marker | null = null;
   const centerOnLocation = options.centerOnLocation ?? true;
+  const renderMarker = options.renderMarker ?? true;
 
   const locate = (status?: HTMLElement, button?: HTMLButtonElement, forceCenter = false) => {
     if (!('geolocation' in navigator)) {
@@ -37,7 +46,7 @@ export function addUserLocationMarker(
       (position) => {
         if (button) button.disabled = false;
 
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
 
         if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
           if (status) status.textContent = t('map.location.unavailable');
@@ -45,24 +54,33 @@ export function addUserLocationMarker(
         }
 
         const latLng = L.latLng(latitude, longitude);
+        const nextLocation: CurrentLocationCoordinates = {
+          latitude,
+          longitude,
+          accuracyMeters: Number.isFinite(accuracy) ? accuracy : undefined,
+        };
 
-        if (marker) {
-          marker.setLatLng(latLng);
-        } else {
-          marker = L.marker(latLng, {
-            icon: L.divIcon({
-              className: 'map-user-location-marker',
-              html: '<span aria-hidden="true"></span>',
-              iconAnchor: [10, 10],
-              iconSize: [20, 20],
-            }),
-            keyboard: true,
-            title: t('map.location.marker'),
-          }).addTo(map);
+        if (renderMarker) {
+          if (marker) {
+            marker.setLatLng(latLng);
+          } else {
+            marker = L.marker(latLng, {
+              icon: L.divIcon({
+                className: 'map-user-location-marker',
+                html: '<span aria-hidden="true"></span>',
+                iconAnchor: [10, 10],
+                iconSize: [20, 20],
+              }),
+              keyboard: true,
+              title: t('map.location.marker'),
+            }).addTo(map);
+          }
+
+          marker.bindPopup(escapeHtml(t('map.location.marker')));
+          syncMarkerVisibility(marker);
         }
 
-        marker.bindPopup(escapeHtml(t('map.location.marker')));
-        syncMarkerVisibility(marker);
+        options.onLocation?.(nextLocation);
 
         if (centerOnLocation || forceCenter) {
           map.setView(latLng, Math.max(map.getZoom(), 15));
