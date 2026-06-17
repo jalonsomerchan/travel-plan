@@ -74,7 +74,7 @@ export function createGlobalTodayMapController(locale: Locale) {
       scrollWheelZoom: false,
     }).setView([40.4168, -3.7038], 5);
 
-    map.on('dragstart zoomstart movestart', () => {
+    map.on('dragstart zoomstart', () => {
       hasUserInteracted = true;
     });
 
