@@ -54,6 +54,39 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
       aria-live="polite"
     ></p>
     <div slot="body" class="mt-8 border-t border-[var(--color-border)] pt-6">
+      <section
+        class="mb-6 grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4"
+        data-dashboard-global-search
+        aria-labelledby="dashboard-global-search-title"
+      >
+        <div>
+          <span class="eyebrow">{t('globalSearch.eyebrow')}</span>
+          <h2 id="dashboard-global-search-title" class="mt-2 text-2xl font-black">
+            {t('globalSearch.title')}
+          </h2>
+          <p class="mt-2 text-sm text-[var(--color-text-muted)]">{t('globalSearch.description')}</p>
+        </div>
+        <label class="grid gap-2 text-sm font-bold text-[var(--color-text)]">
+          <span>{t('globalSearch.label')}</span>
+          <input
+            class="input"
+            type="search"
+            autocomplete="off"
+            placeholder={t('globalSearch.placeholder')}
+            data-global-search-input
+          />
+        </label>
+        <p
+          class="text-sm font-semibold text-[var(--color-text-muted)]"
+          data-global-search-status
+          role="status"
+          aria-live="polite"
+        >
+          {t('globalSearch.hint')}
+        </p>
+        <div class="grid gap-5" data-global-search-results></div>
+      </section>
+
       <div class="flex flex-wrap items-center justify-between gap-4">
         <h2 class="text-2xl font-black">{t('dashboard.listTitle')}</h2>
         <div class="grid w-full grid-cols-3 gap-2 sm:gap-3" data-dashboard-stats></div>
@@ -66,9 +99,11 @@ const dashboardTitle = locale === 'es' ? 'Bienvenido a TravelPlan' : 'Welcome to
 
   <script>
     import { mountDashboardPage } from '../../scripts/pages/dashboard';
+    import { mountDashboardGlobalSearch } from '../../scripts/pages/dashboard-global-search';
     import { mountDashboardMiniTripsFallback } from '../../scripts/pages/dashboard-mini-trips-fallback';
 
     mountDashboardPage({ locale: document.documentElement.lang });
+    mountDashboardGlobalSearch({ locale: document.documentElement.lang });
     mountDashboardMiniTripsFallback({ locale: document.documentElement.lang });
   </script>
 </BaseLayout>
