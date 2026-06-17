@@ -56,12 +56,13 @@ describe('plan AI audio guide', () => {
 
   it('uses the requested Mistral generation parameters for authenticated audio guide requests', () => {
     const client = readText('src/lib/ai/authenticated-api-client.ts');
+    const audioGuide = readText('src/lib/ai/plan-audio-guide.ts');
 
     assert.match(client, /provider=mistral/);
     assert.match(client, /model=ministral-8b-2512/);
-    assert.match(client, /maxOutputTokens/);
-    assert.match(client, /8000/);
-    assert.match(client, /temperature/);
-    assert.match(client, /0\.8/);
+    assert.match(audioGuide, /maxOutputTokens/);
+    assert.match(audioGuide, /8000/);
+    assert.match(audioGuide, /temperature/);
+    assert.match(audioGuide, /0\.8/);
   });
 });
