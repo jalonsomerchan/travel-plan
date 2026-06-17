@@ -1,0 +1,20 @@
+{
+  "globalSearch.eyebrow": "Global search",
+  "globalSearch.title": "Find anything",
+  "globalSearch.description": "Search trips, plans, points of interest, and checklist tasks visible to your user without opening each trip.",
+  "globalSearch.label": "Search TravelPlan",
+  "globalSearch.placeholder": "E.g. museum, passport, viewpoint...",
+  "globalSearch.hint": "Type at least 2 characters to search your trips, plans, points, and checklist.",
+  "globalSearch.loading": "Searching your visible trips...",
+  "globalSearch.empty": "No results for {query}.",
+  "globalSearch.error": "The global search could not be loaded right now.",
+  "globalSearch.resultsSummary": "{count} results for {query}.",
+  "globalSearch.group.trip": "Trips",
+  "globalSearch.group.plan": "Plans",
+  "globalSearch.group.poi": "Points of interest",
+  "globalSearch.group.checklist": "Checklist",
+  "globalSearch.type.trip": "Trip",
+  "globalSearch.type.plan": "Plan",
+  "globalSearch.type.poi": "Point of interest",
+  "globalSearch.type.checklist": "Checklist"
+}
