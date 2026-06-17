@@ -105,7 +105,7 @@ function ensurePlanAiGuideModal(locale: Locale) {
   return modal;
 }
 
-export function openPlanAiGuidePlayer(locale: Locale, plan: PlanRecord) {
+export function openPlanAiGuidePlayer(locale: Locale, plan: PlanRecord, options: { autoPlay?: boolean } = {}) {
   const aiGuide = plan.aiGuide?.trim();
 
   if (!aiGuide) {
@@ -123,6 +123,12 @@ export function openPlanAiGuidePlayer(locale: Locale, plan: PlanRecord) {
 
   if (!modal.open) {
     modal.showModal();
+  }
+
+  if (options.autoPlay) {
+    modal.querySelector<HTMLButtonElement>('[data-plan-ai-guide-player-play]')?.click();
+    modal.querySelector<HTMLButtonElement>('[data-plan-ai-guide-player-stop]')?.focus();
+    return;
   }
 
   modal.querySelector<HTMLButtonElement>('[data-plan-ai-guide-player-play]')?.focus();
