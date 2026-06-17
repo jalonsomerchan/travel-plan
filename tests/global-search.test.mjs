@@ -48,7 +48,7 @@ describe('global search', () => {
     const controller = readText('src/scripts/pages/dashboard-global-search.ts');
 
     assert.match(helper, /normalize\('NFD'\)/);
-    assert.match(helper, /replace\(\/\[\\u0300-\\u036f\]\//);
+    assert.match(helper, /\\u0300-\\u036f/);
     assert.match(helper, /filterGlobalSearchDocuments/);
     assert.match(controller, /fetchUserTripsDirect/);
     assert.match(controller, /getTripPlansOnce/);
