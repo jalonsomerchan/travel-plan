@@ -1,0 +1,9 @@
+{
+  "plan.aiAudioGuide.action": "AI Audio Guide",
+  "plan.aiAudioGuide.generating": "Generating AI audio guide...",
+  "plan.aiAudioGuide.generated": "Audio guide generated. Playing...",
+  "plan.aiAudioGuide.error": "The AI audio guide could not be generated.",
+  "plan.aiAudioGuide.authRequired": "Sign in to generate the AI audio guide.",
+  "plan.aiAudioGuide.planNotFound": "The plan could not be found to generate the audio guide.",
+  "plan.aiAudioGuide.tripNotFound": "The trip could not be found to generate the audio guide."
+}
