@@ -53,4 +53,11 @@ describe('plan AI audio guide', () => {
     assert.match(source, /Do not include logistics/);
     assert.match(source, /valid JSON with shape/);
   });
+
+  it('uses the requested Mistral model parameters for authenticated audio guide requests', () => {
+    const client = readText('src/lib/ai/authenticated-api-client.ts');
+
+    assert.match(client, /provider=mistral/);
+    assert.match(client, /model=ministral-8b-2512/);
+  });
 });
