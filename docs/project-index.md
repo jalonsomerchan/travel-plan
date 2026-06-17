@@ -215,7 +215,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/firebase/trip-reads.ts`: lecturas de viajes.
 - `src/lib/firebase/trips.ts`: escrituras y operaciones principales de viajes.
 - `src/lib/firebase/plan-reads.ts`: lecturas de planes.
-- `src/lib/firebase/plans.ts`: escrituras y operaciones principales de planes.
+- `src/lib/firebase/plans.ts`: escrituras, lecturas puntuales y operaciones principales de planes.
 - `src/lib/firebase/checklists.ts`: persistencia de checklists.
 - `src/lib/firebase/luggage.ts`: persistencia de equipaje.
 - `src/lib/firebase/trip-pois.ts`: persistencia de POIs de viaje.
@@ -237,11 +237,13 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/ai/shopping-list.ts`: generacion de listas de compra.
 - `src/lib/ai/pending-meal-recommendations.ts`: recomendaciones pendientes de comidas.
 - `src/lib/ai/trip-plan-suggestions.ts`: sugerencias IA de planes para viajes.
+- `src/lib/ai/plan-audio-guide.ts`: generacion autenticada de audioguias IA para planes.
 
 ## Scripts de cliente por pagina
 
 - `src/scripts/pages/*.ts`: comportamiento de cliente dividido por vista para dashboard, viajes, planes, mapas, checklists, calendario, IA, POIs, equipaje, alojamiento e invitaciones.
 - `src/scripts/pages/dashboard-global-search.ts`: controlador del buscador global del dashboard autenticado.
+- `src/scripts/pages/plan-ai-audio-guide-action.ts`: acciones para generar audioguias IA desde el detalle o menu de planes.
 - `src/scripts/maps/*.ts`: integracion de Leaflet, Google Maps, capas, marcadores, visibilidad, geolocalizacion, POIs y controles moviles.
 - `src/scripts/pwa/register-service-worker.ts`: registro del service worker.
 - `src/scripts/pwa/connection-status.ts`: deteccion y publicacion del estado de conexion.
@@ -249,6 +251,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 ## Tests
 
 - `tests/smoke.test.mjs`: comprobaciones basicas del proyecto.
+- `tests/plan-audio-guide.test.mjs`: cobertura smoke de generacion de audioguias IA de planes.
 - `tests/public-pages.test.mjs`: paginas publicas, slugs y rutas.
 - `tests/asset-cache-busting.test.mjs`: cache busting de assets.
 - `tests/pwa-offline.test.mjs`: soporte PWA y offline.
@@ -258,6 +261,3 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `tests/plan-*.test.mjs`: fechas, estados, enlaces, ubicacion, colores y prompts de planes.
 - `tests/trip-*.test.mjs`: viajes, formularios, calendario, checklists, equipaje, POIs, IA, clima, miembros, invitaciones y borrado.
 - `tests/global-*.test.mjs`: vistas globales de hoy, checklists y buscador global.
-- `tests/dashboard-*.test.mjs`: dashboard, invitaciones y mini viajes.
-- `tests/invite-flow.test.mjs`: flujo de invitaciones.
-- `tests/list-view-mode.test.mjs`: modo de vista de listas.

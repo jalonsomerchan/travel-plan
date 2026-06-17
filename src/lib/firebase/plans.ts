@@ -4,6 +4,7 @@ import {
   deleteDoc,
   deleteField,
   doc,
+  getDocs,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -74,6 +75,22 @@ function mapPlanRecord(snapshot: { id: string; data: () => Record<string, unknow
 
 function sortPlans(plans: PlanRecord[]) {
   return sortPlansByScheduleAndDayOrder(plans);
+}
+
+export async function getTripPlansOnce(tripId: string) {
+  const cachedPlans = getCachedTripPlans(tripId);
+
+  if (cachedPlans) {
+    return cachedPlans;
+  }
+
+  const db = getFirebaseDb();
+  const plansRef = collection(db, 'trips', tripId, 'plans');
+  const snapshot = await getDocs(plansRef);
+  const plans = sortPlans(snapshot.docs.map(mapPlanRecord));
+  setCachedTripPlans(tripId, plans);
+
+  return plans;
 }
 
 function inputToPlanRecord(id: string, input: PlanInput): PlanRecord {

@@ -6,6 +6,10 @@ import { buildPlanAiTourPrompt } from '../../lib/app/plan-ai-tour-prompt';
 import { getChatGptPromptUrl } from '../../lib/app/trip-ai-prompt';
 import { escapeHtml } from '../../lib/app/dom';
 import { getPageTranslator } from './shared';
+import {
+  mountPlanAiAudioGuideListActions,
+  renderPlanAiAudioGuideMenuAction,
+} from './plan-ai-audio-guide-action';
 
 const storageKey = 'travelPlan:planAiTourOptions';
 const optionNames = ['planAiTourTone', 'planAiTourLength', 'planAiTourFocus'] as const;
@@ -22,9 +26,12 @@ function getGenerateGuideLabel(locale: Locale) {
 }
 
 export function renderPlanAiTourGenerateMenuAction(locale: Locale, plan: PlanRecord) {
-  if (plan.aiGuide?.trim()) return '';
+  const audioGuideAction = renderPlanAiAudioGuideMenuAction(locale, plan);
+
+  if (plan.aiGuide?.trim()) return audioGuideAction;
 
   return `
+    ${audioGuideAction}
     <button class="app-actions-menu-link app-actions-menu-button" data-plan-ai-tour-generate-action="${escapeHtml(plan.id)}" type="button">
       ${escapeHtml(getGenerateGuideLabel(locale))}
     </button>`;
@@ -200,3 +207,5 @@ export function openPlanAiTourGenerator(
 
   modal.showModal();
 }
+
+mountPlanAiAudioGuideListActions();
