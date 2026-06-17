@@ -2,15 +2,15 @@ import L from 'leaflet';
 import { addMapLayerSelector } from './layers';
 import { addMobileMapControlsToggle } from './mobile-controls';
 import { addOpenInGoogleMapsControl } from './google';
-import { addCurrentLocationControl } from './location';
+import {
+  addCurrentLocationControl,
+  type CurrentLocationOptions,
+} from './location';
 import { addPoiControl } from './pois';
 import type { MapTranslate } from './layers';
 
 interface MapToolsOptions {
-  currentLocation?: {
-    centerOnLocation?: boolean;
-    locateOnLoad?: boolean;
-  };
+  currentLocation?: CurrentLocationOptions;
 }
 
 export function addMapTools(map: L.Map, t: MapTranslate, options: MapToolsOptions = {}) {
