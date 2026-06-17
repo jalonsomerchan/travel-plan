@@ -1,7 +1,7 @@
 import { AiClientError } from './errors';
 import { parseValidatedJson, type JsonValidator } from './json';
 
-export const authenticatedAiApiEndpoint = 'https://alon.one/api-ia/auth.php';
+export const authenticatedAiApiEndpoint = 'https://alon.one/api-ia/auth.php?provider=mistral&model=ministral-8b-2512';
 
 export type AuthenticatedAiApiJsonOptions<T> = {
   token: string;
