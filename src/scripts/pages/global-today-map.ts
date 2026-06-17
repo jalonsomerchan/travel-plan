@@ -2,10 +2,12 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Locale } from '../../config/site';
 import { escapeHtml } from '../../lib/app/dom';
+import { formatDistance } from '../../lib/app/format';
 import type { TodayLocationState, TodayPlanItem } from '../../lib/app/global-today';
 import { getPlanLocationLabel, hasPlanLocation } from '../../lib/app/plan-location';
+import { getAppUrl } from '../../lib/app/routes';
 import { createPlanMarkerIcon } from '../maps/trip-markers';
-import { getCategoryLabel, getPageTranslator } from './shared';
+import { getCategoryLabel, getPageTranslator, getPlanStatusLabel } from './shared';
 
 interface GlobalTodayMapPayload {
   isOpen: boolean;
@@ -13,18 +15,48 @@ interface GlobalTodayMapPayload {
   locationState: TodayLocationState;
 }
 
+function getBoundsSignature(items: TodayPlanItem[], locationState: TodayLocationState) {
+  return [
+    ...items
+      .filter((item) => hasPlanLocation(item.plan))
+      .map((item) => `${item.plan.id}:${item.plan.locationLat}:${item.plan.locationLng}:${item.distanceKm ?? '-'}`),
+    locationState.location
+      ? `user:${locationState.location.latitude}:${locationState.location.longitude}:${locationState.location.accuracyMeters ?? '-'}`
+      : 'user:none',
+  ].join('|');
+}
+
 export function createGlobalTodayMapController(locale: Locale) {
   const t = getPageTranslator(locale);
   const canvas = document.querySelector<HTMLElement>('[data-today-map-canvas]');
   const status = document.querySelector<HTMLElement>('[data-today-map-status]');
+  const summary = document.querySelector<HTMLElement>('[data-today-map-summary]');
   let map: L.Map | null = null;
   let tileLayer: L.TileLayer | null = null;
   let markerLayer: L.LayerGroup | null = null;
+  let hasUserInteracted = false;
+  let lastBoundsSignature = '';
 
   function setStatus(message: string) {
     if (status) {
       status.textContent = message;
     }
+  }
+
+  function setSummary(message: string) {
+    if (summary) {
+      summary.textContent = message;
+      summary.hidden = !message;
+    }
+  }
+
+  function setCanvasVisible(isVisible: boolean) {
+    if (!canvas) {
+      return;
+    }
+
+    canvas.hidden = !isVisible;
+    canvas.classList.toggle('hidden', !isVisible);
   }
 
   function ensureMap() {
@@ -36,11 +68,15 @@ export function createGlobalTodayMapController(locale: Locale) {
       return map;
     }
 
-    canvas.hidden = false;
+    setCanvasVisible(true);
     map = L.map(canvas, {
       zoomControl: true,
       scrollWheelZoom: false,
     }).setView([40.4168, -3.7038], 5);
+
+    map.on('dragstart zoomstart', () => {
+      hasUserInteracted = true;
+    });
 
     tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -51,8 +87,15 @@ export function createGlobalTodayMapController(locale: Locale) {
     return map;
   }
 
-  function fitMapBounds(activeMap: L.Map, bounds: L.LatLngBounds) {
+  function fitMapBounds(activeMap: L.Map, bounds: L.LatLngBounds, signature: string) {
     activeMap.invalidateSize();
+
+    if (hasUserInteracted && lastBoundsSignature) {
+      lastBoundsSignature = signature;
+      return;
+    }
+
+    lastBoundsSignature = signature;
 
     if (!bounds.isValid()) {
       activeMap.setView([40.4168, -3.7038], 5);
@@ -102,6 +145,26 @@ export function createGlobalTodayMapController(locale: Locale) {
     }
   }
 
+  function getPlanPopupHtml(item: TodayPlanItem) {
+    const categoryLabel = getCategoryLabel(locale, item.plan.category);
+    const statusLabel = getPlanStatusLabel(locale, item.plan.status);
+    const locationLabel = getPlanLocationLabel(item.plan) || t('today.card.noLocation');
+    const distanceLabel = typeof item.distanceKm === 'number' ? formatDistance(item.distanceKm, locale) : '';
+    const planUrl = getAppUrl(locale, 'plan', { trip: item.trip.id, plan: item.plan.id });
+
+    return `
+      <strong>${escapeHtml(item.plan.name)}</strong>
+      <dl class="mt-2 grid gap-1 text-sm">
+        <div><dt class="font-bold">${escapeHtml(t('today.map.popup.trip'))}</dt><dd>${escapeHtml(item.trip.name)}</dd></div>
+        <div><dt class="font-bold">${escapeHtml(t('today.map.popup.status'))}</dt><dd>${escapeHtml(statusLabel)}</dd></div>
+        <div><dt class="font-bold">${escapeHtml(t('today.map.popup.category'))}</dt><dd>${escapeHtml(categoryLabel)}</dd></div>
+        <div><dt class="font-bold">${escapeHtml(t('today.map.popup.location'))}</dt><dd>${escapeHtml(locationLabel)}</dd></div>
+        <div><dt class="font-bold">${escapeHtml(t('today.map.popup.distance'))}</dt><dd>${escapeHtml(distanceLabel || t('today.card.distanceUnavailable'))}</dd></div>
+      </dl>
+      <a class="map-popup-link" href="${escapeHtml(planUrl)}">${escapeHtml(t('today.map.popup.openPlan'))}</a>
+    `;
+  }
+
   function renderPlanMarkers(items: TodayPlanItem[], bounds: L.LatLngBounds) {
     if (!markerLayer) {
       return 0;
@@ -111,26 +174,37 @@ export function createGlobalTodayMapController(locale: Locale) {
 
     locatedItems.forEach((item) => {
       const latLng = L.latLng(item.plan.locationLat, item.plan.locationLng);
-      const categoryLabel = getCategoryLabel(locale, item.plan.category);
+      const statusLabel = getPlanStatusLabel(locale, item.plan.status);
+      const title = `${item.plan.name} · ${item.trip.name} · ${statusLabel}`;
       bounds.extend(latLng);
 
       L.marker(latLng, {
-        icon: createPlanMarkerIcon(item.plan, locale, { emphasized: typeof item.distanceKm === 'number' }),
+        icon: createPlanMarkerIcon(item.plan, locale, {
+          emphasized: typeof item.distanceKm === 'number',
+          muted: item.plan.status === 'proposed',
+        }),
         keyboard: true,
-        title: item.plan.name,
+        title,
       })
-        .bindPopup(
-          [
-            `<strong>${escapeHtml(item.plan.name)}</strong>`,
-            escapeHtml(item.trip.name),
-            escapeHtml(categoryLabel),
-            escapeHtml(getPlanLocationLabel(item.plan) || t('today.card.noLocation')),
-          ].join('<br />'),
-        )
+        .bindPopup(getPlanPopupHtml(item))
         .addTo(markerLayer);
     });
 
     return locatedItems.length;
+  }
+
+  function renderMapSummary(payload: GlobalTodayMapPayload, locatedCount: number) {
+    const withoutLocationCount = Math.max(payload.items.length - locatedCount, 0);
+    const locationLabel = payload.locationState.location
+      ? t('today.map.summary.withUserLocation')
+      : t('today.map.summary.withoutUserLocation');
+
+    setSummary(
+      t('today.map.summary')
+        .replace('{located}', String(locatedCount))
+        .replace('{withoutLocation}', String(withoutLocationCount))
+        .replace('{location}', locationLabel),
+    );
   }
 
   function sync(payload: GlobalTodayMapPayload) {
@@ -139,16 +213,18 @@ export function createGlobalTodayMapController(locale: Locale) {
     }
 
     if (!payload.isOpen) {
-      canvas.hidden = true;
+      setCanvasVisible(false);
       setStatus(t('today.map.idle'));
+      setSummary('');
       return;
     }
 
     const activeMap = ensureMap();
 
     if (!activeMap || !markerLayer || !tileLayer) {
-      canvas.hidden = true;
+      setCanvasVisible(false);
       setStatus(t('today.map.unavailable'));
+      setSummary('');
       return;
     }
 
@@ -156,14 +232,15 @@ export function createGlobalTodayMapController(locale: Locale) {
     const bounds = L.latLngBounds([]);
     const locatedCount = renderPlanMarkers(payload.items, bounds);
     renderUserLocation(payload.locationState, bounds);
+    renderMapSummary(payload, locatedCount);
 
     if (locatedCount === 0 && !payload.locationState.location) {
-      canvas.hidden = true;
+      setCanvasVisible(false);
       setStatus(t('today.map.empty'));
       return;
     }
 
-    canvas.hidden = false;
+    setCanvasVisible(true);
 
     if (locatedCount === 0) {
       setStatus(t('today.map.onlyUserLocation'));
@@ -173,7 +250,8 @@ export function createGlobalTodayMapController(locale: Locale) {
       setStatus(t('today.map.ready').replace('{count}', String(locatedCount)));
     }
 
-    requestAnimationFrame(() => fitMapBounds(activeMap, bounds));
+    const signature = getBoundsSignature(payload.items, payload.locationState);
+    requestAnimationFrame(() => fitMapBounds(activeMap, bounds, signature));
   }
 
   return { sync };

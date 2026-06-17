@@ -179,6 +179,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/app/location-links.ts`: enlaces externos de ubicacion.
 - `src/lib/app/weather.ts`: obtencion y normalizacion de meteorologia.
 - `src/lib/app/weather-cache.ts`: cache de resultados meteorologicos.
+- `src/lib/app/global-search.ts`: normalizacion, filtrado y agrupacion del buscador global.
 - `src/lib/app/global-today.ts`: logica para la vista global de hoy.
 - `src/lib/app/accommodation.ts`: modelo y helpers de alojamiento.
 - `src/lib/app/invite-share.ts`: helpers para compartir invitaciones.
@@ -209,6 +210,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `src/lib/firebase/subscription-scope.ts`: control de suscripciones activas.
 - `src/lib/firebase/snapshot-freshness.ts`: frescura y origen de snapshots.
 - `src/lib/firebase/shared-data-cache.ts`: cache compartida de datos leidos.
+- `src/lib/firebase/global-search-reads.ts`: lecturas puntuales de checklist y POIs para el buscador global.
 - `src/lib/firebase/trip-rest.ts`: operaciones REST auxiliares de viajes.
 - `src/lib/firebase/trip-reads.ts`: lecturas de viajes.
 - `src/lib/firebase/trips.ts`: escrituras y operaciones principales de viajes.
@@ -239,6 +241,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 ## Scripts de cliente por pagina
 
 - `src/scripts/pages/*.ts`: comportamiento de cliente dividido por vista para dashboard, viajes, planes, mapas, checklists, calendario, IA, POIs, equipaje, alojamiento e invitaciones.
+- `src/scripts/pages/dashboard-global-search.ts`: controlador del buscador global del dashboard autenticado.
 - `src/scripts/maps/*.ts`: integracion de Leaflet, Google Maps, capas, marcadores, visibilidad, geolocalizacion, POIs y controles moviles.
 - `src/scripts/pwa/register-service-worker.ts`: registro del service worker.
 - `src/scripts/pwa/connection-status.ts`: deteccion y publicacion del estado de conexion.
@@ -254,22 +257,7 @@ Este documento resume para que sirve cada zona del repositorio. Debe actualizars
 - `tests/map-*.test.mjs`: mapa, capas, ubicacion, POIs y visibilidad.
 - `tests/plan-*.test.mjs`: fechas, estados, enlaces, ubicacion, colores y prompts de planes.
 - `tests/trip-*.test.mjs`: viajes, formularios, calendario, checklists, equipaje, POIs, IA, clima, miembros, invitaciones y borrado.
-- `tests/global-*.test.mjs`: vistas globales de hoy y checklists.
+- `tests/global-*.test.mjs`: vistas globales de hoy, checklists y buscador global.
 - `tests/dashboard-*.test.mjs`: dashboard, invitaciones y mini viajes.
 - `tests/invite-flow.test.mjs`: flujo de invitaciones.
 - `tests/list-view-mode.test.mjs`: modo de vista de listas.
-- `tests/mobile-filter-and-list-actions.test.mjs`: filtros y acciones moviles.
-- `tests/coordinates-distance.test.mjs`: calculo de distancias.
-- `tests/ios-input-zoom.test.mjs`: prevencion de zoom automatico en iOS.
-- `tests/offline-plan-writes.test.mjs`: escrituras offline de planes.
-- `tests/poi-smoke.test.mjs`: comprobaciones basicas de POIs.
-
-## Archivos generados o locales
-
-Estos archivos pueden aparecer durante el desarrollo y normalmente no se editan a mano:
-
-- `.astro/*`: tipos y configuracion generados por Astro.
-- `.env`: variables locales reales; no debe commitearse ni copiarse en documentacion con secretos.
-- `.DS_Store`: metadatos locales de macOS.
-- `dist/`: salida de build.
-- `node_modules/`: dependencias instaladas.

@@ -48,5 +48,14 @@
   "today.map.ready": "{count} filtered plans and your current location are shown.",
   "today.map.unavailable": "The map could not be loaded right now.",
   "today.map.userLocation": "Your current location",
-  "today.map.canvasLabel": "Map with the filtered plans near you"
+  "today.map.canvasLabel": "Map with the filtered plans near you",
+  "today.map.summary": "{located} visible plans with location, {withoutLocation} without location. {location}",
+  "today.map.summary.withUserLocation": "Your current location is being used.",
+  "today.map.summary.withoutUserLocation": "Your current location is not being used.",
+  "today.map.popup.trip": "Trip",
+  "today.map.popup.status": "Status",
+  "today.map.popup.category": "Category",
+  "today.map.popup.location": "Location",
+  "today.map.popup.distance": "Distance",
+  "today.map.popup.openPlan": "Open plan detail"
 }

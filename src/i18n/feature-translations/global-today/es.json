@@ -48,5 +48,14 @@
   "today.map.ready": "Se muestran {count} planes filtrados y tu ubicación actual.",
   "today.map.unavailable": "No se ha podido cargar el mapa ahora mismo.",
   "today.map.userLocation": "Tu ubicación actual",
-  "today.map.canvasLabel": "Mapa con los planes filtrados cerca de ti"
+  "today.map.canvasLabel": "Mapa con los planes filtrados cerca de ti",
+  "today.map.summary": "{located} planes con ubicación visible, {withoutLocation} sin ubicación. {location}",
+  "today.map.summary.withUserLocation": "Se está usando tu ubicación actual.",
+  "today.map.summary.withoutUserLocation": "No se está usando tu ubicación actual.",
+  "today.map.popup.trip": "Viaje",
+  "today.map.popup.status": "Estado",
+  "today.map.popup.category": "Categoría",
+  "today.map.popup.location": "Ubicación",
+  "today.map.popup.distance": "Distancia",
+  "today.map.popup.openPlan": "Abrir detalle del plan"
 }
