@@ -54,11 +54,11 @@ export function addUserLocationMarker(
         }
 
         const latLng = L.latLng(latitude, longitude);
-        const nextLocation: CurrentLocationCoordinates = {
-          latitude,
-          longitude,
-          accuracyMeters: Number.isFinite(accuracy) ? accuracy : undefined,
-        };
+        const nextLocation: CurrentLocationCoordinates = { latitude, longitude };
+
+        if (Number.isFinite(accuracy)) {
+          nextLocation.accuracyMeters = accuracy;
+        }
 
         if (renderMarker) {
           if (marker) {
