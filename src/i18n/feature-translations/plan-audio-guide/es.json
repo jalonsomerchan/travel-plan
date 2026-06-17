@@ -1,0 +1,9 @@
+{
+  "plan.aiAudioGuide.action": "IA-AudioGuía",
+  "plan.aiAudioGuide.generating": "Generando audioguía IA...",
+  "plan.aiAudioGuide.generated": "Audioguía generada. Reproduciendo...",
+  "plan.aiAudioGuide.error": "No se ha podido generar la audioguía IA.",
+  "plan.aiAudioGuide.authRequired": "Inicia sesión para generar la audioguía IA.",
+  "plan.aiAudioGuide.planNotFound": "No se ha encontrado el plan para generar la audioguía.",
+  "plan.aiAudioGuide.tripNotFound": "No se ha encontrado el viaje para generar la audioguía."
+}
