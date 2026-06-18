@@ -1,6 +1,6 @@
 import type { Locale } from '../config/site';
 import type { PublicPageContent } from './public-page-types';
-import { publicSeoGuidePageIds, publicSeoGuidePages } from './public-seo-guide-pages';
+import { publicSeoGuidePageIds, publicSeoGuidePages } from './public-seo-generated-guides';
 import { publicSeoPagesEn } from './public-seo-pages-en';
 import { publicSeoPagesEs } from './public-seo-pages-es';
 
