@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../Container.astro';
-import { type Locale } from '../../config/site';
+import { siteConfig, type Locale } from '../../config/site';
 import {
   getPublicPage,
   getPublicPagePath,
@@ -10,6 +10,7 @@ import {
 } from '../../data/public-pages';
 import { getPublicPageUi } from '../../data/public-page-ui';
 import { getLocalizedPath } from '../../i18n/ui';
+import { getAbsoluteUrl } from '../../utils/paths';
 
 interface Props {
   id: PublicPageId;
@@ -20,6 +21,28 @@ const { id, locale } = Astro.props;
 const page = getPublicPage(locale, id);
 const pages = getPublicPages(locale);
 const ui = getPublicPageUi(locale);
+const pageUrl = getAbsoluteUrl(getLocalizedPath(getPublicPagePath(locale, page.id), locale), siteConfig.url);
+const pageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: page.title,
+  description: page.description,
+  url: pageUrl,
+  inLanguage: locale,
+  isPartOf: {
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    url: siteConfig.url,
+  },
+  mainEntity: page.sections.map((section) => ({
+    '@type': 'Question',
+    name: section.title,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: [section.body, ...(section.items ?? [])].join(' '),
+    },
+  })),
+};
 ---
 
 <BaseLayout title={page.title} description={page.description} locale={locale}>
@@ -73,4 +96,5 @@ const ui = getPublicPageUi(locale);
       </footer>
     </article>
   </Container>
+  <script type="application/ld+json" set:html={JSON.stringify(pageJsonLd)}></script>
 </BaseLayout>

@@ -1,6 +1,8 @@
 import type { Locale } from '../config/site';
+import { publicSeoPageIds, publicSeoPages, type PublicSeoPageId } from './public-seo-pages';
+import type { PublicPageContent, PublicPageSection } from './public-page-types';
 
-export const publicPageIds = [
+const publicBasePageIds = [
   'about',
   'privacy',
   'faq',
@@ -9,26 +11,17 @@ export const publicPageIds = [
   'manual',
 ] as const;
 
-export type PublicPageId = (typeof publicPageIds)[number];
+export const publicPageIds = [
+  ...publicBasePageIds,
+  ...publicSeoPageIds,
+] as const;
 
-interface PublicPageSection {
-  title: string;
-  body: string;
-  items?: string[];
-}
+type PublicBasePageId = (typeof publicBasePageIds)[number];
+export type PublicPageId = PublicBasePageId | PublicSeoPageId;
 
-export interface PublicPageContent {
-  id: PublicPageId;
-  label: string;
-  slug: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  intro: string;
-  sections: PublicPageSection[];
-}
+export type { PublicPageContent, PublicPageSection };
 
-const es: Record<PublicPageId, PublicPageContent> = {
+const basePagesEs: Record<PublicBasePageId, PublicPageContent<PublicBasePageId>> = {
   about: {
     id: 'about',
     label: 'Acerca de',
@@ -111,7 +104,7 @@ const es: Record<PublicPageId, PublicPageContent> = {
   },
 };
 
-const en: Record<PublicPageId, PublicPageContent> = {
+const basePagesEn: Record<PublicBasePageId, PublicPageContent<PublicBasePageId>> = {
   about: {
     id: 'about',
     label: 'About',
@@ -194,7 +187,16 @@ const en: Record<PublicPageId, PublicPageContent> = {
   },
 };
 
-export const publicPages: Record<Locale, Record<PublicPageId, PublicPageContent>> = { es, en };
+export const publicPages: Record<Locale, Record<PublicPageId, PublicPageContent<PublicPageId>>> = {
+  es: {
+    ...basePagesEs,
+    ...publicSeoPages.es,
+  },
+  en: {
+    ...basePagesEn,
+    ...publicSeoPages.en,
+  },
+};
 
 export function getPublicPage(locale: Locale, id: PublicPageId) {
   return publicPages[locale][id];
