@@ -1,8 +1,10 @@
 import type { Locale } from '../config/site';
+import type { PublicPageContent } from './public-page-types';
+import { publicSeoGuidePageIds, publicSeoGuidePages } from './public-seo-guide-pages';
 import { publicSeoPagesEn } from './public-seo-pages-en';
 import { publicSeoPagesEs } from './public-seo-pages-es';
 
-export const publicSeoPageIds = [
+const publicSeoBasePageIds = [
   'organizador-viajes-grupo',
   'planificador-itinerarios',
   'app-mapas-viaje',
@@ -13,9 +15,20 @@ export const publicSeoPageIds = [
   'viaje-colaborativo-online',
 ] as const;
 
-export type PublicSeoPageId = (typeof publicSeoPageIds)[number];
+export const publicSeoPageIds = [
+  ...publicSeoBasePageIds,
+  ...publicSeoGuidePageIds,
+] as const;
+
+export type PublicSeoPageId = string;
 
 export const publicSeoPages = {
-  es: publicSeoPagesEs,
-  en: publicSeoPagesEn,
-} satisfies Record<Locale, typeof publicSeoPagesEs>;
+  es: {
+    ...publicSeoPagesEs,
+    ...publicSeoGuidePages.es,
+  },
+  en: {
+    ...publicSeoPagesEn,
+    ...publicSeoGuidePages.en,
+  },
+} satisfies Record<Locale, Record<PublicSeoPageId, PublicPageContent<PublicSeoPageId>>>;
